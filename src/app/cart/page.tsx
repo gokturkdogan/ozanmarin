@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { useCartStore } from '@/lib/cart'
 import { ShoppingCart, Plus, Minus, Trash2, ArrowLeft } from 'lucide-react'
+import { formatTRYPrice } from '@/lib/exchangeRate'
 
 export default function CartPage() {
   const { items, updateQuantity, removeItem, clearCart, getTotalPrice, getTotalItems } = useCartStore()
@@ -112,10 +113,10 @@ export default function CartPage() {
                         </div>
                       )}
                       <p className="text-primary font-bold text-lg">
-                        ₺{(item.price + (item.embroideryPrice || 0)).toLocaleString()}
+                        {formatTRYPrice(item.price + (item.embroideryPrice || 0))}
                         {item.hasEmbroidery && (
                           <span className="text-sm text-gray-600 ml-2">
-                            (₺{item.price.toLocaleString()} + ₺100 nakış)
+                            ({formatTRYPrice(item.price)} + ₺100 nakış)
                           </span>
                         )}
                       </p>
@@ -147,11 +148,11 @@ export default function CartPage() {
                     {/* Item Total */}
                     <div className="text-right">
                       <p className="text-lg font-bold text-gray-900">
-                        ₺{((item.price + (item.embroideryPrice || 0)) * item.quantity).toLocaleString()}
+                        {formatTRYPrice((item.price + (item.embroideryPrice || 0)) * item.quantity)}
                       </p>
                       {item.hasEmbroidery && (
                         <p className="text-sm text-gray-600">
-                          (₺{item.price.toLocaleString()} + ₺{(item.embroideryPrice || 0).toLocaleString()} nakış) × {item.quantity}
+                          ({formatTRYPrice(item.price)} + ₺{(item.embroideryPrice || 0).toLocaleString()} nakış) × {item.quantity}
                         </p>
                       )}
                     </div>
@@ -185,7 +186,7 @@ export default function CartPage() {
                 
                 <div className="flex justify-between text-sm">
                   <span>Ara Toplam:</span>
-                  <span>₺{getTotalPrice().toLocaleString()}</span>
+                  <span>{formatTRYPrice(getTotalPrice())}</span>
                 </div>
                 
                 <div className="flex justify-between text-sm">
@@ -199,7 +200,7 @@ export default function CartPage() {
                 <div className="border-t pt-4">
                   <div className="flex justify-between text-lg font-bold">
                     <span>Toplam:</span>
-                    <span>₺{(getTotalPrice() + 200).toLocaleString()}</span>
+                    <span>{formatTRYPrice(getTotalPrice() + 200)}</span>
                   </div>
                 </div>
 

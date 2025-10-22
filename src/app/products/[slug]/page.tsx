@@ -10,6 +10,7 @@ import { useCartStore } from '@/lib/cart'
 import { CustomToast } from '@/components/custom-toast'
 import { FileUpload } from '@/components/file-upload'
 import { ShoppingCart, ArrowLeft, Star, Shield, Waves, ChevronLeft, ChevronRight } from 'lucide-react'
+import { getUSDExchangeRate, convertUSDToTRY, formatTRYPrice } from '@/lib/exchangeRate'
 
 interface Product {
   id: string
@@ -49,6 +50,7 @@ export default function ProductPage({ params }: ProductPageProps) {
   const [hasEmbroidery, setHasEmbroidery] = useState(false)
   const [embroideryFile, setEmbroideryFile] = useState<File | null>(null)
   const [embroideryUrl, setEmbroideryUrl] = useState<string>('')
+  const [exchangeRate, setExchangeRate] = useState<number>(34.50) // Default fallback rate
   const { addItem } = useCartStore()
   const router = useRouter()
 
@@ -63,8 +65,20 @@ export default function ProductPage({ params }: ProductPageProps) {
   useEffect(() => {
     if (slug) {
       fetchProduct()
+      loadExchangeRate()
     }
   }, [slug])
+
+  // Dolar kurunu yükle
+  const loadExchangeRate = async () => {
+    try {
+      const rate = await getUSDExchangeRate()
+      setExchangeRate(rate)
+    } catch (error) {
+      console.error('Exchange rate loading failed:', error)
+      // Fallback rate zaten state'te var
+    }
+  }
 
   // Keyboard navigation for images
   useEffect(() => {
@@ -108,7 +122,7 @@ export default function ProductPage({ params }: ProductPageProps) {
         addItem({
           id: product.id,
           name: product.name,
-          price: selectedSizePrice.price,
+          price: convertUSDToTRY(selectedSizePrice.price, exchangeRate), // Convert USD to TRY
           image: product.images[0] || '/placeholder.jpg',
           size: selectedSizePrice.size,
           color: selectedColor || '',
@@ -270,20 +284,20 @@ export default function ProductPage({ params }: ProductPageProps) {
               <p className="text-xl text-primary font-bold mb-6">
                 {selectedSizePrice ? (
                   <span>
-                    ₺{((selectedSizePrice.price + (hasEmbroidery ? 100 : 0)) * quantity).toLocaleString()}
+                    {formatTRYPrice((convertUSDToTRY(selectedSizePrice.price, exchangeRate) + (hasEmbroidery ? 100 : 0)) * quantity)}
                     {quantity > 1 && (
                       <span className="text-sm text-gray-600 ml-2">
-                        ({quantity} × ₺{(selectedSizePrice.price + (hasEmbroidery ? 100 : 0)).toLocaleString()})
+                        ({quantity} × {formatTRYPrice(convertUSDToTRY(selectedSizePrice.price, exchangeRate) + (hasEmbroidery ? 100 : 0))})
                       </span>
                     )}
                     {hasEmbroidery && (
                       <span className="text-sm text-gray-600 ml-2 block">
-                        ₺{selectedSizePrice.price.toLocaleString()} + ₺100 nakış
+                        {formatTRYPrice(convertUSDToTRY(selectedSizePrice.price, exchangeRate))} + ₺100 nakış
                       </span>
                     )}
                   </span>
                 ) : (
-                  'Fiyat seçiniz'
+                  'Boyut seçiniz'
                 )}
               </p>
             </div>
@@ -331,7 +345,7 @@ export default function ProductPage({ params }: ProductPageProps) {
                     <SelectContent>
                       {product.sizePrices.map((sizePrice) => (
                         <SelectItem key={sizePrice.size} value={sizePrice.size}>
-                          {sizePrice.size} - ₺{sizePrice.price.toLocaleString()}
+                          {sizePrice.size} - {formatTRYPrice(convertUSDToTRY(sizePrice.price, exchangeRate))}
                         </SelectItem>
                       ))}
                     </SelectContent>

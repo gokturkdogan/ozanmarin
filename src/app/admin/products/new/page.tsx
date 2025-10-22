@@ -394,12 +394,12 @@ export default function NewProductPage() {
                     />
                   </div>
                   <div>
-                    <Label htmlFor="price-input">Fiyat (₺)</Label>
+                    <Label htmlFor="price-input">Fiyat ($)</Label>
                     <Input
                       id="price-input"
                       type="number"
                       step="0.01"
-                      placeholder="1250.00"
+                      placeholder="45.00"
                     />
                   </div>
                 </div>
@@ -439,7 +439,7 @@ export default function NewProductPage() {
                           onChange={(e) => updateSizePrice(index, 'price', parseFloat(e.target.value) || 0)}
                           className="flex-1"
                         />
-                        <span className="text-sm text-gray-500">₺</span>
+                        <span className="text-sm text-gray-500">$</span>
                         <Button
                           type="button"
                           variant="outline"

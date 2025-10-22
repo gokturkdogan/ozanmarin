@@ -8,6 +8,7 @@ import { Input } from '@/components/ui/input'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { useCartStore } from '@/lib/cart'
 import { ShoppingCart, Search } from 'lucide-react'
+import { getUSDExchangeRate, convertUSDToTRY, formatTRYPrice } from '@/lib/exchangeRate'
 
 interface Product {
   id: string
@@ -52,12 +53,25 @@ export default function ProductsPage() {
   const [selectedBrand, setSelectedBrand] = useState<string>('all')
   const [searchTerm, setSearchTerm] = useState('')
   const [isLoading, setIsLoading] = useState(true)
+  const [exchangeRate, setExchangeRate] = useState<number>(34.50) // Default fallback rate
   const { addItem } = useCartStore()
 
   useEffect(() => {
     fetchProducts()
     fetchCategories()
+    loadExchangeRate()
   }, [selectedCategory, selectedBrand])
+
+  // Dolar kurunu yükle
+  const loadExchangeRate = async () => {
+    try {
+      const rate = await getUSDExchangeRate()
+      setExchangeRate(rate)
+    } catch (error) {
+      console.error('Exchange rate loading failed:', error)
+      // Fallback rate zaten state'te var
+    }
+  }
 
   useEffect(() => {
     if (selectedCategory !== 'all') {
@@ -271,9 +285,9 @@ export default function ProductsPage() {
                         <span className="text-2xl font-bold text-primary">
                           {product.sizePrices.length > 0 ? (
                             product.sizePrices.length === 1 ? (
-                              `₺${product.sizePrices[0].price.toLocaleString()}`
+                              formatTRYPrice(convertUSDToTRY(product.sizePrices[0].price, exchangeRate))
                             ) : (
-                              `₺${Math.min(...product.sizePrices.map(sp => sp.price)).toLocaleString()} - ₺${Math.max(...product.sizePrices.map(sp => sp.price)).toLocaleString()}`
+                              `${formatTRYPrice(convertUSDToTRY(Math.min(...product.sizePrices.map(sp => sp.price)), exchangeRate))} - ${formatTRYPrice(convertUSDToTRY(Math.max(...product.sizePrices.map(sp => sp.price)), exchangeRate))}`
                             )
                           ) : (
                             'Fiyat Yok'

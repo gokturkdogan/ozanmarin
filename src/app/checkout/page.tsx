@@ -11,6 +11,7 @@ import { ArrowLeft, Plus, CreditCard, MapPin, Edit } from 'lucide-react'
 import Link from 'next/link'
 import { countries } from '@/lib/countries'
 import { AddressModal } from '@/components/address-modal'
+import { formatTRYPrice } from '@/lib/exchangeRate'
 
 interface Address {
   id: string
@@ -760,13 +761,13 @@ export default function CheckoutPage() {
                 
                 <div className="flex justify-between text-sm">
                   <span>Ara Toplam:</span>
-                  <span>₺{getTotalPrice().toLocaleString()}</span>
+                  <span>{formatTRYPrice(getTotalPrice())}</span>
                 </div>
                 
                 <div className="flex justify-between text-sm">
                   <span>Kargo:</span>
                   <div className="text-right">
-                    <div>₺{getShippingCost().toLocaleString()}</div>
+                    <div>{formatTRYPrice(getShippingCost())}</div>
                     <div className="text-gray-500 text-xs">
                       {getShippingCost() === 200 
                         ? '(teslimat adresine göre değişiklik gösterebilir)'
@@ -779,7 +780,7 @@ export default function CheckoutPage() {
                 <div className="border-t pt-4">
                   <div className="flex justify-between text-lg font-bold">
                     <span>Toplam:</span>
-                    <span>₺{(getTotalPrice() + getShippingCost()).toLocaleString()}</span>
+                    <span>{formatTRYPrice(getTotalPrice() + getShippingCost())}</span>
                   </div>
                 </div>
 

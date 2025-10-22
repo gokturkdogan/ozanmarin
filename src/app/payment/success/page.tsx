@@ -46,7 +46,7 @@ export default function PaymentSuccessPage() {
             Siparişiniz başarıyla alındı. En kısa sürede hazırlanacaktır.
             Sipariş detayları e-postanıza gönderilmiştir.
           </p>
-          <div className="space-y-4">
+          <div className="space-y-6">
             <Link href="/products">
               <Button size="lg" className="w-full">
                 Alışverişe Devam Et
@@ -73,7 +73,7 @@ export default function PaymentSuccessPage() {
         <p className="text-gray-600 mb-8">
           Ödeme işlemi sırasında bir hata oluştu. Lütfen tekrar deneyin.
         </p>
-        <div className="space-y-4">
+        <div className="space-y-6">
           <Link href="/checkout">
             <Button size="lg" className="w-full">
               Tekrar Dene

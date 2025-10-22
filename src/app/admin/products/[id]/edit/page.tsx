@@ -377,7 +377,7 @@ export default function EditProductPage({ params }: { params: Promise<{ id: stri
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="space-y-2">
-                <Label htmlFor="price">Fiyat (₺) *</Label>
+                <Label htmlFor="price">Fiyat ($) *</Label>
                 <Input
                   id="price"
                   type="number"
@@ -482,7 +482,7 @@ export default function EditProductPage({ params }: { params: Promise<{ id: stri
                     />
                   </div>
                   <div>
-                    <Label htmlFor="price-input">Fiyat (₺)</Label>
+                    <Label htmlFor="price-input">Fiyat ($)</Label>
                     <Input
                       id="price-input"
                       type="number"
@@ -539,7 +539,7 @@ export default function EditProductPage({ params }: { params: Promise<{ id: stri
                           }}
                           className="flex-1"
                         />
-                        <span className="text-sm text-gray-500">₺</span>
+                        <span className="text-sm text-gray-500">$</span>
                         <Button
                           type="button"
                           variant="outline"

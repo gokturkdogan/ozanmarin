@@ -351,9 +351,9 @@ export default function AdminProductsPage() {
                     <span className="text-2xl font-bold text-primary">
                       {product.sizePrices.length > 0 ? (
                         product.sizePrices.length === 1 ? (
-                          `₺${product.sizePrices[0].price.toLocaleString('tr-TR')}`
+                          `$${product.sizePrices[0].price.toLocaleString('en-US')}`
                         ) : (
-                          `₺${Math.min(...product.sizePrices.map(sp => sp.price)).toLocaleString('tr-TR')} - ₺${Math.max(...product.sizePrices.map(sp => sp.price)).toLocaleString('tr-TR')}`
+                          `$${Math.min(...product.sizePrices.map(sp => sp.price)).toLocaleString('en-US')} - $${Math.max(...product.sizePrices.map(sp => sp.price)).toLocaleString('en-US')}`
                         )
                       ) : (
                         'Fiyat Yok'
@@ -375,7 +375,7 @@ export default function AdminProductsPage() {
                     <div className="flex flex-wrap gap-1">
                       {product.sizePrices.map((sizePrice) => (
                         <Badge key={sizePrice.size} variant="outline" className="text-xs">
-                          {sizePrice.size} - ₺{sizePrice.price.toLocaleString('tr-TR')}
+                          {sizePrice.size} - ${sizePrice.price.toLocaleString('en-US')}
                         </Badge>
                       ))}
                     </div>

@@ -388,7 +388,7 @@ export default function OrdersPage() {
                           </div>
                           <div className="text-right">
                             <p className="text-lg font-bold text-gray-900">
-                              Toplam: ₺{order.totalPrice.toLocaleString()}
+                              Toplam: ₺{order.totalPrice.toLocaleString('tr-TR')}
                             </p>
                             {order.paymentMethod && (
                               <p className="text-sm text-gray-500">
