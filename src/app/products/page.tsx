@@ -13,11 +13,11 @@ interface Product {
   id: string
   name: string
   slug: string
-  price: number
   description: string
   images: string[]
   stock: number
-  sizes: string[]
+  sizePrices: { size: string; price: number }[]
+  colors: string[]
   category: {
     name: string
     slug: string
@@ -114,15 +114,6 @@ export default function ProductsPage() {
     product.description.toLowerCase().includes(searchTerm.toLowerCase())
   )
 
-  const handleAddToCart = (product: Product) => {
-    addItem({
-      id: product.id,
-      name: product.name,
-      price: product.price,
-      image: product.images[0] || '/placeholder.jpg'
-    })
-  }
-
   if (isLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
@@ -205,10 +196,18 @@ export default function ProductsPage() {
               <Card key={product.id} className="group hover:shadow-xl transition-all duration-300 border-0 shadow-md overflow-hidden">
                 <CardContent className="p-0">
                   {/* Product Image */}
-                  <div className="relative w-full h-48 bg-gradient-to-br from-blue-400 to-blue-600 overflow-hidden">
-                    <div className="absolute inset-0 flex items-center justify-center">
-                      <ShoppingCart className="w-16 h-16 text-white opacity-50 group-hover:opacity-70 transition-opacity" />
-                    </div>
+                  <div className="relative w-full h-48 bg-gray-100 overflow-hidden">
+                    {product.images && product.images.length > 0 ? (
+                      <img 
+                        src={product.images[0]} 
+                        alt={product.name}
+                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                      />
+                    ) : (
+                      <div className="w-full h-full bg-gradient-to-br from-blue-400 to-blue-600 flex items-center justify-center">
+                        <ShoppingCart className="w-16 h-16 text-white opacity-50 group-hover:opacity-70 transition-opacity" />
+                      </div>
+                    )}
                     <div className="absolute top-2 left-2">
                       <span className="bg-primary text-primary-foreground text-xs px-2 py-1 rounded-full font-medium">
                         {product.category.name}
@@ -227,8 +226,13 @@ export default function ProductsPage() {
                   <div className="p-4 space-y-3">
                     {/* Brand */}
                     {product.brand && (
-                      <div className="text-xs text-gray-500 font-medium">
-                        {product.brand.name}
+                      <div className="flex items-center space-x-2">
+                        <span className="text-xs text-gray-400 font-medium uppercase tracking-wide">
+                          Marka:
+                        </span>
+                        <span className="text-sm text-primary font-semibold">
+                          {product.brand.name}
+                        </span>
                       </div>
                     )}
                     
@@ -265,29 +269,29 @@ export default function ProductsPage() {
                     <div className="pt-2 border-t border-gray-100">
                       <div className="flex items-center justify-between mb-3">
                         <span className="text-2xl font-bold text-primary">
-                          ₺{product.price.toLocaleString()}
+                          {product.sizePrices.length > 0 ? (
+                            product.sizePrices.length === 1 ? (
+                              `₺${product.sizePrices[0].price.toLocaleString()}`
+                            ) : (
+                              `₺${Math.min(...product.sizePrices.map(sp => sp.price)).toLocaleString()} - ₺${Math.max(...product.sizePrices.map(sp => sp.price)).toLocaleString()}`
+                            )
+                          ) : (
+                            'Fiyat Yok'
+                          )}
                         </span>
                       </div>
                       
                       <div className="flex gap-2">
                         <Link href={`/products/${product.slug}`} className="flex-1">
                           <Button 
-                            variant="outline" 
+                            variant="default" 
                             size="sm" 
-                            className="w-full cursor-pointer hover:bg-primary hover:text-primary-foreground transition-colors"
+                            className="w-full cursor-pointer"
                           >
-                            Detay
+                            <ShoppingCart className="w-4 h-4 mr-2" />
+                            Sepete Ekle
                           </Button>
                         </Link>
-                        <Button 
-                          size="sm" 
-                          onClick={() => handleAddToCart(product)}
-                          disabled={product.stock === 0}
-                          className="flex-1 cursor-pointer hover:bg-primary/90 transition-colors"
-                        >
-                          <ShoppingCart className="w-4 h-4 mr-1" />
-                          Sepete Ekle
-                        </Button>
                       </div>
                     </div>
                   </div>

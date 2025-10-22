@@ -6,17 +6,16 @@ import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { useCartStore } from '@/lib/cart'
-import { ShoppingCart, ArrowLeft, Star, Shield, Waves } from 'lucide-react'
+import { ShoppingCart, ArrowLeft, Star, Shield, Waves, ChevronLeft, ChevronRight } from 'lucide-react'
 
 interface Product {
   id: string
   name: string
   slug: string
-  price: number
   description: string
   images: string[]
   stock: number
-  sizes: string[]
+  sizePrices: { size: string; price: number }[]
   colors: string[]
   category: {
     name: string
@@ -39,7 +38,7 @@ export default function ProductPage({ params }: ProductPageProps) {
   const [isLoading, setIsLoading] = useState(true)
   const [selectedImage, setSelectedImage] = useState(0)
   const [quantity, setQuantity] = useState(1)
-  const [selectedSize, setSelectedSize] = useState<string>('')
+  const [selectedSizePrice, setSelectedSizePrice] = useState<{ size: string; price: number } | null>(null)
   const [selectedColor, setSelectedColor] = useState<string>('')
   const [slug, setSlug] = useState<string>('')
   const { addItem } = useCartStore()
@@ -58,11 +57,31 @@ export default function ProductPage({ params }: ProductPageProps) {
     }
   }, [slug])
 
+  // Keyboard navigation for images
+  useEffect(() => {
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (product && product.images.length > 1) {
+        if (event.key === 'ArrowLeft') {
+          prevImage()
+        } else if (event.key === 'ArrowRight') {
+          nextImage()
+        }
+      }
+    }
+
+    window.addEventListener('keydown', handleKeyDown)
+    return () => window.removeEventListener('keydown', handleKeyDown)
+  }, [product])
+
   const fetchProduct = async () => {
     try {
       const response = await fetch(`/api/products/${slug}`)
       const data = await response.json()
       setProduct(data.product)
+      // İlk boyutu seçili hale getir
+      if (data.product.sizePrices && data.product.sizePrices.length > 0) {
+        setSelectedSizePrice(data.product.sizePrices[0])
+      }
     } catch (error) {
       console.error('Error fetching product:', error)
     } finally {
@@ -71,17 +90,29 @@ export default function ProductPage({ params }: ProductPageProps) {
   }
 
   const handleAddToCart = () => {
-    if (product) {
+    if (product && selectedSizePrice) {
       for (let i = 0; i < quantity; i++) {
         addItem({
           id: product.id,
           name: product.name,
-          price: product.price,
+          price: selectedSizePrice.price,
           image: product.images[0] || '/placeholder.jpg',
-          size: selectedSize,
+          size: selectedSizePrice.size,
           color: selectedColor
         })
       }
+    }
+  }
+
+  const nextImage = () => {
+    if (product && product.images.length > 0) {
+      setSelectedImage((prev) => (prev + 1) % product.images.length)
+    }
+  }
+
+  const prevImage = () => {
+    if (product && product.images.length > 0) {
+      setSelectedImage((prev) => (prev - 1 + product.images.length) % product.images.length)
     }
   }
 
@@ -128,25 +159,60 @@ export default function ProductPage({ params }: ProductPageProps) {
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
           {/* Product Images */}
           <div className="space-y-4">
-            <div className="aspect-w-16 aspect-h-12">
-              <div className="w-full h-96 bg-gradient-to-br from-blue-400 to-blue-600 rounded-lg flex items-center justify-center">
-                <ShoppingCart className="w-32 h-32 text-white opacity-50" />
-              </div>
+            {/* Main Image */}
+            <div className="aspect-w-16 aspect-h-12 relative">
+              {product.images && product.images.length > 0 ? (
+                <>
+                  <img
+                    src={product.images[selectedImage]}
+                    alt={product.name}
+                    className="w-full h-96 object-cover rounded-lg"
+                  />
+                  {/* Navigation Buttons */}
+                  {product.images.length > 1 && (
+                    <>
+                      <button
+                        onClick={prevImage}
+                        className="absolute left-2 top-1/2 transform -translate-y-1/2 bg-black bg-opacity-50 hover:bg-opacity-75 text-white p-2 rounded-full transition-all"
+                      >
+                        <ChevronLeft className="w-5 h-5" />
+                      </button>
+                      <button
+                        onClick={nextImage}
+                        className="absolute right-2 top-1/2 transform -translate-y-1/2 bg-black bg-opacity-50 hover:bg-opacity-75 text-white p-2 rounded-full transition-all"
+                      >
+                        <ChevronRight className="w-5 h-5" />
+                      </button>
+                      {/* Image Counter */}
+                      <div className="absolute bottom-2 right-2 bg-black bg-opacity-50 text-white px-2 py-1 rounded text-sm">
+                        {selectedImage + 1} / {product.images.length}
+                      </div>
+                    </>
+                  )}
+                </>
+              ) : (
+                <div className="w-full h-96 bg-gradient-to-br from-blue-400 to-blue-600 rounded-lg flex items-center justify-center">
+                  <ShoppingCart className="w-32 h-32 text-white opacity-50" />
+                </div>
+              )}
             </div>
             
-            {product.images.length > 1 && (
+            {/* Thumbnail Images */}
+            {product.images && product.images.length > 1 && (
               <div className="grid grid-cols-4 gap-2">
                 {product.images.map((image, index) => (
                   <button
                     key={index}
                     onClick={() => setSelectedImage(index)}
-                    className={`aspect-w-1 aspect-h-1 rounded-lg overflow-hidden ${
-                      selectedImage === index ? 'ring-2 ring-primary' : ''
+                    className={`aspect-w-1 aspect-h-1 rounded-lg overflow-hidden border-2 transition-all ${
+                      selectedImage === index ? 'border-primary ring-2 ring-primary ring-opacity-50' : 'border-gray-200 hover:border-gray-300'
                     }`}
                   >
-                    <div className="w-full h-20 bg-gradient-to-br from-blue-400 to-blue-600 flex items-center justify-center">
-                      <ShoppingCart className="w-8 h-8 text-white opacity-50" />
-                    </div>
+                    <img
+                      src={image}
+                      alt={`${product.name} - Görsel ${index + 1}`}
+                      className="w-full h-20 object-cover"
+                    />
                   </button>
                 ))}
               </div>
@@ -160,17 +226,24 @@ export default function ProductPage({ params }: ProductPageProps) {
                 <span className="text-sm text-primary font-medium">
                   {product.category.name}
                 </span>
-                {product.brand && (
-                  <span className="text-sm text-gray-500 ml-2">
-                    • {product.brand.name}
-                  </span>
-                )}
               </div>
+              {product.brand && (
+                <div className="mb-3">
+                  <div className="flex items-center space-x-2">
+                    <span className="text-sm text-gray-500 font-medium uppercase tracking-wide">
+                      Marka:
+                    </span>
+                    <span className="text-lg text-primary font-bold">
+                      {product.brand.name}
+                    </span>
+                  </div>
+                </div>
+              )}
               <h1 className="text-3xl font-bold text-gray-900 mb-4">
                 {product.name}
               </h1>
               <p className="text-xl text-primary font-bold mb-6">
-                ₺{product.price.toLocaleString()}
+                {selectedSizePrice ? `₺${selectedSizePrice.price.toLocaleString()}` : 'Fiyat seçiniz'}
               </p>
             </div>
 
@@ -199,17 +272,25 @@ export default function ProductPage({ params }: ProductPageProps) {
             {/* Add to Cart */}
             <div className="border-t pt-6">
               {/* Size Selection */}
-              {product.sizes && product.sizes.length > 0 && (
+              {product.sizePrices && product.sizePrices.length > 0 && (
                 <div className="mb-4">
                   <label className="text-sm font-medium mb-2 block">Boyut Seçin:</label>
-                  <Select value={selectedSize} onValueChange={setSelectedSize}>
+                  <Select 
+                    value={selectedSizePrice ? selectedSizePrice.size : ''} 
+                    onValueChange={(value) => {
+                      const sizePrice = product.sizePrices.find(sp => sp.size === value)
+                      if (sizePrice) {
+                        setSelectedSizePrice(sizePrice)
+                      }
+                    }}
+                  >
                     <SelectTrigger className="w-full">
                       <SelectValue placeholder="Boyut seçin" />
                     </SelectTrigger>
                     <SelectContent>
-                      {product.sizes.map((size) => (
-                        <SelectItem key={size} value={size}>
-                          {size}
+                      {product.sizePrices.map((sizePrice) => (
+                        <SelectItem key={sizePrice.size} value={sizePrice.size}>
+                          {sizePrice.size} - ₺{sizePrice.price.toLocaleString()}
                         </SelectItem>
                       ))}
                     </SelectContent>
@@ -262,7 +343,7 @@ export default function ProductPage({ params }: ProductPageProps) {
                   size="lg" 
                   className="flex-1 cursor-pointer hover:bg-primary/90 transition-colors"
                   onClick={handleAddToCart}
-                  disabled={product.stock === 0}
+                  disabled={product.stock === 0 || !selectedSizePrice}
                 >
                   <ShoppingCart className="w-5 h-5 mr-2" />
                   Sepete Ekle
@@ -278,7 +359,11 @@ export default function ProductPage({ params }: ProductPageProps) {
                 <p className="text-red-500 text-sm mt-2">Bu ürün şu anda stokta bulunmuyor.</p>
               )}
               
-              {product.stock > 0 && product.stock < 10 && (
+              {!selectedSizePrice && product.sizePrices && product.sizePrices.length > 0 && (
+                <p className="text-orange-500 text-sm mt-2">Lütfen bir boyut seçiniz.</p>
+              )}
+              
+              {product.stock > 0 && product.stock < 10 && selectedSizePrice && (
                 <p className="text-orange-500 text-sm mt-2">
                   Son {product.stock} adet kaldı!
                 </p>
