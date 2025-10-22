@@ -38,6 +38,7 @@ export default function CheckoutPage() {
   const [isLoading, setIsLoading] = useState(true)
   const [showAddressModal, setShowAddressModal] = useState(false)
   const [editingAddress, setEditingAddress] = useState<Address | null>(null)
+  const [paymentMethod, setPaymentMethod] = useState<string>('online') // Default to online payment
   
   // Guest form data
   const [guestForm, setGuestForm] = useState({
@@ -153,9 +154,176 @@ export default function CheckoutPage() {
     setShowAddressModal(true)
   }
 
-  const handleProceedToPayment = () => {
-    // TODO: Implement payment processing
-    console.log('Proceeding to payment...')
+  const handleProceedToPayment = async () => {
+    try {
+      // Validate required fields
+      if (user) {
+        // Logged in user - check if address is selected
+        if (!selectedAddressId) {
+          alert('Lütfen bir teslimat adresi seçin.')
+          return
+        }
+      } else {
+        // Guest user - check if form is filled
+        if (!guestForm.fullName || !guestForm.email || !guestForm.phone || 
+            !guestForm.city || !guestForm.district || !guestForm.address) {
+          alert('Lütfen tüm teslimat bilgilerini doldurun.')
+          return
+        }
+      }
+
+      // Prepare payment data
+      const shippingAddress = user 
+        ? addresses.find(addr => addr.id === selectedAddressId)
+        : guestForm
+
+      if (!shippingAddress) {
+        alert('Teslimat adresi bulunamadı.')
+        return
+      }
+
+      // Check payment method
+      if (paymentMethod === 'bank_transfer') {
+        // Create order directly for bank transfer
+        const orderData = {
+          userId: user ? user.id : null,
+          totalPrice: getTotalPrice() + getShippingCost(),
+          status: 'received',
+          paymentStatus: 'pending',
+          paymentMethod: 'bank_transfer',
+          shippingAddress: shippingAddress,
+          items: items.map(item => ({
+            productId: item.id,
+            productName: item.name,
+            productPrice: item.price + (item.embroideryPrice || 0),
+            quantity: item.quantity,
+            size: item.size,
+            color: item.color,
+            hasEmbroidery: item.hasEmbroidery || false,
+            embroideryFile: item.embroideryFile,
+            embroideryPrice: item.embroideryPrice || 0
+          }))
+        }
+
+        const response = await fetch('/api/orders/create', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify(orderData),
+        })
+
+        const result = await response.json()
+
+        if (result.success) {
+          // Clear cart and redirect to success page
+          clearCart()
+          window.location.href = `/payment/success?paymentId=${result.order.id}&method=bank_transfer`
+        } else {
+          alert(result.error || 'Sipariş oluşturulurken bir hata oluştu.')
+        }
+        return
+      }
+
+      // Continue with Iyzico for online payment
+      // Clean Turkish characters for Iyzico
+      const cleanText = (text: string) => {
+        return text.replace(/[çğıöşüÇĞIİÖŞÜ]/g, (match) => {
+          const map: { [key: string]: string } = {
+            'ç': 'c', 'ğ': 'g', 'ı': 'i', 'ö': 'o', 'ş': 's', 'ü': 'u',
+            'Ç': 'C', 'Ğ': 'G', 'İ': 'I', 'Ö': 'O', 'Ş': 'S', 'Ü': 'U'
+          }
+          return map[match] || match
+        })
+      }
+
+      const totalPrice = getTotalPrice() + getShippingCost()
+      const basketId = `basket_${Date.now()}`
+
+      // Prepare Iyzico request
+      const iyzicoRequest = {
+        locale: 'tr',
+        conversationId: basketId,
+        price: totalPrice.toFixed(2),
+        paidPrice: totalPrice.toFixed(2),
+        currency: 'TRY',
+        installment: 1,
+        paymentChannel: 'WEB',
+        paymentGroup: 'PRODUCT',
+        callbackUrl: `${window.location.origin}/api/iyzico/callback`,
+        enabledInstallments: [1, 2, 3, 6, 9, 12],
+        buyer: {
+          id: user ? user.id : `guest_${Date.now()}`,
+          name: cleanText(user ? user.name.split(' ')[0] : guestForm.fullName.split(' ')[0]),
+          surname: cleanText(user ? user.name.split(' ').slice(1).join(' ') : guestForm.fullName.split(' ').slice(1).join(' ')),
+          email: user ? user.email : guestForm.email,
+          phoneNumber: `+90${(shippingAddress.phone || '').replace(/^0/, '')}`,
+          identityNumber: '11111111111',
+          address: cleanText(shippingAddress.address),
+          city: cleanText(shippingAddress.city),
+          country: 'TR',
+          zipCode: '34000',
+          registrationAddress: cleanText(shippingAddress.address),
+          registrationCity: cleanText(shippingAddress.city),
+          registrationCountry: 'TR',
+          registrationZipCode: '34000'
+        },
+        shippingAddress: {
+          contactName: cleanText(shippingAddress.fullName || `${shippingAddress.name || ''} ${shippingAddress.surname || ''}`),
+          city: cleanText(shippingAddress.city),
+          country: 'TR',
+          address: cleanText(shippingAddress.address),
+          zipCode: '34000'
+        },
+        billingAddress: {
+          contactName: cleanText(shippingAddress.fullName || `${shippingAddress.name || ''} ${shippingAddress.surname || ''}`),
+          city: cleanText(shippingAddress.city),
+          country: 'TR',
+          address: cleanText(shippingAddress.address),
+          zipCode: '34000'
+        },
+        basketItems: [
+          ...items.map((item: any, index: number) => ({
+            id: `item_${index}`,
+            name: cleanText(item.name),
+            category1: 'Denizcilik Tekstili',
+            itemType: 'PHYSICAL',
+            price: ((item.price + (item.embroideryPrice || 0)) * item.quantity).toFixed(2)
+          })),
+          {
+            id: 'shipping',
+            name: 'Kargo',
+            category1: 'Kargo',
+            itemType: 'PHYSICAL',
+            price: getShippingCost().toFixed(2)
+          }
+        ]
+      }
+
+      console.log('Iyzico Request:', JSON.stringify(iyzicoRequest, null, 2))
+
+      // Create payment with Iyzico
+      const response = await fetch('/api/iyzico/init', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(iyzicoRequest),
+      })
+
+      const result = await response.json()
+
+      if (result.status === 'success' && result.paymentPageUrl) {
+        // Redirect to Iyzico payment page
+        window.location.href = result.paymentPageUrl
+      } else {
+        console.error('Iyzico Error:', result)
+        alert(result.errorMessage || 'Ödeme oluşturulurken bir hata oluştu.')
+      }
+    } catch (error) {
+      console.error('Payment error:', error)
+      alert('Ödeme sırasında bir hata oluştu. Lütfen tekrar deneyin.')
+    }
   }
 
   if (items.length === 0) {
@@ -386,18 +554,59 @@ export default function CheckoutPage() {
                 </CardTitle>
               </CardHeader>
               <CardContent>
-                <div className="border border-gray-200 rounded-lg p-4 bg-gray-50">
-                  <div className="flex items-center">
-                    <CreditCard className="w-6 h-6 text-primary mr-3" />
-                    <div>
-                      <h4 className="font-medium text-gray-900">Kredi Kartı ile Ödeme</h4>
-                      <p className="text-sm text-gray-600">Güvenli ödeme işlemi</p>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  {/* Online Ödeme */}
+                  <button
+                    onClick={() => setPaymentMethod('online')}
+                    className={`p-4 rounded-lg border-2 transition-all duration-300 ${
+                      paymentMethod === 'online'
+                        ? 'border-primary bg-primary/5'
+                        : 'border-gray-200 hover:border-gray-300'
+                    }`}
+                  >
+                    <div className="flex items-center">
+                      <CreditCard className="w-6 h-6 text-primary mr-3" />
+                      <div className="text-left">
+                        <h4 className="font-medium text-gray-900">Online Ödeme</h4>
+                        <p className="text-sm text-gray-600">Kredi kartı ile güvenli ödeme</p>
+                      </div>
+                    </div>
+                  </button>
+
+                  {/* Havale/EFT */}
+                  <button
+                    onClick={() => setPaymentMethod('bank_transfer')}
+                    className={`p-4 rounded-lg border-2 transition-all duration-300 ${
+                      paymentMethod === 'bank_transfer'
+                        ? 'border-primary bg-primary/5'
+                        : 'border-gray-200 hover:border-gray-300'
+                    }`}
+                  >
+                    <div className="flex items-center">
+                      <svg xmlns="http://www.w3.org/2000/svg" className="w-6 h-6 text-primary mr-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
+                      </svg>
+                      <div className="text-left">
+                        <h4 className="font-medium text-gray-900">Havale/EFT</h4>
+                        <p className="text-sm text-gray-600">Banka hesabına transfer</p>
+                      </div>
+                    </div>
+                  </button>
+                </div>
+                
+                {paymentMethod === 'bank_transfer' && (
+                  <div className="mt-4 p-4 bg-blue-50 border border-blue-200 rounded-lg">
+                    <h5 className="font-medium text-blue-900 mb-2">Havale/EFT Bilgileri</h5>
+                    <div className="text-sm text-blue-800 space-y-1">
+                      <p><strong>Banka:</strong> Türkiye İş Bankası</p>
+                      <p><strong>Hesap Adı:</strong> Ozan Marin Denizcilik</p>
+                      <p><strong>IBAN:</strong> TR12 0006 4000 0011 2345 6789 01</p>
+                      <p className="text-xs text-blue-600 mt-2">
+                        Ödeme yaptıktan sonra dekontu WhatsApp'tan gönderebilirsiniz.
+                      </p>
                     </div>
                   </div>
-                </div>
-                <p className="text-sm text-gray-500 mt-3">
-                  Ödeme detayları bir sonraki adımda girilecektir.
-                </p>
+                )}
               </CardContent>
             </Card>
           </div>

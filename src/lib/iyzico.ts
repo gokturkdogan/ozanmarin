@@ -78,24 +78,57 @@ class IyzicoService {
   private baseUrl: string
 
   constructor() {
-    this.apiKey = process.env.IYZICO_API_KEY || ''
-    this.secretKey = process.env.IYZICO_SECRET_KEY || ''
+    this.apiKey = process.env.IYZICO_API_KEY || 'sandbox-api-key'
+    this.secretKey = process.env.IYZICO_SECRET_KEY || 'sandbox-secret-key'
     this.baseUrl = process.env.IYZICO_BASE_URL || 'https://sandbox-api.iyzipay.com'
   }
 
   async createPayment(request: IyzicoPaymentRequest): Promise<IyzicoPaymentResponse> {
-    try {
-      // In a real implementation, you would make an HTTP request to Iyzico API
-      // For now, we'll simulate a successful response
-      
-      const mockResponse: IyzicoPaymentResponse = {
+    // Iyzico API request
+    const iyzicoRequest = {
+      locale: 'tr',
+      conversationId: `conv_${Date.now()}`,
+      price: request.price,
+      paidPrice: request.paidPrice,
+      currency: request.currency,
+      installment: 1,
+      paymentChannel: 'WEB',
+      paymentGroup: request.paymentGroup,
+      callbackUrl: request.callbackUrl,
+      enabledInstallments: request.enabledInstallments,
+      buyer: request.buyer,
+      shippingAddress: request.shippingAddress,
+      billingAddress: request.billingAddress,
+      basketItems: request.basketItems
+    }
+
+    // Generate authorization header for Iyzico
+    const randomString = this.generateRandomString()
+    const dataString = JSON.stringify(iyzicoRequest)
+    const hashString = this.generateHash(randomString, dataString)
+
+    const response = await fetch(`${this.baseUrl}/payment/iyzipos/checkoutform/initialize/auth`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `IYZWS ${this.apiKey}:${hashString}`,
+        'x-iyzi-rnd': randomString,
+        'x-iyzi-client-version': 'iyzipay-node-2.0.48'
+      },
+      body: dataString
+    })
+
+    const result = await response.json()
+
+    if (result.status === 'success') {
+      return {
         status: 'success',
-        paymentId: `payment_${Date.now()}`,
-        conversationId: `conv_${Date.now()}`,
+        paymentId: result.token,
+        conversationId: result.conversationId,
         price: request.price,
         paidPrice: request.paidPrice,
         installment: 1,
-        paymentStatus: 'SUCCESS',
+        paymentStatus: 'INITIALIZE',
         fraudStatus: 1,
         merchantCommissionRate: 0.035,
         merchantCommissionRateAmount: parseFloat(request.price) * 0.035,
@@ -104,34 +137,61 @@ class IyzicoService {
         cardType: 'CREDIT_CARD',
         cardAssociation: 'VISA',
         cardFamily: 'Visa',
-        cardToken: `token_${Date.now()}`,
-        cardUserKey: `user_${Date.now()}`,
-        binNumber: '454671',
-        paymentTransactionId: `txn_${Date.now()}`,
-        authCode: `auth_${Date.now()}`,
-        phase: 'AUTH',
-        lastFourDigits: '1234',
-        posOrderId: `pos_${Date.now()}`,
-        url: '',
-        htmlContent: ''
+        cardToken: '',
+        cardUserKey: '',
+        binNumber: '',
+        paymentTransactionId: '',
+        authCode: '',
+        phase: 'INITIALIZE',
+        lastFourDigits: '',
+        posOrderId: '',
+        url: result.paymentPageUrl,
+        htmlContent: result.paymentPageUrl
       }
-
-      return mockResponse
-    } catch (error) {
-      console.error('Iyzico payment error:', error)
-      throw new Error('Payment failed')
+    } else {
+      throw new Error(result.errorMessage || 'Payment initialization failed')
     }
   }
 
   async verifyPayment(paymentId: string): Promise<boolean> {
-    try {
-      // In a real implementation, you would verify the payment with Iyzico
-      // For now, we'll always return true
-      return true
-    } catch (error) {
-      console.error('Iyzico verification error:', error)
-      return false
+    // Iyzico payment verification
+    const verifyRequest = {
+      locale: 'tr',
+      conversationId: `conv_${Date.now()}`,
+      token: paymentId
     }
+
+    const randomString = this.generateRandomString()
+    const dataString = JSON.stringify(verifyRequest)
+    const hashString = this.generateHash(randomString, dataString)
+
+    const response = await fetch(`${this.baseUrl}/payment/iyzipos/checkoutform/auth/ecom/detail`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `IYZWS ${this.apiKey}:${hashString}`,
+        'x-iyzi-rnd': randomString,
+        'x-iyzi-client-version': 'iyzipay-node-2.0.48'
+      },
+      body: dataString
+    })
+
+    const result = await response.json()
+    return result.status === 'success' && result.paymentStatus === 'SUCCESS'
+  }
+
+  private generateRandomString(): string {
+    return Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15)
+  }
+
+  private generateHash(randomString: string, dataString: string): string {
+    const crypto = require('crypto')
+    // Iyzico hash format: randomString + secretKey + dataString
+    const hashString = randomString + this.secretKey + dataString
+    console.log('Hash input:', hashString)
+    const hash = crypto.createHash('sha1').update(hashString, 'utf8').digest('base64')
+    console.log('Generated hash:', hash)
+    return hash
   }
 }
 
