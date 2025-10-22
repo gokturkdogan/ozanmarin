@@ -1,0 +1,42 @@
+<svg width="200" height="80" viewBox="0 0 200 80" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <!-- Compass Rose -->
+  <g transform="translate(100, 20)">
+    <!-- Central circle -->
+    <circle cx="0" cy="0" r="5" fill="#3A57B0"/>
+    
+    <!-- Main rays -->
+    <path d="M0,-12 L-1.5,-4.5 L1.5,-4.5 Z" fill="#3A57B0"/>
+    <path d="M12,0 L4.5,-1.5 L4.5,1.5 Z" fill="#3A57B0"/>
+    <path d="M0,12 L-1.5,4.5 L1.5,4.5 Z" fill="#3A57B0"/>
+    <path d="M-12,0 L-4.5,-1.5 L-4.5,1.5 Z" fill="#3A57B0"/>
+    
+    <!-- Secondary rays -->
+    <path d="M8.5,-8.5 L6,-3 L7,-2 Z" fill="#3A57B0"/>
+    <path d="M8.5,8.5 L7,2 L6,3 Z" fill="#3A57B0"/>
+    <path d="M-8.5,8.5 L-6,3 L-7,2 Z" fill="#3A57B0"/>
+    <path d="M-8.5,-8.5 L-7,-2 L-6,-3 Z" fill="#3A57B0"/>
+    
+    <!-- Small dots around compass -->
+    <circle cx="-8" cy="-8" r="0.8" fill="#7F7F7F"/>
+    <circle cx="-5" cy="-10" r="0.8" fill="#7F7F7F"/>
+    <circle cx="-2" cy="-11" r="0.8" fill="#7F7F7F"/>
+    <circle cx="0" cy="-11" r="0.8" fill="#7F7F7F"/>
+    <circle cx="2" cy="-11" r="0.8" fill="#7F7F7F"/>
+    <circle cx="5" cy="-10" r="0.8" fill="#7F7F7F"/>
+    <circle cx="8" cy="-8" r="0.8" fill="#7F7F7F"/>
+    <circle cx="9" cy="-5" r="0.8" fill="#7F7F7F"/>
+  </g>
+  
+  <!-- OZAN marin text -->
+  <text x="100" y="48" text-anchor="middle" font-family="Arial, sans-serif" font-size="14" font-weight="bold" fill="#3A57B0">
+    OZAN marin
+  </text>
+  
+  <!-- Small dot above 'i' in marin -->
+  <circle cx="108" cy="40" r="0.6" fill="#7F7F7F"/>
+  
+  <!-- yachting & boating tagline -->
+  <text x="100" y="62" text-anchor="middle" font-family="Arial, sans-serif" font-size="8" font-weight="normal" fill="#7F7F7F">
+    yachting &amp; boating
+  </text>
+</svg>
