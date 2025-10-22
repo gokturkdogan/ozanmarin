@@ -9,6 +9,7 @@ import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { useToast } from '@/hooks/use-toast'
+import { ConfirmModal } from '@/components/confirm-modal'
 import { MapPin, Plus, Edit, Trash2, ArrowLeft, Save, X } from 'lucide-react'
 import Link from 'next/link'
 import { countries } from '@/lib/countries'
@@ -39,6 +40,9 @@ export default function AddressesPage() {
   const [isSaving, setIsSaving] = useState(false)
   const [showAddForm, setShowAddForm] = useState(false)
   const [editingAddress, setEditingAddress] = useState<Address | null>(null)
+  const [showConfirmModal, setShowConfirmModal] = useState(false)
+  const [addressToDelete, setAddressToDelete] = useState<string | null>(null)
+  const [isDeleting, setIsDeleting] = useState(false)
   const [formData, setFormData] = useState({
     title: '',
     fullName: '',
@@ -142,7 +146,7 @@ export default function AddressesPage() {
       if (response.ok) {
         toast({
           title: 'Başarılı',
-          description: editingAddress ? 'Adres güncellendi.' : 'Adres eklendi.',
+          description: editingAddress ? 'Adres başarıyla güncellendi.' : 'Adres başarıyla eklendi.',
           variant: 'default'
         })
         resetForm()
@@ -182,20 +186,24 @@ export default function AddressesPage() {
     setShowAddForm(true)
   }
 
-  const handleDelete = async (addressId: string) => {
-    if (!confirm('Bu adresi silmek istediğinizden emin misiniz?')) {
-      return
-    }
+  const handleDelete = (addressId: string) => {
+    setAddressToDelete(addressId)
+    setShowConfirmModal(true)
+  }
 
+  const confirmDelete = async () => {
+    if (!addressToDelete) return
+    
+    setIsDeleting(true)
     try {
-      const response = await fetch(`/api/addresses/${addressId}`, {
+      const response = await fetch(`/api/addresses/${addressToDelete}`, {
         method: 'DELETE',
       })
 
       if (response.ok) {
         toast({
           title: 'Başarılı',
-          description: 'Adres silindi.',
+          description: 'Adres başarıyla silindi.',
           variant: 'default'
         })
         fetchAddresses()
@@ -214,6 +222,9 @@ export default function AddressesPage() {
         description: 'Adres silinirken bir hata oluştu.',
         variant: 'destructive'
       })
+    } finally {
+      setIsDeleting(false)
+      setAddressToDelete(null)
     }
   }
 
@@ -226,7 +237,7 @@ export default function AddressesPage() {
       if (response.ok) {
         toast({
           title: 'Başarılı',
-          description: 'Varsayılan adres güncellendi.',
+          description: 'Varsayılan adres başarıyla güncellendi.',
           variant: 'default'
         })
         fetchAddresses()
@@ -505,6 +516,22 @@ export default function AddressesPage() {
             ))}
           </div>
         )}
+
+        {/* Confirm Modal */}
+        <ConfirmModal
+          isOpen={showConfirmModal}
+          onClose={() => {
+            setShowConfirmModal(false)
+            setAddressToDelete(null)
+          }}
+          onConfirm={confirmDelete}
+          title="Adresi Sil"
+          message="Bu adresi silmek istediğinizden emin misiniz? Bu işlem geri alınamaz."
+          confirmText="Sil"
+          cancelText="İptal"
+          variant="destructive"
+          isLoading={isDeleting}
+        />
       </div>
     </div>
   )

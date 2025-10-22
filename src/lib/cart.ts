@@ -3,12 +3,16 @@ import { persist } from 'zustand/middleware'
 
 export interface CartItem {
   id: string
+  cartItemId: string // Unique ID for cart item (combination of product + options)
   name: string
   price: number
   image: string
   quantity: number
   size?: string
   color?: string
+  hasEmbroidery?: boolean
+  embroideryFile?: string // CDN URL
+  embroideryPrice?: number
 }
 
 interface CartStore {
@@ -28,42 +32,42 @@ export const useCartStore = create<CartStore>()(
       
       addItem: (item) => {
         const items = get().items
-        const existingItem = items.find(i => 
-          i.id === item.id && 
-          i.size === item.size && 
-          i.color === item.color
-        )
+        
+        // Generate unique cart item ID
+        const cartItemId = `${item.id}-${item.size || 'no-size'}-${item.color || 'no-color'}-${item.hasEmbroidery ? 'embroidery' : 'no-embroidery'}-${item.embroideryFile ? 'file' : 'no-file'}`
+        
+        const existingItem = items.find(i => i.cartItemId === cartItemId)
         
         if (existingItem) {
           set({
             items: items.map(i =>
-              i.id === item.id && i.size === item.size && i.color === item.color
+              i.cartItemId === cartItemId
                 ? { ...i, quantity: i.quantity + 1 }
                 : i
             )
           })
         } else {
           set({
-            items: [...items, { ...item, quantity: 1 }]
+            items: [...items, { ...item, cartItemId, quantity: 1 }]
           })
         }
       },
       
-      removeItem: (id) => {
+      removeItem: (cartItemId) => {
         set({
-          items: get().items.filter(item => item.id !== id)
+          items: get().items.filter(item => item.cartItemId !== cartItemId)
         })
       },
       
-      updateQuantity: (id, quantity) => {
+      updateQuantity: (cartItemId, quantity) => {
         if (quantity <= 0) {
-          get().removeItem(id)
+          get().removeItem(cartItemId)
           return
         }
         
         set({
           items: get().items.map(item =>
-            item.id === id
+            item.cartItemId === cartItemId
               ? { ...item, quantity }
               : item
           )
@@ -75,7 +79,10 @@ export const useCartStore = create<CartStore>()(
       },
       
       getTotalPrice: () => {
-        return get().items.reduce((total, item) => total + (item.price * item.quantity), 0)
+        return get().items.reduce((total, item) => {
+          const itemPrice = item.price + (item.embroideryPrice || 0)
+          return total + (itemPrice * item.quantity)
+        }, 0)
       },
       
       getTotalItems: () => {

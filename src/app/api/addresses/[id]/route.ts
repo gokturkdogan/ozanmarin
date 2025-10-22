@@ -17,9 +17,10 @@ const addressUpdateSchema = z.object({
 // GET /api/addresses/[id] - Tek adres getir
 export async function GET(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { id } = await params
     const token = request.cookies.get('auth-token')?.value
     
     if (!token) {
@@ -33,7 +34,7 @@ export async function GET(
 
     const address = await prisma.address.findFirst({
       where: { 
-        id: params.id,
+        id: id,
         userId: decoded.userId 
       }
     })
@@ -52,9 +53,10 @@ export async function GET(
 // PUT /api/addresses/[id] - Adres güncelle
 export async function PUT(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { id } = await params
     const token = request.cookies.get('auth-token')?.value
     
     if (!token) {
@@ -72,7 +74,7 @@ export async function PUT(
     // Adresin kullanıcıya ait olduğunu kontrol et
     const existingAddress = await prisma.address.findFirst({
       where: { 
-        id: params.id,
+        id: id,
         userId: decoded.userId 
       }
     })
@@ -86,14 +88,14 @@ export async function PUT(
       await prisma.address.updateMany({
         where: { 
           userId: decoded.userId,
-          id: { not: params.id }
+          id: { not: id }
         },
         data: { isDefault: false }
       })
     }
 
     const address = await prisma.address.update({
-      where: { id: params.id },
+      where: { id: id },
       data: validatedData
     })
 
@@ -113,9 +115,10 @@ export async function PUT(
 // DELETE /api/addresses/[id] - Adres sil
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { id } = await params
     const token = request.cookies.get('auth-token')?.value
     
     if (!token) {
@@ -130,7 +133,7 @@ export async function DELETE(
     // Adresin kullanıcıya ait olduğunu kontrol et
     const existingAddress = await prisma.address.findFirst({
       where: { 
-        id: params.id,
+        id: id,
         userId: decoded.userId 
       }
     })
@@ -140,7 +143,7 @@ export async function DELETE(
     }
 
     await prisma.address.delete({
-      where: { id: params.id }
+      where: { id: id }
     })
 
     return NextResponse.json({ message: 'Adres başarıyla silindi' })

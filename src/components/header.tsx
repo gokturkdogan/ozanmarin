@@ -1,6 +1,7 @@
 'use client'
 
 import Link from 'next/link'
+import { usePathname } from 'next/navigation'
 import { useState, useEffect } from 'react'
 import { Button } from '@/components/ui/button'
 import { useCartStore } from '@/lib/cart'
@@ -13,6 +14,22 @@ export function Header() {
   const [isLoggedIn, setIsLoggedIn] = useState(false)
   const [user, setUser] = useState<{ name: string; email: string; role: string } | null>(null)
   const { getTotalItems } = useCartStore()
+  const pathname = usePathname()
+
+  // Helper function to check if a path is active
+  const isActive = (path: string) => {
+    if (path === '/') {
+      return pathname === '/'
+    }
+    return pathname.startsWith(path)
+  }
+
+  // Helper function to get active class
+  const getActiveClass = (path: string, baseClass: string = '') => {
+    return isActive(path) 
+      ? `${baseClass} text-primary font-semibold border-b-2 border-primary` 
+      : `${baseClass} text-gray-700 hover:text-primary transition-colors`
+  }
 
   useEffect(() => {
     // Check if user is logged in
@@ -79,20 +96,20 @@ export function Header() {
 
           {/* Desktop Navigation */}
           <nav className="hidden md:flex items-center space-x-8">
-            <Link href="/" className="text-gray-700 hover:text-primary transition-colors">
+            <Link href="/" className={getActiveClass('/', 'px-3 py-2')}>
               Ana Sayfa
             </Link>
-            <Link href="/products" className="text-gray-700 hover:text-primary transition-colors">
+            <Link href="/products" className={getActiveClass('/products', 'px-3 py-2')}>
               Ürünler
             </Link>
-            <Link href="/about" className="text-gray-700 hover:text-primary transition-colors">
+            <Link href="/about" className={getActiveClass('/about', 'px-3 py-2')}>
               Hakkımızda
             </Link>
-            <Link href="/contact" className="text-gray-700 hover:text-primary transition-colors">
+            <Link href="/contact" className={getActiveClass('/contact', 'px-3 py-2')}>
               İletişim
             </Link>
             {isLoggedIn && user?.role === 'admin' && (
-              <Link href="/admin" className="text-gray-700 hover:text-primary transition-colors font-medium">
+              <Link href="/admin" className={getActiveClass('/admin', 'px-3 py-2 font-medium')}>
                 Admin Panel
               </Link>
             )}
@@ -101,7 +118,7 @@ export function Header() {
           {/* Right side actions */}
           <div className="flex items-center space-x-4">
             {/* Cart */}
-            <Link href="/cart" className="relative p-2 text-gray-700 hover:text-primary transition-colors">
+            <Link href="/cart" className={`relative p-2 transition-colors ${isActive('/cart') ? 'text-primary' : 'text-gray-700 hover:text-primary'}`}>
               <ShoppingCart className="w-6 h-6" />
               <ClientOnly fallback={null}>
                 {getTotalItems() > 0 && (
@@ -130,21 +147,21 @@ export function Header() {
                     <div className="py-1">
                       <Link 
                         href="/profile" 
-                        className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 transition-colors"
+                        className={`block px-4 py-2 text-sm transition-colors ${isActive('/profile') ? 'bg-primary/10 text-primary font-medium' : 'text-gray-700 hover:bg-gray-100'}`}
                         onClick={() => setIsUserMenuOpen(false)}
                       >
                         Profilim
                       </Link>
                       <Link 
                         href="/addresses" 
-                        className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 transition-colors"
+                        className={`block px-4 py-2 text-sm transition-colors ${isActive('/addresses') ? 'bg-primary/10 text-primary font-medium' : 'text-gray-700 hover:bg-gray-100'}`}
                         onClick={() => setIsUserMenuOpen(false)}
                       >
                         Adreslerim
                       </Link>
                       <Link 
                         href="/orders" 
-                        className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 transition-colors"
+                        className={`block px-4 py-2 text-sm transition-colors ${isActive('/orders') ? 'bg-primary/10 text-primary font-medium' : 'text-gray-700 hover:bg-gray-100'}`}
                         onClick={() => setIsUserMenuOpen(false)}
                       >
                         Siparişlerim
@@ -192,28 +209,28 @@ export function Header() {
             <nav className="flex flex-col space-y-4">
               <Link 
                 href="/" 
-                className="text-gray-700 hover:text-primary transition-colors"
+                className={getActiveClass('/', 'px-3 py-2')}
                 onClick={() => setIsMenuOpen(false)}
               >
                 Ana Sayfa
               </Link>
               <Link 
                 href="/products" 
-                className="text-gray-700 hover:text-primary transition-colors"
+                className={getActiveClass('/products', 'px-3 py-2')}
                 onClick={() => setIsMenuOpen(false)}
               >
                 Ürünler
               </Link>
               <Link 
                 href="/about" 
-                className="text-gray-700 hover:text-primary transition-colors"
+                className={getActiveClass('/about', 'px-3 py-2')}
                 onClick={() => setIsMenuOpen(false)}
               >
                 Hakkımızda
               </Link>
               <Link 
                 href="/contact" 
-                className="text-gray-700 hover:text-primary transition-colors"
+                className={getActiveClass('/contact', 'px-3 py-2')}
                 onClick={() => setIsMenuOpen(false)}
               >
                 İletişim
@@ -221,11 +238,49 @@ export function Header() {
               {isLoggedIn && user?.role === 'admin' && (
                 <Link 
                   href="/admin" 
-                  className="text-gray-700 hover:text-primary transition-colors font-medium"
+                  className={getActiveClass('/admin', 'px-3 py-2 font-medium')}
                   onClick={() => setIsMenuOpen(false)}
                 >
                   Admin Panel
                 </Link>
+              )}
+              
+              {/* User Links */}
+              {isLoggedIn && (
+                <>
+                  <hr className="my-2" />
+                  <Link 
+                    href="/profile" 
+                    className={getActiveClass('/profile', 'px-3 py-2')}
+                    onClick={() => setIsMenuOpen(false)}
+                  >
+                    Profilim
+                  </Link>
+                  <Link 
+                    href="/addresses" 
+                    className={getActiveClass('/addresses', 'px-3 py-2')}
+                    onClick={() => setIsMenuOpen(false)}
+                  >
+                    Adreslerim
+                  </Link>
+                  <Link 
+                    href="/orders" 
+                    className={getActiveClass('/orders', 'px-3 py-2')}
+                    onClick={() => setIsMenuOpen(false)}
+                  >
+                    Siparişlerim
+                  </Link>
+                  <hr className="my-2" />
+                  <button
+                    onClick={() => {
+                      handleLogout()
+                      setIsMenuOpen(false)
+                    }}
+                    className="block w-full text-left px-3 py-2 text-red-600 hover:bg-red-50 transition-colors"
+                  >
+                    Çıkış Yap
+                  </button>
+                </>
               )}
             </nav>
           </div>

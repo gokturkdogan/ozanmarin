@@ -74,12 +74,22 @@ export default function CartPage() {
           {/* Cart Items */}
           <div className="lg:col-span-2 space-y-4">
             {items.map((item) => (
-              <Card key={item.id}>
+              <Card key={item.cartItemId}>
                 <CardContent className="p-6">
                   <div className="flex items-center space-x-4">
                     {/* Product Image */}
-                    <div className="w-20 h-20 bg-gradient-to-br from-blue-400 to-blue-600 rounded-lg flex items-center justify-center flex-shrink-0">
-                      <ShoppingCart className="w-8 h-8 text-white opacity-50" />
+                    <div className="w-20 h-20 rounded-lg overflow-hidden flex-shrink-0">
+                      {item.image ? (
+                        <img 
+                          src={item.image} 
+                          alt={item.name}
+                          className="w-full h-full object-cover"
+                        />
+                      ) : (
+                        <div className="w-full h-full bg-gradient-to-br from-blue-400 to-blue-600 flex items-center justify-center">
+                          <ShoppingCart className="w-8 h-8 text-white opacity-50" />
+                        </div>
+                      )}
                     </div>
 
                     {/* Product Info */}
@@ -87,15 +97,27 @@ export default function CartPage() {
                       <h3 className="text-lg font-semibold text-gray-900 truncate">
                         {item.name}
                       </h3>
-                      {(item.size || item.color) && (
-                        <div className="text-sm text-gray-600 mt-1">
-                          {item.size && <span>Boyut: {item.size}</span>}
-                          {item.size && item.color && <span className="mx-2">•</span>}
-                          {item.color && <span>Renk: {item.color}</span>}
+                      {(item.size || item.color || item.hasEmbroidery) && (
+                        <div className="text-sm text-gray-600 mt-1 space-y-1">
+                          {item.size && <div>Boyut: {item.size}</div>}
+                          {item.color && <div>Renk: {item.color}</div>}
+                          {item.hasEmbroidery && (
+                            <div className="text-green-600 font-medium">
+                              ✓ Nakış (+₺100)
+                              {item.embroideryFile && (
+                                <span className="text-gray-500 ml-1">- Dosya yüklendi</span>
+                              )}
+                            </div>
+                          )}
                         </div>
                       )}
                       <p className="text-primary font-bold text-lg">
-                        ₺{item.price.toLocaleString()}
+                        ₺{(item.price + (item.embroideryPrice || 0)).toLocaleString()}
+                        {item.hasEmbroidery && (
+                          <span className="text-sm text-gray-600 ml-2">
+                            (₺{item.price.toLocaleString()} + ₺100 nakış)
+                          </span>
+                        )}
                       </p>
                     </div>
 
@@ -104,7 +126,7 @@ export default function CartPage() {
                       <Button
                         variant="outline"
                         size="sm"
-                        onClick={() => handleQuantityChange(item.id, item.quantity - 1)}
+                        onClick={() => handleQuantityChange(item.cartItemId, item.quantity - 1)}
                         className="cursor-pointer hover:bg-gray-50 transition-colors"
                       >
                         <Minus className="w-4 h-4" />
@@ -115,7 +137,7 @@ export default function CartPage() {
                       <Button
                         variant="outline"
                         size="sm"
-                        onClick={() => handleQuantityChange(item.id, item.quantity + 1)}
+                        onClick={() => handleQuantityChange(item.cartItemId, item.quantity + 1)}
                         className="cursor-pointer hover:bg-gray-50 transition-colors"
                       >
                         <Plus className="w-4 h-4" />
@@ -125,15 +147,20 @@ export default function CartPage() {
                     {/* Item Total */}
                     <div className="text-right">
                       <p className="text-lg font-bold text-gray-900">
-                        ₺{(item.price * item.quantity).toLocaleString()}
+                        ₺{((item.price + (item.embroideryPrice || 0)) * item.quantity).toLocaleString()}
                       </p>
+                      {item.hasEmbroidery && (
+                        <p className="text-sm text-gray-600">
+                          (₺{item.price.toLocaleString()} + ₺{(item.embroideryPrice || 0).toLocaleString()} nakış) × {item.quantity}
+                        </p>
+                      )}
                     </div>
 
                     {/* Remove Button */}
                     <Button
                       variant="outline"
                       size="sm"
-                      onClick={() => removeItem(item.id)}
+                      onClick={() => removeItem(item.cartItemId)}
                       className="text-red-600 hover:text-red-700 hover:bg-red-50 cursor-pointer transition-colors"
                     >
                       <Trash2 className="w-4 h-4" />
@@ -163,13 +190,16 @@ export default function CartPage() {
                 
                 <div className="flex justify-between text-sm">
                   <span>Kargo:</span>
-                  <span className="text-green-600">Ücretsiz</span>
+                  <div className="text-right">
+                    <div>₺200</div>
+                    <div className="text-gray-500 text-xs">(teslimat adresine göre değişiklik gösterebilir)</div>
+                  </div>
                 </div>
                 
                 <div className="border-t pt-4">
                   <div className="flex justify-between text-lg font-bold">
                     <span>Toplam:</span>
-                    <span>₺{getTotalPrice().toLocaleString()}</span>
+                    <span>₺{(getTotalPrice() + 200).toLocaleString()}</span>
                   </div>
                 </div>
 

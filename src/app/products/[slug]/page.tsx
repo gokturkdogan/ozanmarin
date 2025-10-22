@@ -2,10 +2,13 @@
 
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
+import { useRouter } from 'next/navigation'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { useCartStore } from '@/lib/cart'
+import { CustomToast } from '@/components/custom-toast'
+import { FileUpload } from '@/components/file-upload'
 import { ShoppingCart, ArrowLeft, Star, Shield, Waves, ChevronLeft, ChevronRight } from 'lucide-react'
 
 interface Product {
@@ -41,7 +44,13 @@ export default function ProductPage({ params }: ProductPageProps) {
   const [selectedSizePrice, setSelectedSizePrice] = useState<{ size: string; price: number } | null>(null)
   const [selectedColor, setSelectedColor] = useState<string>('')
   const [slug, setSlug] = useState<string>('')
+  const [showToast, setShowToast] = useState(false)
+  const [toastMessage, setToastMessage] = useState('')
+  const [hasEmbroidery, setHasEmbroidery] = useState(false)
+  const [embroideryFile, setEmbroideryFile] = useState<File | null>(null)
+  const [embroideryUrl, setEmbroideryUrl] = useState<string>('')
   const { addItem } = useCartStore()
+  const router = useRouter()
 
   useEffect(() => {
     const getSlug = async () => {
@@ -82,6 +91,10 @@ export default function ProductPage({ params }: ProductPageProps) {
       if (data.product.sizePrices && data.product.sizePrices.length > 0) {
         setSelectedSizePrice(data.product.sizePrices[0])
       }
+      // İlk rengi seçili hale getir
+      if (data.product.colors && data.product.colors.length > 0) {
+        setSelectedColor(data.product.colors[0])
+      }
     } catch (error) {
       console.error('Error fetching product:', error)
     } finally {
@@ -98,9 +111,19 @@ export default function ProductPage({ params }: ProductPageProps) {
           price: selectedSizePrice.price,
           image: product.images[0] || '/placeholder.jpg',
           size: selectedSizePrice.size,
-          color: selectedColor
+          color: selectedColor || '',
+          hasEmbroidery: hasEmbroidery,
+          embroideryFile: embroideryUrl || undefined,
+          embroideryPrice: hasEmbroidery ? 100 : 0
         })
       }
+      setToastMessage(`${quantity} adet ${product.name} sepete eklendi!`)
+      setShowToast(true)
+      
+      // Toast gösterildikten sonra ürünler sayfasına yönlendir
+      setTimeout(() => {
+        router.push('/products')
+      }, 2000) // 2 saniye sonra yönlendir
     }
   }
 
@@ -243,7 +266,23 @@ export default function ProductPage({ params }: ProductPageProps) {
                 {product.name}
               </h1>
               <p className="text-xl text-primary font-bold mb-6">
-                {selectedSizePrice ? `₺${selectedSizePrice.price.toLocaleString()}` : 'Fiyat seçiniz'}
+                {selectedSizePrice ? (
+                  <span>
+                    ₺{((selectedSizePrice.price + (hasEmbroidery ? 100 : 0)) * quantity).toLocaleString()}
+                    {quantity > 1 && (
+                      <span className="text-sm text-gray-600 ml-2">
+                        ({quantity} × ₺{(selectedSizePrice.price + (hasEmbroidery ? 100 : 0)).toLocaleString()})
+                      </span>
+                    )}
+                    {hasEmbroidery && (
+                      <span className="text-sm text-gray-600 ml-2 block">
+                        ₺{selectedSizePrice.price.toLocaleString()} + ₺100 nakış
+                      </span>
+                    )}
+                  </span>
+                ) : (
+                  'Fiyat seçiniz'
+                )}
               </p>
             </div>
 
@@ -316,6 +355,36 @@ export default function ProductPage({ params }: ProductPageProps) {
                   </Select>
                 </div>
               )}
+
+              {/* Embroidery Option */}
+              <div className="mb-4">
+                <div className="flex items-center space-x-2 mb-3">
+                  <input
+                    type="checkbox"
+                    id="embroidery"
+                    checked={hasEmbroidery}
+                    onChange={(e) => setHasEmbroidery(e.target.checked)}
+                    className="rounded"
+                  />
+                  <label htmlFor="embroidery" className="text-sm font-medium cursor-pointer">
+                    Nakış (+₺100)
+                  </label>
+                </div>
+                
+                {hasEmbroidery && (
+                  <div className="mt-3">
+                    <label className="text-sm font-medium mb-2 block">Nakış Tasarımı:</label>
+                    <FileUpload
+                      onFileSelect={(file, url) => {
+                        setEmbroideryFile(file)
+                        setEmbroideryUrl(url || '')
+                      }}
+                      acceptedTypes={['.jpg', '.jpeg', '.png', '.pdf']}
+                      maxSize={10}
+                    />
+                  </div>
+                )}
+              </div>
               
               <div className="flex items-center space-x-4 mb-4">
                 <label className="text-sm font-medium">Adet:</label>
@@ -343,7 +412,7 @@ export default function ProductPage({ params }: ProductPageProps) {
                   size="lg" 
                   className="flex-1 cursor-pointer hover:bg-primary/90 transition-colors"
                   onClick={handleAddToCart}
-                  disabled={product.stock === 0 || !selectedSizePrice}
+                  disabled={product.stock === 0 || !selectedSizePrice || (hasEmbroidery && !embroideryUrl)}
                 >
                   <ShoppingCart className="w-5 h-5 mr-2" />
                   Sepete Ekle
@@ -354,6 +423,12 @@ export default function ProductPage({ params }: ProductPageProps) {
                   </Button>
                 </Link>
               </div>
+              
+              {hasEmbroidery && !embroideryUrl && (
+                <p className="text-sm text-red-600 mt-2">
+                  Nakış seçtiyseniz tasarım dosyasını yüklemelisiniz.
+                </p>
+              )}
               
               {product.stock === 0 && (
                 <p className="text-red-500 text-sm mt-2">Bu ürün şu anda stokta bulunmuyor.</p>
@@ -409,6 +484,16 @@ export default function ProductPage({ params }: ProductPageProps) {
           </div>
         </div>
       </div>
+      
+      {/* Custom Toast */}
+      {showToast && (
+        <CustomToast
+          title="Sepete Eklendi!"
+          description={toastMessage}
+          onClose={() => setShowToast(false)}
+          duration={3000}
+        />
+      )}
     </div>
   )
 }
