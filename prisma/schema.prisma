@@ -8,14 +8,15 @@ datasource db {
 }
 
 model User {
-  id           String   @id @default(cuid())
+  id           String    @id @default(cuid())
   name         String
-  email        String   @unique
+  email        String    @unique
   passwordHash String
-  role         String   @default("user") // user, admin
-  createdAt    DateTime @default(now())
-  updatedAt    DateTime @updatedAt
+  role         String    @default("user") // user, admin
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
   orders       Order[]
+  addresses    Address[]
 
   @@map("users")
 }
@@ -79,4 +80,22 @@ model Order {
   user            User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@map("orders")
+}
+
+model Address {
+  id        String   @id @default(cuid())
+  userId    String
+  title     String
+  fullName  String
+  phone     String
+  country   String
+  city      String
+  district  String
+  address   String
+  isDefault Boolean  @default(false)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("addresses")
 }
