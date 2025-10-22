@@ -48,12 +48,17 @@ export async function POST(request: NextRequest) {
             productId: item.productId,
             productName: item.productName,
             productPrice: item.productPrice,
+            productImage: item.productImage,
             quantity: item.quantity,
             size: item.size,
             color: item.color,
             hasEmbroidery: item.hasEmbroidery || false,
-            embroideryFile: item.embroideryFile,
-            embroideryPrice: item.embroideryPrice || 0
+            embroideryFile: item.embroideryFile || null,
+            embroideryPrice: item.embroideryPrice || 0,
+            categoryName: item.categoryName,
+            brandName: item.brandName,
+            isShipping: item.isShipping || false,
+            shippingCost: item.shippingCost || 0
           }))
         }
       },

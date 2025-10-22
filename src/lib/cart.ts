@@ -13,6 +13,8 @@ export interface CartItem {
   hasEmbroidery?: boolean
   embroideryFile?: string // CDN URL
   embroideryPrice?: number
+  categoryName?: string
+  brandName?: string
 }
 
 interface CartStore {

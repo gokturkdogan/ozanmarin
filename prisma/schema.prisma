@@ -75,6 +75,7 @@ model Order {
   paymentStatus   String      @default("pending") // pending, paid, failed, refunded
   paymentMethod   String?     // iyzico, bank_transfer, cash_on_delivery
   iyzicoPaymentId String?
+  iyzicoToken     String?     // Iyzico token for callback lookup
   shippingAddress Json
   createdAt       DateTime    @default(now())
   updatedAt       DateTime    @updatedAt
@@ -90,12 +91,19 @@ model OrderItem {
   productId   String
   productName String
   productPrice Decimal @db.Decimal(10, 2)
+  productImage String? // Ürün görseli
   quantity    Int
   size        String?
   color       String?
   hasEmbroidery Boolean @default(false)
   embroideryFile String?
   embroideryPrice Decimal @db.Decimal(10, 2) @default(0)
+  // Additional product info for order history
+  categoryName String?
+  brandName   String?
+  // Shipping info
+  isShipping Boolean @default(false) // Kargo ürünü mü?
+  shippingCost Decimal @db.Decimal(10, 2) @default(0) // Kargo ücreti
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
   order       Order    @relation(fields: [orderId], references: [id], onDelete: Cascade)

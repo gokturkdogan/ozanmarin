@@ -51,6 +51,25 @@ export default function CheckoutPage() {
     address: ''
   })
 
+  // Check if selected country is Turkey
+  const isTurkeySelected = () => {
+    if (user) {
+      // For logged in users, check selected address
+      const selectedAddress = addresses.find(addr => addr.id === selectedAddressId)
+      return selectedAddress?.country === 'Türkiye'
+    } else {
+      // For guest users, check guest form
+      return guestForm.country === 'Türkiye'
+    }
+  }
+
+  // Auto-switch to bank transfer if non-Turkey country is selected
+  useEffect(() => {
+    if (!isTurkeySelected() && paymentMethod === 'online') {
+      setPaymentMethod('bank_transfer')
+    }
+  }, [selectedAddressId, guestForm.country, paymentMethod])
+
   // Calculate shipping cost based on country
   const getShippingCost = () => {
     if (user) {
@@ -192,17 +211,41 @@ export default function CheckoutPage() {
           paymentStatus: 'pending',
           paymentMethod: 'bank_transfer',
           shippingAddress: shippingAddress,
-          items: items.map(item => ({
-            productId: item.id,
-            productName: item.name,
-            productPrice: item.price + (item.embroideryPrice || 0),
-            quantity: item.quantity,
-            size: item.size,
-            color: item.color,
-            hasEmbroidery: item.hasEmbroidery || false,
-            embroideryFile: item.embroideryFile,
-            embroideryPrice: item.embroideryPrice || 0
-          }))
+          items: [
+            ...items.map(item => ({
+              productId: item.id,
+              productName: item.name,
+              productPrice: item.price + (item.embroideryPrice || 0),
+              productImage: item.image,
+              quantity: item.quantity,
+              size: item.size,
+              color: item.color,
+              hasEmbroidery: item.hasEmbroidery || false,
+              embroideryFile: item.embroideryFile || null,
+              embroideryPrice: item.embroideryPrice || 0,
+              categoryName: item.categoryName,
+              brandName: item.brandName,
+              isShipping: false,
+              shippingCost: 0
+            })),
+            // Kargo ücreti
+            {
+              productId: 'shipping',
+              productName: 'Kargo Ücreti',
+              productPrice: getShippingCost(),
+              productImage: null,
+              quantity: 1,
+              size: null,
+              color: null,
+              hasEmbroidery: false,
+              embroideryFile: null,
+              embroideryPrice: 0,
+              categoryName: 'Kargo',
+              brandName: null,
+              isShipping: true,
+              shippingCost: getShippingCost()
+            }
+          ]
         }
 
         const response = await fetch('/api/orders/create', {
@@ -288,7 +331,16 @@ export default function CheckoutPage() {
             name: cleanText(item.name),
             category1: 'Denizcilik Tekstili',
             itemType: 'PHYSICAL',
-            price: ((item.price + (item.embroideryPrice || 0)) * item.quantity).toFixed(2)
+            price: ((item.price + (item.embroideryPrice || 0)) * item.quantity).toFixed(2),
+            // Store additional product info for callback
+            productId: item.id,
+            size: item.size,
+            color: item.color,
+            hasEmbroidery: item.hasEmbroidery,
+            embroideryFile: item.embroideryFile,
+            embroideryPrice: item.embroideryPrice,
+            categoryName: item.categoryName,
+            brandName: item.brandName
           })),
           {
             id: 'shipping',
@@ -302,6 +354,69 @@ export default function CheckoutPage() {
 
       console.log('Iyzico Request:', JSON.stringify(iyzicoRequest, null, 2))
 
+      // First create order with pending payment status
+      const orderData = {
+        userId: user ? user.id : null,
+        totalPrice: totalPrice,
+        status: 'received',
+        paymentStatus: 'pending',
+        paymentMethod: 'iyzico',
+        shippingAddress: shippingAddress,
+        items: [
+          ...items.map(item => ({
+            productId: item.id,
+            productName: item.name,
+            productPrice: item.price + (item.embroideryPrice || 0),
+            productImage: item.image,
+            quantity: item.quantity,
+            size: item.size,
+            color: item.color,
+            hasEmbroidery: item.hasEmbroidery || false,
+            embroideryFile: item.embroideryFile || null,
+            embroideryPrice: item.embroideryPrice || 0,
+            categoryName: item.categoryName,
+            brandName: item.brandName,
+            isShipping: false,
+            shippingCost: 0
+          })),
+          // Kargo ücreti
+          {
+            productId: 'shipping',
+            productName: 'Kargo Ücreti',
+            productPrice: getShippingCost(),
+            productImage: null,
+            quantity: 1,
+            size: null,
+            color: null,
+            hasEmbroidery: false,
+            embroideryFile: null,
+            embroideryPrice: 0,
+            categoryName: 'Kargo',
+            brandName: null,
+            isShipping: true,
+            shippingCost: getShippingCost()
+          }
+        ]
+      }
+
+      const orderResponse = await fetch('/api/orders/create', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(orderData),
+      })
+
+      const orderResult = await orderResponse.json()
+
+      if (!orderResult.success) {
+        alert(orderResult.error || 'Sipariş oluşturulurken bir hata oluştu.')
+        return
+      }
+
+      // Update conversationId with order ID
+      iyzicoRequest.conversationId = orderResult.order.id
+
       // Create payment with Iyzico
       const response = await fetch('/api/iyzico/init', {
         method: 'POST',
@@ -314,6 +429,20 @@ export default function CheckoutPage() {
       const result = await response.json()
 
       if (result.status === 'success' && result.paymentPageUrl) {
+        // Save Iyzico token to order for callback lookup
+        if (result.token) {
+          await fetch('/api/orders/update-token', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+              orderId: orderResult.order.id,
+              iyzicoToken: result.token,
+            }),
+          })
+        }
+        
         // Redirect to Iyzico payment page
         window.location.href = result.paymentPageUrl
       } else {
@@ -558,17 +687,23 @@ export default function CheckoutPage() {
                   {/* Online Ödeme */}
                   <button
                     onClick={() => setPaymentMethod('online')}
+                    disabled={!isTurkeySelected()}
                     className={`p-4 rounded-lg border-2 transition-all duration-300 ${
                       paymentMethod === 'online'
                         ? 'border-primary bg-primary/5'
                         : 'border-gray-200 hover:border-gray-300'
-                    }`}
+                    } ${!isTurkeySelected() ? 'opacity-50 cursor-not-allowed' : ''}`}
                   >
                     <div className="flex items-center">
                       <CreditCard className="w-6 h-6 text-primary mr-3" />
                       <div className="text-left">
                         <h4 className="font-medium text-gray-900">Online Ödeme</h4>
-                        <p className="text-sm text-gray-600">Kredi kartı ile güvenli ödeme</p>
+                        <p className="text-sm text-gray-600">
+                          {isTurkeySelected() 
+                            ? 'Kredi kartı ile güvenli ödeme' 
+                            : 'Sadece Türkiye için geçerli'
+                          }
+                        </p>
                       </div>
                     </div>
                   </button>

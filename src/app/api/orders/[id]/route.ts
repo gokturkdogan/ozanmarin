@@ -1,49 +1,68 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { prisma } from '@/lib/prisma'
 import { verifyToken } from '@/lib/auth'
+import { prisma } from '@/lib/prisma'
 
 export async function GET(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    // Get user from token (optional for guest orders)
+    const { id: orderId } = await params
+
+    // Check if user is logged in
     const token = request.cookies.get('auth-token')?.value
-    let userId: string | null = null
+    let userId = null
     
     if (token) {
-      const payload = verifyToken(token)
-      if (payload) {
-        userId = payload.userId
+      const decoded = verifyToken(token)
+      if (decoded) {
+        userId = decoded.userId
       }
     }
 
-    const { id } = await params
-
-    // Get order - allow access if user owns it or if it's a guest order
+    // Find order by ID or Iyzico payment ID
     const order = await prisma.order.findFirst({
       where: {
-        id,
         OR: [
-          { userId: userId || undefined },
-          { userId: { startsWith: 'guest_' } }
+          { id: orderId },
+          { iyzicoPaymentId: orderId }
         ]
+      },
+      include: {
+        items: true,
+        user: {
+          select: {
+            id: true,
+            name: true,
+            email: true
+          }
+        }
       }
     })
 
     if (!order) {
-      return NextResponse.json(
-        { error: 'Sipariş bulunamadı' },
-        { status: 404 }
-      )
+      return NextResponse.json({ 
+        error: 'Sipariş bulunamadı' 
+      }, { status: 404 })
     }
 
-    return NextResponse.json({ order })
+    // For logged in users, only show their own orders
+    // For guest orders, allow access by order ID
+    if (userId && order.userId && order.userId !== userId) {
+      return NextResponse.json({ 
+        error: 'Bu siparişe erişim yetkiniz yok' 
+      }, { status: 403 })
+    }
+
+    return NextResponse.json({
+      success: true,
+      order: order
+    })
+
   } catch (error) {
     console.error('Order fetch error:', error)
-    return NextResponse.json(
-      { error: 'Sipariş getirilirken bir hata oluştu' },
-      { status: 500 }
-    )
+    return NextResponse.json({ 
+      error: 'Sipariş bilgileri alınırken hata oluştu' 
+    }, { status: 500 })
   }
 }

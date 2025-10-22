@@ -72,14 +72,13 @@ export async function POST(request: NextRequest) {
     }
 
     // Siparişi bul ve güncelle
-    const conversationId = paymentResult.conversationId || paymentResult.basketId || paymentResult.token;
+    // Token ile order'ı bul
+    const iyzicoToken = paymentResult.token;
     
-    console.log("ConversationId:", conversationId);
-    console.log("BasketId:", paymentResult.basketId);
-    console.log("Token:", paymentResult.token);
+    console.log("Iyzico Token:", iyzicoToken);
     
-    if (!conversationId) {
-      console.error("No conversationId, basketId or token found");
+    if (!iyzicoToken) {
+      console.error("No token found in payment result");
       return new Response(null, {
         status: 302,
         headers: {
@@ -89,42 +88,28 @@ export async function POST(request: NextRequest) {
     }
     
     try {
-      // Ödeme başarılı, order'ı oluştur
-      const order = await prisma.order.create({
-        data: {
-          userId: null, // Guest order için null
-          totalPrice: parseFloat(paymentResult.paidPrice),
-          status: 'received', // Sipariş alındı
-          paymentStatus: 'paid', // Ödeme yapıldı
-          paymentMethod: 'iyzico',
-          iyzicoPaymentId: paymentResult.paymentId || paymentResult.token,
-          shippingAddress: {
-            // Iyzico'dan gelen buyer bilgilerini kullan
-            fullName: `${paymentResult.buyer?.name || 'Gokturk'} ${paymentResult.buyer?.surname || 'Dogan'}`,
-            email: paymentResult.buyer?.email || 'gokturk.dogan@hotmail.com',
-            phone: paymentResult.buyer?.phoneNumber || '+905398226918',
-            city: paymentResult.buyer?.city || 'istanbul',
-            district: 'Yenisehir',
-            address: paymentResult.buyer?.address || 'yenisehir mahallesi millet caddesi alp sitesi b blok',
-            country: 'Türkiye'
+      // Find order by Iyzico token
+      const order = await prisma.order.findFirst({
+        where: { iyzicoToken: iyzicoToken }
+      });
+      
+      if (!order) {
+        console.error("Order not found with token:", iyzicoToken);
+        return new Response(null, {
+          status: 302,
+          headers: {
+            'Location': '/payment/failure',
           },
-          items: {
-            create: paymentResult.itemTransactions?.map((item: any) => ({
-              productId: item.itemId,
-              productName: item.itemId === 'shipping' ? 'Kargo' : 'Ürün',
-              productPrice: parseFloat(item.price),
-              quantity: 1,
-              size: null,
-              color: null,
-              hasEmbroidery: false,
-              embroideryFile: null,
-              embroideryPrice: 0
-            })) || []
-          }
+        });
+      }
+      
+      // Update order payment status to paid
+      await prisma.order.update({
+        where: { id: order.id },
+        data: { 
+          paymentStatus: 'paid',
+          iyzicoPaymentId: paymentResult.paymentId || paymentResult.token,
         },
-        include: {
-          items: true
-        }
       });
 
       console.log("✅ Payment confirmed for order:", order.id);
@@ -133,7 +118,7 @@ export async function POST(request: NextRequest) {
       return new Response(null, {
         status: 302,
         headers: {
-          'Location': `/payment/success?paymentId=${paymentResult.paymentId || paymentResult.token}`,
+          'Location': `/payment/success?paymentId=${order.id}&method=iyzico`,
         },
       });
     } catch (dbError) {

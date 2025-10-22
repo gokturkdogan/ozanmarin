@@ -114,7 +114,9 @@ export default function ProductPage({ params }: ProductPageProps) {
           color: selectedColor || '',
           hasEmbroidery: hasEmbroidery,
           embroideryFile: embroideryUrl || undefined,
-          embroideryPrice: hasEmbroidery ? 100 : 0
+          embroideryPrice: hasEmbroidery ? 100 : 0,
+          categoryName: product.category.name,
+          brandName: product.brand?.name
         })
       }
       setToastMessage(`${quantity} adet ${product.name} sepete eklendi!`)

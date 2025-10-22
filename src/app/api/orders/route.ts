@@ -145,6 +145,16 @@ export async function GET(request: NextRequest) {
           { userId: { startsWith: 'guest_' } }
         ]
       },
+      include: {
+        items: true,
+        user: {
+          select: {
+            id: true,
+            name: true,
+            email: true
+          }
+        }
+      },
       orderBy: { createdAt: 'desc' }
     })
 
