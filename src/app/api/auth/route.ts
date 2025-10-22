@@ -45,7 +45,8 @@ export async function POST(request: NextRequest) {
         select: {
           id: true,
           name: true,
-          email: true
+          email: true,
+          role: true
         }
       })
 
@@ -94,7 +95,8 @@ export async function POST(request: NextRequest) {
       const token = generateToken({
         id: user.id,
         name: user.name,
-        email: user.email
+        email: user.email,
+        role: user.role
       })
       
       const response = NextResponse.json({
@@ -102,7 +104,8 @@ export async function POST(request: NextRequest) {
         user: {
           id: user.id,
           name: user.name,
-          email: user.email
+          email: user.email,
+          role: user.role
         },
         isAdmin: user.role === 'admin'
       })
@@ -125,7 +128,7 @@ export async function POST(request: NextRequest) {
   } catch (error) {
     if (error instanceof z.ZodError) {
       return NextResponse.json(
-        { error: 'Geçersiz veri', details: error.errors },
+        { error: 'Geçersiz veri', details: error.issues },
         { status: 400 }
       )
     }

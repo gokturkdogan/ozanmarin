@@ -10,6 +10,7 @@ import { Textarea } from '@/components/ui/textarea'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { ArrowLeft, Save } from 'lucide-react'
 import Link from 'next/link'
+import { useToast } from '@/hooks/use-toast'
 
 interface Category {
   id: string
@@ -27,11 +28,11 @@ interface Product {
   id: string
   name: string
   slug: string
-  price: number
   stock: number
   description: string
   images: string[]
-  sizes: string[]
+  sizePrices: { size: string; price: number }[]
+  colors: string[]
   category: {
     id: string
     name: string
@@ -53,18 +54,22 @@ export default function EditProductPage({ params }: { params: Promise<{ id: stri
   const [categories, setCategories] = useState<Category[]>([])
   const [brands, setBrands] = useState<Brand[]>([])
   const [selectedCategory, setSelectedCategory] = useState('')
+  const [images, setImages] = useState<string[]>([])
+  const [uploadingImages, setUploadingImages] = useState(false)
   
   const [formData, setFormData] = useState({
     name: '',
     slug: '',
     categoryId: '',
     brandId: '',
-    price: '',
     description: '',
     stock: '',
     images: '',
-    sizes: ''
+    sizePrices: [] as { size: string; price: number }[],
+    colors: ''
   })
+
+  const { toast } = useToast()
 
   useEffect(() => {
     const getParams = async () => {
@@ -101,13 +106,14 @@ export default function EditProductPage({ params }: { params: Promise<{ id: stri
           slug: product.slug,
           categoryId: product.category.id,
           brandId: product.brand?.id || '',
-          price: product.price.toString(),
           description: product.description || '',
           stock: product.stock.toString(),
           images: product.images.join(', '),
-          sizes: product.sizes.join(', ')
+          sizePrices: product.sizePrices,
+          colors: product.colors.join(', ')
         })
         
+        setImages(product.images)
         setSelectedCategory(product.category.slug)
       } else {
         setError('Ürün bulunamadı')
@@ -117,6 +123,47 @@ export default function EditProductPage({ params }: { params: Promise<{ id: stri
     } finally {
       setFetching(false)
     }
+  }
+
+  const handleImageUpload = async (files: FileList) => {
+    setUploadingImages(true)
+    const uploadPromises = Array.from(files).map(async (file) => {
+      const formData = new FormData()
+      formData.append('file', file)
+      
+      const response = await fetch('/api/upload', {
+        method: 'POST',
+        body: formData
+      })
+      
+      if (response.ok) {
+        const data = await response.json()
+        return data.url
+      }
+      throw new Error('Upload failed')
+    })
+
+    try {
+      const uploadedUrls = await Promise.all(uploadPromises)
+      setImages(prev => [...prev, ...uploadedUrls])
+      setFormData(prev => ({
+        ...prev,
+        images: [...images, ...uploadedUrls].join(', ')
+      }))
+    } catch (error) {
+      console.error('Image upload error:', error)
+    } finally {
+      setUploadingImages(false)
+    }
+  }
+
+  const removeImage = (index: number) => {
+    const newImages = images.filter((_, i) => i !== index)
+    setImages(newImages)
+    setFormData(prev => ({
+      ...prev,
+      images: newImages.join(', ')
+    }))
   }
 
   const fetchCategories = async () => {
@@ -184,15 +231,13 @@ export default function EditProductPage({ params }: { params: Promise<{ id: stri
 
     try {
       // Parse arrays from strings
-      const images = formData.images.split(',').map(img => img.trim()).filter(img => img)
-      const sizes = formData.sizes.split(',').map(size => size.trim()).filter(size => size)
+      const colors = formData.colors.split(',').map(color => color.trim()).filter(color => color)
 
       const productData = {
         ...formData,
-        price: parseFloat(formData.price),
         stock: parseInt(formData.stock),
         images,
-        sizes,
+        colors,
         brandId: formData.brandId || null
       }
 
@@ -207,12 +252,22 @@ export default function EditProductPage({ params }: { params: Promise<{ id: stri
       const data = await response.json()
 
       if (response.ok) {
+        toast({
+          title: "Başarılı",
+          description: `${formData.name} başarıyla güncellendi.`,
+          variant: "success",
+        })
         router.push('/admin/products')
       } else {
-        setError(data.error || 'Ürün güncellenirken hata oluştu')
+        throw new Error(data.error || 'Ürün güncellenirken hata oluştu')
       }
-    } catch (error) {
-      setError('Sunucu hatası')
+    } catch (error: any) {
+      setError(error.message || 'Sunucu hatası')
+      toast({
+        title: "Hata",
+        description: error.message || 'Ürün güncellenirken hata oluştu',
+        variant: "destructive",
+      })
     } finally {
       setLoading(false)
     }
@@ -358,29 +413,162 @@ export default function EditProductPage({ params }: { params: Promise<{ id: stri
               />
             </div>
 
-            <div className="space-y-2">
-              <Label htmlFor="images">Resim URL'leri</Label>
-              <Input
-                id="images"
-                value={formData.images}
-                onChange={(e) => handleInputChange('images', e.target.value)}
-                placeholder="/images/urun1.jpg, /images/urun2.jpg"
-              />
-              <p className="text-sm text-gray-500">
-                Virgülle ayırarak birden fazla resim URL'si ekleyebilirsiniz
-              </p>
+            <div className="space-y-4">
+              <Label>Ürün Görselleri</Label>
+              
+              {/* Image Upload */}
+              <div className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center">
+                <input
+                  type="file"
+                  multiple
+                  accept="image/*"
+                  onChange={(e) => e.target.files && handleImageUpload(e.target.files)}
+                  className="hidden"
+                  id="image-upload"
+                  disabled={uploadingImages}
+                />
+                <label
+                  htmlFor="image-upload"
+                  className="cursor-pointer flex flex-col items-center space-y-2"
+                >
+                  <div className="w-12 h-12 bg-gray-100 rounded-lg flex items-center justify-center">
+                    <svg className="w-6 h-6 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+                    </svg>
+                  </div>
+                  <div className="text-sm text-gray-600">
+                    {uploadingImages ? 'Yükleniyor...' : 'Görsel eklemek için tıklayın'}
+                  </div>
+                  <div className="text-xs text-gray-500">
+                    PNG, JPG, GIF formatları desteklenir
+                  </div>
+                </label>
+              </div>
+
+              {/* Current Images */}
+              {images.length > 0 && (
+                <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+                  {images.map((image, index) => (
+                    <div key={index} className="relative group">
+                      <img
+                        src={image}
+                        alt={`Ürün görseli ${index + 1}`}
+                        className="w-full h-32 object-cover rounded-lg border"
+                      />
+                      <button
+                        type="button"
+                        onClick={() => removeImage(index)}
+                        className="absolute top-2 right-2 bg-red-500 text-white rounded-full w-6 h-6 flex items-center justify-center text-sm opacity-0 group-hover:opacity-100 transition-opacity hover:bg-red-600"
+                      >
+                        ×
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+
+            <div className="space-y-4">
+              <Label>Boyut ve Fiyat Seçenekleri</Label>
+              
+              {/* Add Size Price Form */}
+              <div className="border rounded-lg p-4 space-y-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <Label htmlFor="size-input">Boyut</Label>
+                    <Input
+                      id="size-input"
+                      placeholder="S, M, L, XL"
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="price-input">Fiyat (₺)</Label>
+                    <Input
+                      id="price-input"
+                      type="number"
+                      step="0.01"
+                      placeholder="1250.00"
+                    />
+                  </div>
+                </div>
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => {
+                    const sizeInput = document.getElementById('size-input') as HTMLInputElement
+                    const priceInput = document.getElementById('price-input') as HTMLInputElement
+                    if (sizeInput.value && priceInput.value) {
+                      const newSizePrice = { size: sizeInput.value, price: parseFloat(priceInput.value) }
+                      setFormData(prev => ({
+                        ...prev,
+                        sizePrices: [...prev.sizePrices, newSizePrice]
+                      }))
+                      sizeInput.value = ''
+                      priceInput.value = ''
+                    }
+                  }}
+                >
+                  Boyut Ekle
+                </Button>
+              </div>
+
+              {/* Size Prices List */}
+              {formData.sizePrices.length > 0 && (
+                <div className="space-y-2">
+                  <Label>Eklenen Boyutlar:</Label>
+                  <div className="space-y-2">
+                    {formData.sizePrices.map((sizePrice, index) => (
+                      <div key={index} className="flex items-center gap-2 p-3 border rounded-lg">
+                        <Input
+                          value={sizePrice.size}
+                          onChange={(e) => {
+                            const newSizePrices = [...formData.sizePrices]
+                            newSizePrices[index] = { ...newSizePrices[index], size: e.target.value }
+                            setFormData(prev => ({ ...prev, sizePrices: newSizePrices }))
+                          }}
+                          className="flex-1"
+                        />
+                        <Input
+                          type="number"
+                          step="0.01"
+                          value={sizePrice.price}
+                          onChange={(e) => {
+                            const newSizePrices = [...formData.sizePrices]
+                            newSizePrices[index] = { ...newSizePrices[index], price: parseFloat(e.target.value) || 0 }
+                            setFormData(prev => ({ ...prev, sizePrices: newSizePrices }))
+                          }}
+                          className="flex-1"
+                        />
+                        <span className="text-sm text-gray-500">₺</span>
+                        <Button
+                          type="button"
+                          variant="outline"
+                          size="sm"
+                          onClick={() => {
+                            const newSizePrices = formData.sizePrices.filter((_, i) => i !== index)
+                            setFormData(prev => ({ ...prev, sizePrices: newSizePrices }))
+                          }}
+                          className="text-red-600 hover:text-red-700 hover:bg-red-50"
+                        >
+                          ×
+                        </Button>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="sizes">Boyutlar</Label>
+              <Label htmlFor="colors">Renkler</Label>
               <Input
-                id="sizes"
-                value={formData.sizes}
-                onChange={(e) => handleInputChange('sizes', e.target.value)}
-                placeholder="S, M, L, XL"
+                id="colors"
+                value={formData.colors}
+                onChange={(e) => handleInputChange('colors', e.target.value)}
+                placeholder="Kırmızı, Beyaz, Mavi"
               />
               <p className="text-sm text-gray-500">
-                Virgülle ayırarak boyutları ekleyebilirsiniz
+                Virgülle ayırarak renkleri ekleyebilirsiniz
               </p>
             </div>
 

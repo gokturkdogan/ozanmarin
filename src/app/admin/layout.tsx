@@ -5,6 +5,7 @@ import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
+import { Toaster } from '@/components/ui/toaster'
 import { 
   LayoutDashboard, 
   Package, 
@@ -163,6 +164,9 @@ export default function AdminLayout({
           {children}
         </main>
       </div>
+      
+      {/* Toast notifications */}
+      <Toaster />
     </div>
   )
 }

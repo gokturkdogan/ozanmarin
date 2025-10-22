@@ -243,6 +243,13 @@ export default function CheckoutPage() {
                           <p className="text-sm font-medium text-gray-900 truncate">
                             {item.name}
                           </p>
+                          {(item.size || item.color) && (
+                            <div className="text-xs text-gray-500 mt-1">
+                              {item.size && <span>Boyut: {item.size}</span>}
+                              {item.size && item.color && <span className="mx-1">•</span>}
+                              {item.color && <span>Renk: {item.color}</span>}
+                            </div>
+                          )}
                           <p className="text-sm text-gray-500">
                             {item.quantity} adet × ₺{item.price.toLocaleString()}
                           </p>

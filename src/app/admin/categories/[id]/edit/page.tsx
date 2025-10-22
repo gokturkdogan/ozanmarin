@@ -1,0 +1,223 @@
+'use client'
+
+import { useState, useEffect } from 'react'
+import { useRouter } from 'next/navigation'
+import { Button } from '@/components/ui/button'
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import { Input } from '@/components/ui/input'
+import { Label } from '@/components/ui/label'
+import { Textarea } from '@/components/ui/textarea'
+import { ArrowLeft, Save } from 'lucide-react'
+import Link from 'next/link'
+import { useToast } from '@/hooks/use-toast'
+
+interface Category {
+  id: string
+  name: string
+  slug: string
+  description: string | null
+}
+
+export default function EditCategoryPage({ params }: { params: Promise<{ id: string }> }) {
+  const router = useRouter()
+  const [loading, setLoading] = useState(false)
+  const [error, setError] = useState('')
+  const [category, setCategory] = useState<Category | null>(null)
+  
+  const [formData, setFormData] = useState({
+    name: '',
+    slug: '',
+    description: ''
+  })
+
+  const { toast } = useToast()
+
+  useEffect(() => {
+    const fetchCategory = async () => {
+      try {
+        const { id } = await params
+        const response = await fetch(`/api/categories/${id}`)
+        if (response.ok) {
+          const data = await response.json()
+          setCategory(data.category)
+          setFormData({
+            name: data.category.name,
+            slug: data.category.slug,
+            description: data.category.description || ''
+          })
+        } else {
+          setError('Kategori bulunamadı')
+        }
+      } catch (error) {
+        setError('Kategori yüklenirken hata oluştu')
+      }
+    }
+    
+    fetchCategory()
+  }, [params])
+
+  const generateSlug = (name: string) => {
+    return name
+      .toLowerCase()
+      .replace(/[^a-z0-9\s-]/g, '')
+      .replace(/\s+/g, '-')
+      .replace(/-+/g, '-')
+      .trim()
+  }
+
+  const handleInputChange = (field: string, value: string) => {
+    setFormData(prev => ({
+      ...prev,
+      [field]: value
+    }))
+
+    // Auto-generate slug from name
+    if (field === 'name') {
+      setFormData(prev => ({
+        ...prev,
+        slug: generateSlug(value)
+      }))
+    }
+  }
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault()
+    setLoading(true)
+    setError('')
+
+    try {
+      const { id } = await params
+      const response = await fetch(`/api/admin/categories/${id}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(formData),
+      })
+
+      const data = await response.json()
+
+      if (response.ok) {
+        toast({
+          title: "Başarılı",
+          description: `${formData.name} kategorisi başarıyla güncellendi.`,
+          variant: "success",
+        })
+        router.push('/admin/categories')
+      } else {
+        throw new Error(data.error || 'Kategori güncellenirken hata oluştu')
+      }
+    } catch (error: any) {
+      setError(error.message || 'Sunucu hatası')
+      toast({
+        title: "Hata",
+        description: error.message || 'Kategori güncellenirken hata oluştu',
+        variant: "destructive",
+      })
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  if (!category) {
+    return (
+      <div className="container mx-auto px-4 py-8">
+        <div className="flex items-center gap-4 mb-8">
+          <Link href="/admin/categories">
+            <Button variant="outline" size="sm">
+              <ArrowLeft className="w-4 h-4 mr-2" />
+              Geri
+            </Button>
+          </Link>
+          <div>
+            <h1 className="text-3xl font-bold text-gray-900">Kategori Düzenle</h1>
+            <p className="text-gray-600 mt-2">Kategori bilgilerini güncelleyin</p>
+          </div>
+        </div>
+        <p>{error || 'Kategori yükleniyor...'}</p>
+      </div>
+    )
+  }
+
+  return (
+    <div className="container mx-auto px-4 py-8">
+      <div className="flex items-center gap-4 mb-8">
+        <Link href="/admin/categories">
+          <Button variant="outline" size="sm">
+            <ArrowLeft className="w-4 h-4 mr-2" />
+            Geri
+          </Button>
+        </Link>
+        <div>
+          <h1 className="text-3xl font-bold text-gray-900">Kategori Düzenle</h1>
+          <p className="text-gray-600 mt-2">"{category.name}" kategorisini düzenleyin</p>
+        </div>
+      </div>
+
+      <Card className="max-w-2xl">
+        <CardHeader>
+          <CardTitle>Kategori Bilgileri</CardTitle>
+          <CardDescription>
+            Kategori bilgilerini güncelleyin
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <form onSubmit={handleSubmit} className="space-y-6">
+            {error && (
+              <div className="bg-red-50 border border-red-200 text-red-600 px-4 py-3 rounded-md">
+                {error}
+              </div>
+            )}
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="name">Kategori Adı *</Label>
+                <Input
+                  id="name"
+                  value={formData.name}
+                  onChange={(e) => handleInputChange('name', e.target.value)}
+                  placeholder="Örn: Yat Kumaş Kılıfları"
+                  required
+                />
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="slug">URL Slug *</Label>
+                <Input
+                  id="slug"
+                  value={formData.slug}
+                  onChange={(e) => handleInputChange('slug', e.target.value)}
+                  placeholder="yat-kumas-kiliflari"
+                  required
+                />
+              </div>
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="description">Açıklama</Label>
+              <Textarea
+                id="description"
+                value={formData.description}
+                onChange={(e) => handleInputChange('description', e.target.value)}
+                placeholder="Kategori açıklaması..."
+                rows={4}
+              />
+            </div>
+
+            <div className="flex gap-4 pt-4">
+              <Button type="submit" disabled={loading} className="flex-1">
+                <Save className="w-4 h-4 mr-2" />
+                {loading ? 'Güncelleniyor...' : 'Değişiklikleri Kaydet'}
+              </Button>
+              <Link href="/admin/categories">
+                <Button type="button" variant="outline">
+                  İptal
+                </Button>
+              </Link>
+            </div>
+          </form>
+        </CardContent>
+      </Card>
+    </div>
+  )
+}

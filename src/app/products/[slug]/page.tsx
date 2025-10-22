@@ -17,6 +17,7 @@ interface Product {
   images: string[]
   stock: number
   sizes: string[]
+  colors: string[]
   category: {
     name: string
     slug: string
@@ -39,6 +40,7 @@ export default function ProductPage({ params }: ProductPageProps) {
   const [selectedImage, setSelectedImage] = useState(0)
   const [quantity, setQuantity] = useState(1)
   const [selectedSize, setSelectedSize] = useState<string>('')
+  const [selectedColor, setSelectedColor] = useState<string>('')
   const [slug, setSlug] = useState<string>('')
   const { addItem } = useCartStore()
 
@@ -75,7 +77,9 @@ export default function ProductPage({ params }: ProductPageProps) {
           id: product.id,
           name: product.name,
           price: product.price,
-          image: product.images[0] || '/placeholder.jpg'
+          image: product.images[0] || '/placeholder.jpg',
+          size: selectedSize,
+          color: selectedColor
         })
       }
     }
@@ -206,6 +210,25 @@ export default function ProductPage({ params }: ProductPageProps) {
                       {product.sizes.map((size) => (
                         <SelectItem key={size} value={size}>
                           {size}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+              )}
+              
+              {/* Color Selection */}
+              {product.colors && product.colors.length > 0 && (
+                <div className="mb-4">
+                  <label className="text-sm font-medium mb-2 block">Renk Seçin:</label>
+                  <Select value={selectedColor} onValueChange={setSelectedColor}>
+                    <SelectTrigger className="w-full">
+                      <SelectValue placeholder="Renk seçin" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {product.colors.map((color) => (
+                        <SelectItem key={color} value={color}>
+                          {color}
                         </SelectItem>
                       ))}
                     </SelectContent>

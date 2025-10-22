@@ -10,7 +10,7 @@ import { ClientOnly } from './client-only'
 export function Header() {
   const [isMenuOpen, setIsMenuOpen] = useState(false)
   const [isLoggedIn, setIsLoggedIn] = useState(false)
-  const [user, setUser] = useState<{ name: string; email: string } | null>(null)
+  const [user, setUser] = useState<{ name: string; email: string; role: string } | null>(null)
   const { getTotalItems } = useCartStore()
 
   useEffect(() => {

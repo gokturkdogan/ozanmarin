@@ -7,6 +7,8 @@ export interface CartItem {
   price: number
   image: string
   quantity: number
+  size?: string
+  color?: string
 }
 
 interface CartStore {
@@ -26,12 +28,16 @@ export const useCartStore = create<CartStore>()(
       
       addItem: (item) => {
         const items = get().items
-        const existingItem = items.find(i => i.id === item.id)
+        const existingItem = items.find(i => 
+          i.id === item.id && 
+          i.size === item.size && 
+          i.color === item.color
+        )
         
         if (existingItem) {
           set({
             items: items.map(i =>
-              i.id === item.id
+              i.id === item.id && i.size === item.size && i.color === item.color
                 ? { ...i, quantity: i.quantity + 1 }
                 : i
             )

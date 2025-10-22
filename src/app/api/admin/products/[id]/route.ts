@@ -8,11 +8,14 @@ const productUpdateSchema = z.object({
   slug: z.string().min(1, 'Slug gerekli'),
   categoryId: z.string().min(1, 'Kategori gerekli'),
   brandId: z.string().optional(),
-  price: z.number().positive('Fiyat pozitif olmalı'),
   description: z.string().optional(),
   stock: z.number().int().min(0, 'Stok negatif olamaz'),
   images: z.array(z.string()),
-  sizes: z.array(z.string())
+  sizePrices: z.array(z.object({
+    size: z.string().min(1, 'Boyut gerekli'),
+    price: z.number().positive('Fiyat pozitif olmalı')
+  })),
+  colors: z.array(z.string())
 })
 
 export async function GET(
@@ -168,11 +171,11 @@ export async function PUT(
         slug: validatedData.slug,
         categoryId: validatedData.categoryId,
         brandId: validatedData.brandId || null,
-        price: validatedData.price,
         description: validatedData.description || null,
         stock: validatedData.stock,
         images: validatedData.images,
-        sizes: validatedData.sizes
+        sizePrices: validatedData.sizePrices,
+        colors: validatedData.colors
       },
       include: {
         category: {
@@ -194,7 +197,7 @@ export async function PUT(
   } catch (error) {
     if (error instanceof z.ZodError) {
       return NextResponse.json(
-        { error: 'Geçersiz veri', details: error.errors },
+        { error: 'Geçersiz veri', details: error.issues },
         { status: 400 }
       )
     }

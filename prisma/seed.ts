@@ -89,72 +89,106 @@ async function main() {
       where: { slug: 'yat-koltuk-kilifi-premium' },
       update: {
         brandId: brands[0].id,
-        sizes: ['S', 'M', 'L', 'XL']
+        sizePrices: [
+          { size: 'S', price: 1000 },
+          { size: 'M', price: 1250 },
+          { size: 'L', price: 1500 },
+          { size: 'XL', price: 1750 }
+        ],
+        colors: ['Beyaz', 'Mavi', 'Gri', 'Kırmızı']
       },
       create: {
         name: 'Yat Koltuk Kılıfı Premium',
         slug: 'yat-koltuk-kilifi-premium',
         categoryId: categories[0].id,
         brandId: brands[0].id,
-        price: 1250.00,
         description: 'Su geçirmez, UV korumalı premium yat koltuk kılıfı. Deniz tuzuna dayanıklı özel kumaş.',
         images: ['/images/yat-koltuk-kilifi-1.jpg', '/images/yat-koltuk-kilifi-2.jpg'],
         stock: 15,
-        sizes: ['S', 'M', 'L', 'XL']
+        sizePrices: [
+          { size: 'S', price: 1000 },
+          { size: 'M', price: 1250 },
+          { size: 'L', price: 1500 },
+          { size: 'XL', price: 1750 }
+        ],
+        colors: ['Beyaz', 'Mavi', 'Gri', 'Kırmızı']
       }
     }),
     prisma.product.upsert({
       where: { slug: 'tekne-minderi-deniz-mavisi' },
       update: {
         brandId: brands[1].id,
-        sizes: ['Tek Boyut']
+        sizePrices: [
+          { size: 'Tek Boyut', price: 850 }
+        ],
+        colors: ['Deniz Mavisi', 'Beyaz', 'Gri']
       },
       create: {
         name: 'Tekne Minderi Deniz Mavisi',
         slug: 'tekne-minderi-deniz-mavisi',
         categoryId: categories[1].id,
         brandId: brands[1].id,
-        price: 850.00,
         description: 'Deniz koşullarına dayanıklı, hızlı kuruyan tekne minderi.',
         images: ['/images/tekne-minderi-1.jpg'],
         stock: 8,
-        sizes: ['Tek Boyut']
+        sizePrices: [
+          { size: 'Tek Boyut', price: 850 }
+        ],
+        colors: ['Deniz Mavisi', 'Beyaz', 'Gri']
       }
     }),
     prisma.product.upsert({
       where: { slug: 'marin-guneslik-3x4m' },
       update: {
         brandId: brands[2].id,
-        sizes: ['3x4m', '4x5m', '5x6m']
+        sizePrices: [
+          { size: '3x4m', price: 1800 },
+          { size: '4x5m', price: 2100 },
+          { size: '5x6m', price: 2500 }
+        ],
+        colors: ['Beyaz', 'Mavi', 'Gri', 'Bej']
       },
       create: {
         name: 'Marin Güneşlik 3x4m',
         slug: 'marin-guneslik-3x4m',
         categoryId: categories[2].id,
         brandId: brands[2].id,
-        price: 2100.00,
         description: 'UV korumalı, rüzgar dirençli marin güneşlik. Özel bağlantı sistemli.',
         images: ['/images/marin-guneslik-1.jpg', '/images/marin-guneslik-2.jpg'],
         stock: 5,
-        sizes: ['3x4m', '4x5m', '5x6m']
+        sizePrices: [
+          { size: '3x4m', price: 1800 },
+          { size: '4x5m', price: 2100 },
+          { size: '5x6m', price: 2500 }
+        ],
+        colors: ['Beyaz', 'Mavi', 'Gri', 'Bej']
       }
     }),
     prisma.product.upsert({
       where: { slug: 'yat-direk-kilifi' },
       update: {
         brandId: brands[3].id,
-        sizes: ['S', 'M', 'L']
+        sizePrices: [
+          { size: 'S', price: 350 },
+          { size: 'M', price: 450 },
+          { size: 'L', price: 550 }
+        ],
+        colors: ['Siyah', 'Mavi', 'Beyaz']
       },
       create: {
         name: 'Yat Direk Kılıfı',
         slug: 'yat-direk-kilifi',
         categoryId: categories[0].id,
         brandId: brands[3].id,
-        price: 450.00,
         description: 'Direklerinizi koruyan su geçirmez kılıf.',
         images: ['/images/direk-kilifi-1.jpg'],
         stock: 12,
-        sizes: ['S', 'M', 'L']
+        sizePrices: [
+          { size: 'S', price: 350 },
+          { size: 'M', price: 450 },
+          { size: 'L', price: 550 }
+        ],
+        colors: ['Siyah', 'Mavi', 'Beyaz']
       }
     })
   ])

@@ -3,19 +3,11 @@ import { prisma } from '@/lib/prisma'
 import { verifyToken } from '@/lib/auth'
 import { z } from 'zod'
 
-const productSchema = z.object({
-  name: z.string().min(1, 'Ürün adı gerekli'),
+const brandSchema = z.object({
+  name: z.string().min(1, 'Marka adı gerekli'),
   slug: z.string().min(1, 'Slug gerekli'),
-  categoryId: z.string().min(1, 'Kategori gerekli'),
-  brandId: z.string().optional(),
   description: z.string().optional(),
-  stock: z.number().int().min(0, 'Stok negatif olamaz'),
-  images: z.array(z.string()),
-  sizePrices: z.array(z.object({
-    size: z.string().min(1, 'Boyut gerekli'),
-    price: z.number().positive('Fiyat pozitif olmalı')
-  })),
-  colors: z.array(z.string())
+  categoryId: z.string().min(1, 'Kategori gerekli')
 })
 
 export async function POST(request: NextRequest) {
@@ -41,14 +33,14 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json()
-    const validatedData = productSchema.parse(body)
+    const validatedData = brandSchema.parse(body)
 
     // Check if slug already exists
-    const existingProduct = await prisma.product.findUnique({
+    const existingBrand = await prisma.brand.findUnique({
       where: { slug: validatedData.slug }
     })
 
-    if (existingProduct) {
+    if (existingBrand) {
       return NextResponse.json(
         { error: 'Bu slug zaten kullanılıyor' },
         { status: 400 }
@@ -67,40 +59,15 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // Check if brand exists (if provided)
-    if (validatedData.brandId) {
-      const brand = await prisma.brand.findUnique({
-        where: { id: validatedData.brandId }
-      })
-
-      if (!brand) {
-        return NextResponse.json(
-          { error: 'Marka bulunamadı' },
-          { status: 400 }
-        )
-      }
-    }
-
-    const product = await prisma.product.create({
+    const brand = await prisma.brand.create({
       data: {
         name: validatedData.name,
         slug: validatedData.slug,
-        categoryId: validatedData.categoryId,
-        brandId: validatedData.brandId || null,
         description: validatedData.description || null,
-        stock: validatedData.stock,
-        images: validatedData.images,
-        sizePrices: validatedData.sizePrices,
-        colors: validatedData.colors
+        categoryId: validatedData.categoryId
       },
       include: {
         category: {
-          select: {
-            name: true,
-            slug: true
-          }
-        },
-        brand: {
           select: {
             name: true,
             slug: true
@@ -109,7 +76,7 @@ export async function POST(request: NextRequest) {
       }
     })
 
-    return NextResponse.json({ product, message: 'Ürün başarıyla oluşturuldu' })
+    return NextResponse.json({ brand, message: 'Marka başarıyla oluşturuldu' })
   } catch (error) {
     if (error instanceof z.ZodError) {
       return NextResponse.json(
@@ -118,9 +85,60 @@ export async function POST(request: NextRequest) {
       )
     }
     
-    console.error('Product creation error:', error)
+    console.error('Brand creation error:', error)
     return NextResponse.json(
-      { error: 'Ürün oluşturulurken bir hata oluştu' },
+      { error: 'Marka oluşturulurken bir hata oluştu' },
+      { status: 500 }
+    )
+  }
+}
+
+export async function GET(request: NextRequest) {
+  try {
+    // Verify admin authentication
+    const token = request.cookies.get('auth-token')?.value
+    if (!token) {
+      return NextResponse.json({ error: 'Yetkisiz erişim' }, { status: 401 })
+    }
+
+    const payload = verifyToken(token)
+    if (!payload) {
+      return NextResponse.json({ error: 'Geçersiz token' }, { status: 401 })
+    }
+
+    const user = await prisma.user.findUnique({
+      where: { id: payload.userId },
+      select: { role: true }
+    })
+
+    if (user?.role !== 'admin') {
+      return NextResponse.json({ error: 'Admin yetkisi gerekli' }, { status: 403 })
+    }
+
+    const brands = await prisma.brand.findMany({
+      include: {
+        category: {
+          select: {
+            name: true,
+            slug: true
+          }
+        },
+        _count: {
+          select: {
+            products: true
+          }
+        }
+      },
+      orderBy: {
+        createdAt: 'desc'
+      }
+    })
+
+    return NextResponse.json({ brands })
+  } catch (error) {
+    console.error('Brands fetch error:', error)
+    return NextResponse.json(
+      { error: 'Markalar getirilirken bir hata oluştu' },
       { status: 500 }
     )
   }

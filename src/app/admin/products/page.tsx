@@ -5,16 +5,20 @@ import Link from 'next/link'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
-import { Plus, Edit, Trash2, Package } from 'lucide-react'
+import { Input } from '@/components/ui/input'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
+import { Plus, Edit, Trash2, Package, Search, Filter, X } from 'lucide-react'
+import { DeleteConfirmationModal } from '@/components/admin/confirmation-modal'
+import { useToast } from '@/hooks/use-toast'
 
 interface Product {
   id: string
   name: string
   slug: string
-  price: number
   stock: number
   images: string[]
-  sizes: string[]
+  sizePrices: { size: string; price: number }[]
+  colors: string[]
   category: {
     name: string
     slug: string
@@ -26,49 +30,164 @@ interface Product {
   createdAt: string
 }
 
+interface Category {
+  id: string
+  name: string
+  slug: string
+}
+
+interface Brand {
+  id: string
+  name: string
+  slug: string
+  categoryId: string
+}
+
 export default function AdminProductsPage() {
   const [products, setProducts] = useState<Product[]>([])
+  const [filteredProducts, setFilteredProducts] = useState<Product[]>([])
+  const [categories, setCategories] = useState<Category[]>([])
+  const [brands, setBrands] = useState<Brand[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
+  
+  // Filter states
+  const [searchTerm, setSearchTerm] = useState('')
+  const [selectedCategory, setSelectedCategory] = useState('all')
+  const [selectedBrand, setSelectedBrand] = useState('all')
+  const [showFilters, setShowFilters] = useState(false)
+  
+  // Modal states
+  const [deleteModalOpen, setDeleteModalOpen] = useState(false)
+  const [productToDelete, setProductToDelete] = useState<Product | null>(null)
+  const [isDeleting, setIsDeleting] = useState(false)
+  
+  const { toast } = useToast()
 
   useEffect(() => {
-    fetchProducts()
+    fetchData()
   }, [])
 
-  const fetchProducts = async () => {
+  useEffect(() => {
+    applyFilters()
+  }, [products, searchTerm, selectedCategory, selectedBrand])
+
+  const fetchData = async () => {
+    setLoading(true)
     try {
-      const response = await fetch('/api/products')
-      if (response.ok) {
-        const data = await response.json()
-        setProducts(data.products)
+      const [productsResponse, categoriesResponse, brandsResponse] = await Promise.all([
+        fetch('/api/products'),
+        fetch('/api/categories'),
+        fetch('/api/brands')
+      ])
+
+      if (productsResponse.ok) {
+        const productsData = await productsResponse.json()
+        setProducts(productsData.products)
       } else {
-        setError('Ürünler yüklenirken hata oluştu')
+        throw new Error('Ürünler yüklenirken hata oluştu')
       }
-    } catch (error) {
-      setError('Sunucu hatası')
+
+      if (categoriesResponse.ok) {
+        const categoriesData = await categoriesResponse.json()
+        setCategories(categoriesData.categories)
+      }
+
+      if (brandsResponse.ok) {
+        const brandsData = await brandsResponse.json()
+        setBrands(brandsData.brands)
+      }
+    } catch (error: any) {
+      setError(error.message || 'Veriler yüklenirken hata oluştu')
+      toast({
+        title: "Hata",
+        description: error.message || 'Veriler yüklenirken hata oluştu',
+        variant: "destructive",
+      })
     } finally {
       setLoading(false)
     }
   }
 
-  const handleDelete = async (id: string) => {
-    if (!confirm('Bu ürünü silmek istediğinizden emin misiniz?')) {
-      return
+  const applyFilters = () => {
+    let filtered = [...products]
+
+    // Search filter
+    if (searchTerm) {
+      filtered = filtered.filter(product =>
+        product.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        product.category.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        (product.brand && product.brand.name.toLowerCase().includes(searchTerm.toLowerCase()))
+      )
     }
 
+    // Category filter
+    if (selectedCategory !== 'all') {
+      filtered = filtered.filter(product => product.category.slug === selectedCategory)
+    }
+
+    // Brand filter
+    if (selectedBrand !== 'all') {
+      filtered = filtered.filter(product => product.brand?.slug === selectedBrand)
+    }
+
+    setFilteredProducts(filtered)
+  }
+
+  const clearFilters = () => {
+    setSearchTerm('')
+    setSelectedCategory('all')
+    setSelectedBrand('all')
+  }
+
+  const getFilteredBrands = () => {
+    if (selectedCategory === 'all') {
+      return brands
+    }
+    return brands.filter(brand => brand.categoryId === categories.find(c => c.slug === selectedCategory)?.id)
+  }
+
+  const handleDeleteClick = (product: Product) => {
+    setProductToDelete(product)
+    setDeleteModalOpen(true)
+  }
+
+  const handleDeleteConfirm = async () => {
+    if (!productToDelete) return
+
+    setIsDeleting(true)
     try {
-      const response = await fetch(`/api/admin/products/${id}`, {
+      const response = await fetch(`/api/admin/products/${productToDelete.id}`, {
         method: 'DELETE'
       })
 
       if (response.ok) {
-        setProducts(products.filter(p => p.id !== id))
+        setProducts(products.filter(p => p.id !== productToDelete.id))
+        toast({
+          title: "Başarılı",
+          description: `${productToDelete.name} başarıyla silindi.`,
+          variant: "success",
+        })
       } else {
-        alert('Ürün silinirken hata oluştu')
+        const errorData = await response.json()
+        throw new Error(errorData.error || 'Ürün silinirken hata oluştu')
       }
-    } catch (error) {
-      alert('Sunucu hatası')
+    } catch (error: any) {
+      toast({
+        title: "Hata",
+        description: error.message || 'Ürün silinirken hata oluştu',
+        variant: "destructive",
+      })
+    } finally {
+      setIsDeleting(false)
+      setDeleteModalOpen(false)
+      setProductToDelete(null)
     }
+  }
+
+  const handleDeleteCancel = () => {
+    setDeleteModalOpen(false)
+    setProductToDelete(null)
   }
 
   if (loading) {
@@ -102,7 +221,99 @@ export default function AdminProductsPage() {
         </div>
       )}
 
-      {products.length === 0 ? (
+      {/* Search and Filter Section */}
+      <Card className="mb-6">
+        <CardContent className="p-6">
+          <div className="flex flex-col lg:flex-row gap-4">
+            {/* Search */}
+            <div className="flex-1">
+              <div className="relative">
+                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
+                <Input
+                  placeholder="Ürün adı, kategori veya marka ara..."
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  className="pl-10"
+                />
+              </div>
+            </div>
+
+            {/* Filter Toggle */}
+            <Button
+              variant="outline"
+              onClick={() => setShowFilters(!showFilters)}
+              className="flex items-center gap-2"
+            >
+              <Filter className="w-4 h-4" />
+              Filtreler
+              {(selectedCategory !== 'all' || selectedBrand !== 'all') && (
+                <Badge variant="secondary" className="ml-1">
+                  {(selectedCategory !== 'all' ? 1 : 0) + (selectedBrand !== 'all' ? 1 : 0)}
+                </Badge>
+              )}
+            </Button>
+
+            {/* Clear Filters */}
+            {(selectedCategory !== 'all' || selectedBrand !== 'all' || searchTerm) && (
+              <Button variant="outline" onClick={clearFilters} className="flex items-center gap-2">
+                <X className="w-4 h-4" />
+                Temizle
+              </Button>
+            )}
+          </div>
+
+          {/* Advanced Filters */}
+          {showFilters && (
+            <div className="mt-4 pt-4 border-t grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <label className="text-sm font-medium text-gray-700 mb-2 block">Kategori</label>
+                <Select value={selectedCategory} onValueChange={setSelectedCategory}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Kategori seçin" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">Tüm Kategoriler</SelectItem>
+                    {categories.map((category) => (
+                      <SelectItem key={category.id} value={category.slug}>
+                        {category.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div>
+                <label className="text-sm font-medium text-gray-700 mb-2 block">Marka</label>
+                <Select value={selectedBrand} onValueChange={setSelectedBrand}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Marka seçin" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">Tüm Markalar</SelectItem>
+                    {getFilteredBrands().map((brand) => (
+                      <SelectItem key={brand.id} value={brand.slug}>
+                        {brand.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+          )}
+        </CardContent>
+      </Card>
+
+      {/* Results Count */}
+      <div className="mb-4 flex justify-between items-center">
+        <p className="text-sm text-gray-600">
+          {filteredProducts.length} ürün bulundu
+          {(searchTerm || selectedCategory !== 'all' || selectedBrand !== 'all') && (
+            <span className="text-gray-500"> (filtrelenmiş)</span>
+          )}
+        </p>
+      </div>
+
+      {filteredProducts.length === 0 ? (
         <Card>
           <CardContent className="flex flex-col items-center justify-center py-12">
             <Package className="w-12 h-12 text-gray-400 mb-4" />
@@ -118,7 +329,7 @@ export default function AdminProductsPage() {
         </Card>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {products.map((product) => (
+          {filteredProducts.map((product) => (
             <Card key={product.id} className="hover:shadow-lg transition-shadow">
               <CardHeader>
                 <div className="flex justify-between items-start">
@@ -138,7 +349,15 @@ export default function AdminProductsPage() {
                 <div className="space-y-3">
                   <div className="flex justify-between items-center">
                     <span className="text-2xl font-bold text-primary">
-                      ₺{product.price.toLocaleString('tr-TR')}
+                      {product.sizePrices.length > 0 ? (
+                        product.sizePrices.length === 1 ? (
+                          `₺${product.sizePrices[0].price.toLocaleString('tr-TR')}`
+                        ) : (
+                          `₺${Math.min(...product.sizePrices.map(sp => sp.price)).toLocaleString('tr-TR')} - ₺${Math.max(...product.sizePrices.map(sp => sp.price)).toLocaleString('tr-TR')}`
+                        )
+                      ) : (
+                        'Fiyat Yok'
+                      )}
                     </span>
                   </div>
                   
@@ -152,11 +371,21 @@ export default function AdminProductsPage() {
                     </div>
                   )}
 
-                  {product.sizes.length > 0 && (
+                  {product.sizePrices.length > 0 && (
                     <div className="flex flex-wrap gap-1">
-                      {product.sizes.map((size) => (
-                        <Badge key={size} variant="outline" className="text-xs">
-                          {size}
+                      {product.sizePrices.map((sizePrice) => (
+                        <Badge key={sizePrice.size} variant="outline" className="text-xs">
+                          {sizePrice.size} - ₺{sizePrice.price.toLocaleString('tr-TR')}
+                        </Badge>
+                      ))}
+                    </div>
+                  )}
+
+                  {product.colors.length > 0 && (
+                    <div className="flex flex-wrap gap-1">
+                      {product.colors.map((color) => (
+                        <Badge key={color} variant="secondary" className="text-xs bg-green-100 text-green-800">
+                          {color}
                         </Badge>
                       ))}
                     </div>
@@ -172,7 +401,7 @@ export default function AdminProductsPage() {
                     <Button 
                       variant="outline" 
                       size="sm" 
-                      onClick={() => handleDelete(product.id)}
+                      onClick={() => handleDeleteClick(product)}
                       className="text-red-600 hover:text-red-700 hover:bg-red-50"
                     >
                       <Trash2 className="w-4 h-4" />
@@ -184,6 +413,15 @@ export default function AdminProductsPage() {
           ))}
         </div>
       )}
+      
+      {/* Delete Confirmation Modal */}
+      <DeleteConfirmationModal
+        isOpen={deleteModalOpen}
+        onClose={handleDeleteCancel}
+        onConfirm={handleDeleteConfirm}
+        itemName={productToDelete?.name || ''}
+        isLoading={isDeleting}
+      />
     </div>
   )
 }

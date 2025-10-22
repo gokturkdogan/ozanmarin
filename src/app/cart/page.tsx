@@ -87,6 +87,13 @@ export default function CartPage() {
                       <h3 className="text-lg font-semibold text-gray-900 truncate">
                         {item.name}
                       </h3>
+                      {(item.size || item.color) && (
+                        <div className="text-sm text-gray-600 mt-1">
+                          {item.size && <span>Boyut: {item.size}</span>}
+                          {item.size && item.color && <span className="mx-2">•</span>}
+                          {item.color && <span>Renk: {item.color}</span>}
+                        </div>
+                      )}
                       <p className="text-primary font-bold text-lg">
                         ₺{item.price.toLocaleString()}
                       </p>

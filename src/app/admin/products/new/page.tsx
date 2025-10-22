@@ -10,6 +10,7 @@ import { Textarea } from '@/components/ui/textarea'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { ArrowLeft, Save } from 'lucide-react'
 import Link from 'next/link'
+import { useToast } from '@/hooks/use-toast'
 
 interface Category {
   id: string
@@ -36,13 +37,15 @@ export default function NewProductPage() {
     slug: '',
     categoryId: '',
     brandId: '',
-    price: '',
     description: '',
     stock: '',
     images: [] as string[],
-    sizes: [] as string[]
+    sizePrices: [] as { size: string; price: number }[],
+    colors: [] as string[]
   })
   const [uploadingImages, setUploadingImages] = useState(false)
+  
+  const { toast } = useToast()
 
   useEffect(() => {
     fetchCategories()
@@ -62,9 +65,16 @@ export default function NewProductPage() {
       if (response.ok) {
         const data = await response.json()
         setCategories(data.categories)
+      } else {
+        throw new Error('Kategoriler yüklenirken hata oluştu')
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error('Categories fetch error:', error)
+      toast({
+        title: "Hata",
+        description: error.message || 'Kategoriler yüklenirken hata oluştu',
+        variant: "destructive",
+      })
     }
   }
 
@@ -74,9 +84,16 @@ export default function NewProductPage() {
       if (response.ok) {
         const data = await response.json()
         setBrands(data.brands)
+      } else {
+        throw new Error('Markalar yüklenirken hata oluştu')
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error('Brands fetch error:', error)
+      toast({
+        title: "Hata",
+        description: error.message || 'Markalar yüklenirken hata oluştu',
+        variant: "destructive",
+      })
     }
   }
 
@@ -152,19 +169,44 @@ export default function NewProductPage() {
     }))
   }
 
-  const addSize = (size: string) => {
-    if (size.trim() && !formData.sizes.includes(size.trim())) {
+  const addSizePrice = (size: string, price: number) => {
+    if (size.trim() && price > 0 && !formData.sizePrices.some(sp => sp.size === size.trim())) {
       setFormData(prev => ({
         ...prev,
-        sizes: [...prev.sizes, size.trim()]
+        sizePrices: [...prev.sizePrices, { size: size.trim(), price }]
       }))
     }
   }
 
-  const removeSize = (index: number) => {
+  const removeSizePrice = (index: number) => {
     setFormData(prev => ({
       ...prev,
-      sizes: prev.sizes.filter((_, i) => i !== index)
+      sizePrices: prev.sizePrices.filter((_, i) => i !== index)
+    }))
+  }
+
+  const updateSizePrice = (index: number, field: 'size' | 'price', value: string | number) => {
+    setFormData(prev => ({
+      ...prev,
+      sizePrices: prev.sizePrices.map((sp, i) => 
+        i === index ? { ...sp, [field]: value } : sp
+      )
+    }))
+  }
+
+  const addColor = (color: string) => {
+    if (color.trim() && !formData.colors.includes(color.trim())) {
+      setFormData(prev => ({
+        ...prev,
+        colors: [...prev.colors, color.trim()]
+      }))
+    }
+  }
+
+  const removeColor = (index: number) => {
+    setFormData(prev => ({
+      ...prev,
+      colors: prev.colors.filter((_, i) => i !== index)
     }))
   }
 
@@ -176,7 +218,6 @@ export default function NewProductPage() {
     try {
       const productData = {
         ...formData,
-        price: parseFloat(formData.price),
         stock: parseInt(formData.stock),
         brandId: formData.brandId || null
       }
@@ -192,12 +233,22 @@ export default function NewProductPage() {
       const data = await response.json()
 
       if (response.ok) {
+        toast({
+          title: "Başarılı",
+          description: `${formData.name} başarıyla eklendi.`,
+          variant: "success",
+        })
         router.push('/admin/products')
       } else {
-        setError(data.error || 'Ürün oluşturulurken hata oluştu')
+        throw new Error(data.error || 'Ürün oluşturulurken hata oluştu')
       }
-    } catch (error) {
-      setError('Sunucu hatası')
+    } catch (error: any) {
+      setError(error.message || 'Sunucu hatası')
+      toast({
+        title: "Hata",
+        description: error.message || 'Ürün eklenirken hata oluştu',
+        variant: "destructive",
+      })
     } finally {
       setLoading(false)
     }
@@ -294,31 +345,16 @@ export default function NewProductPage() {
               </div>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label htmlFor="price">Fiyat (₺) *</Label>
-                <Input
-                  id="price"
-                  type="number"
-                  step="0.01"
-                  value={formData.price}
-                  onChange={(e) => handleInputChange('price', e.target.value)}
-                  placeholder="1250.00"
-                  required
-                />
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="stock">Stok Miktarı *</Label>
-                <Input
-                  id="stock"
-                  type="number"
-                  value={formData.stock}
-                  onChange={(e) => handleInputChange('stock', e.target.value)}
-                  placeholder="15"
-                  required
-                />
-              </div>
+            <div className="space-y-2">
+              <Label htmlFor="stock">Stok Miktarı *</Label>
+              <Input
+                id="stock"
+                type="number"
+                value={formData.stock}
+                onChange={(e) => handleInputChange('stock', e.target.value)}
+                placeholder="15"
+                required
+              />
             </div>
 
             <div className="space-y-2">
@@ -330,6 +366,94 @@ export default function NewProductPage() {
                 placeholder="Ürün açıklaması..."
                 rows={4}
               />
+            </div>
+
+            <div className="space-y-4">
+              <Label>Boyut ve Fiyat Seçenekleri</Label>
+              
+              {/* Add Size Price Form */}
+              <div className="border rounded-lg p-4 space-y-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <Label htmlFor="size-input">Boyut</Label>
+                    <Input
+                      id="size-input"
+                      placeholder="S, M, L, XL"
+                      onKeyPress={(e) => {
+                        if (e.key === 'Enter') {
+                          e.preventDefault()
+                          const sizeInput = document.getElementById('size-input') as HTMLInputElement
+                          const priceInput = document.getElementById('price-input') as HTMLInputElement
+                          if (sizeInput.value && priceInput.value) {
+                            addSizePrice(sizeInput.value, parseFloat(priceInput.value))
+                            sizeInput.value = ''
+                            priceInput.value = ''
+                          }
+                        }
+                      }}
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="price-input">Fiyat (₺)</Label>
+                    <Input
+                      id="price-input"
+                      type="number"
+                      step="0.01"
+                      placeholder="1250.00"
+                    />
+                  </div>
+                </div>
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => {
+                    const sizeInput = document.getElementById('size-input') as HTMLInputElement
+                    const priceInput = document.getElementById('price-input') as HTMLInputElement
+                    if (sizeInput.value && priceInput.value) {
+                      addSizePrice(sizeInput.value, parseFloat(priceInput.value))
+                      sizeInput.value = ''
+                      priceInput.value = ''
+                    }
+                  }}
+                >
+                  Boyut Ekle
+                </Button>
+              </div>
+
+              {/* Size Prices List */}
+              {formData.sizePrices.length > 0 && (
+                <div className="space-y-2">
+                  <Label>Eklenen Boyutlar:</Label>
+                  <div className="space-y-2">
+                    {formData.sizePrices.map((sizePrice, index) => (
+                      <div key={index} className="flex items-center gap-2 p-3 border rounded-lg">
+                        <Input
+                          value={sizePrice.size}
+                          onChange={(e) => updateSizePrice(index, 'size', e.target.value)}
+                          className="flex-1"
+                        />
+                        <Input
+                          type="number"
+                          step="0.01"
+                          value={sizePrice.price}
+                          onChange={(e) => updateSizePrice(index, 'price', parseFloat(e.target.value) || 0)}
+                          className="flex-1"
+                        />
+                        <span className="text-sm text-gray-500">₺</span>
+                        <Button
+                          type="button"
+                          variant="outline"
+                          size="sm"
+                          onClick={() => removeSizePrice(index)}
+                          className="text-red-600 hover:text-red-700 hover:bg-red-50"
+                        >
+                          ×
+                        </Button>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
             </div>
 
             <div className="space-y-2">
@@ -379,14 +503,14 @@ export default function NewProductPage() {
             </div>
 
             <div className="space-y-2">
-              <Label>Ürün Boyutları</Label>
+              <Label>Renk Seçenekleri</Label>
               <div className="flex gap-2">
                 <Input
-                  placeholder="Boyut ekle (örn: S, M, L)"
+                  placeholder="Renk ekle (örn: Kırmızı, Beyaz, Mavi)"
                   onKeyPress={(e) => {
                     if (e.key === 'Enter') {
                       e.preventDefault()
-                      addSize((e.target as HTMLInputElement).value)
+                      addColor((e.target as HTMLInputElement).value)
                       ;(e.target as HTMLInputElement).value = ''
                     }
                   }}
@@ -395,9 +519,9 @@ export default function NewProductPage() {
                   type="button"
                   variant="outline"
                   onClick={() => {
-                    const input = document.querySelector('input[placeholder="Boyut ekle (örn: S, M, L)"]') as HTMLInputElement
+                    const input = document.querySelector('input[placeholder="Renk ekle (örn: Kırmızı, Beyaz, Mavi)"]') as HTMLInputElement
                     if (input) {
-                      addSize(input.value)
+                      addColor(input.value)
                       input.value = ''
                     }
                   }}
@@ -406,18 +530,18 @@ export default function NewProductPage() {
                 </Button>
               </div>
               
-              {formData.sizes.length > 0 && (
+              {formData.colors.length > 0 && (
                 <div className="flex flex-wrap gap-2 mt-2">
-                  {formData.sizes.map((size, index) => (
+                  {formData.colors.map((color, index) => (
                     <span
                       key={index}
-                      className="inline-flex items-center px-3 py-1 rounded-full text-sm bg-blue-100 text-blue-800"
+                      className="inline-flex items-center px-3 py-1 rounded-full text-sm bg-green-100 text-green-800"
                     >
-                      {size}
+                      {color}
                       <button
                         type="button"
-                        onClick={() => removeSize(index)}
-                        className="ml-2 text-blue-600 hover:text-blue-800"
+                        onClick={() => removeColor(index)}
+                        className="ml-2 text-green-600 hover:text-green-800"
                       >
                         ×
                       </button>
