@@ -24,8 +24,11 @@ model User {
 model Category {
   id          String    @id @default(cuid())
   name        String
+  nameEn      String?   // English name
   slug        String    @unique
+  slugEn      String?   // English slug
   description String?
+  descriptionEn String? // English description
   createdAt   DateTime  @default(now())
   updatedAt   DateTime  @updatedAt
   brands      Brand[]
@@ -37,8 +40,11 @@ model Category {
 model Brand {
   id          String    @id @default(cuid())
   name        String
+  nameEn      String?   // English name
   slug        String    @unique
+  slugEn      String?   // English slug
   description String?
+  descriptionEn String? // English description
   categoryId  String
   createdAt   DateTime  @default(now())
   updatedAt   DateTime  @updatedAt
@@ -51,16 +57,19 @@ model Brand {
 model Product {
   id          String   @id @default(cuid())
   name        String
+  nameEn      String?  // English name
   slug        String   @unique
+  slugEn      String?  // English slug
   categoryId  String
   description String?
+  descriptionEn String? // English description
   images      String[]
   stock       Int      @default(0)
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
   brandId     String?
   sizePrices  Json     // Boyut ve fiyat bilgileri: [{"size": "S", "price": 100}, {"size": "M", "price": 120}]
-  colors      String[] // Renk seçenekleri (örn: ["Kırmızı", "Beyaz", "Mavi"])
+  colors      Json     // Renk seçenekleri: [{"tr": "Kırmızı", "en": "Red"}, {"tr": "Beyaz", "en": "White"}]
   brand       Brand?   @relation(fields: [brandId], references: [id])
   category    Category @relation(fields: [categoryId], references: [id], onDelete: Cascade)
 

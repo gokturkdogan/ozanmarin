@@ -34,14 +34,16 @@ export default function NewProductPage() {
   
   const [formData, setFormData] = useState({
     name: '',
+    nameEn: '',
     slug: '',
     categoryId: '',
     brandId: '',
     description: '',
+    descriptionEn: '',
     stock: '',
     images: [] as string[],
     sizePrices: [] as { size: string; price: number }[],
-    colors: [] as string[]
+    colors: [] as { tr: string; en: string }[] // Updated colors interface
   })
   const [uploadingImages, setUploadingImages] = useState(false)
   
@@ -194,12 +196,19 @@ export default function NewProductPage() {
     }))
   }
 
-  const addColor = (color: string) => {
-    if (color.trim() && !formData.colors.includes(color.trim())) {
-      setFormData(prev => ({
-        ...prev,
-        colors: [...prev.colors, color.trim()]
-      }))
+  const addColor = (trColor: string, enColor: string) => {
+    if (trColor.trim() && enColor.trim()) {
+      const newColor = { tr: trColor.trim(), en: enColor.trim() }
+      const colorExists = formData.colors.some(color => 
+        color.tr === newColor.tr || color.en === newColor.en
+      )
+      
+      if (!colorExists) {
+        setFormData(prev => ({
+          ...prev,
+          colors: [...prev.colors, newColor]
+        }))
+      }
     }
   }
 
@@ -286,7 +295,7 @@ export default function NewProductPage() {
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="space-y-2">
-                <Label htmlFor="name">Ürün Adı *</Label>
+                <Label htmlFor="name">Türkçe Ürün Adı *</Label>
                 <Input
                   id="name"
                   value={formData.name}
@@ -297,15 +306,25 @@ export default function NewProductPage() {
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="slug">URL Slug *</Label>
+                <Label htmlFor="nameEn">English Product Name</Label>
                 <Input
-                  id="slug"
-                  value={formData.slug}
-                  onChange={(e) => handleInputChange('slug', e.target.value)}
-                  placeholder="yat-koltuk-kilifi-premium"
-                  required
+                  id="nameEn"
+                  value={formData.nameEn}
+                  onChange={(e) => handleInputChange('nameEn', e.target.value)}
+                  placeholder="e.g. Yacht Seat Cover Premium"
                 />
               </div>
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="slug">URL Slug *</Label>
+              <Input
+                id="slug"
+                value={formData.slug}
+                onChange={(e) => handleInputChange('slug', e.target.value)}
+                placeholder="yat-koltuk-kilifi-premium"
+                required
+              />
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -357,15 +376,28 @@ export default function NewProductPage() {
               />
             </div>
 
-            <div className="space-y-2">
-              <Label htmlFor="description">Açıklama</Label>
-              <Textarea
-                id="description"
-                value={formData.description}
-                onChange={(e) => handleInputChange('description', e.target.value)}
-                placeholder="Ürün açıklaması..."
-                rows={4}
-              />
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="description">Türkçe Açıklama</Label>
+                <Textarea
+                  id="description"
+                  value={formData.description}
+                  onChange={(e) => handleInputChange('description', e.target.value)}
+                  placeholder="Ürün açıklaması..."
+                  rows={4}
+                />
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="descriptionEn">English Description</Label>
+                <Textarea
+                  id="descriptionEn"
+                  value={formData.descriptionEn}
+                  onChange={(e) => handleInputChange('descriptionEn', e.target.value)}
+                  placeholder="Product description..."
+                  rows={4}
+                />
+              </div>
             </div>
 
             <div className="space-y-4">
@@ -379,18 +411,15 @@ export default function NewProductPage() {
                     <Input
                       id="size-input"
                       placeholder="S, M, L, XL"
-                      onKeyPress={(e) => {
-                        if (e.key === 'Enter') {
-                          e.preventDefault()
-                          const sizeInput = document.getElementById('size-input') as HTMLInputElement
-                          const priceInput = document.getElementById('price-input') as HTMLInputElement
-                          if (sizeInput.value && priceInput.value) {
-                            addSizePrice(sizeInput.value, parseFloat(priceInput.value))
-                            sizeInput.value = ''
-                            priceInput.value = ''
-                          }
-                        }
-                      }}
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="price-input">Fiyat ($)</Label>
+                    <Input
+                      id="price-input"
+                      type="number"
+                      step="0.01"
+                      placeholder="100.00"
                     />
                   </div>
                 </div>
@@ -399,9 +428,11 @@ export default function NewProductPage() {
                   variant="outline"
                   onClick={() => {
                     const sizeInput = document.getElementById('size-input') as HTMLInputElement
-                    if (sizeInput.value) {
-                      addSizePrice(sizeInput.value, 0) // Default price 0, admin will set it in the list
+                    const priceInput = document.getElementById('price-input') as HTMLInputElement
+                    if (sizeInput.value && priceInput.value) {
+                      addSizePrice(sizeInput.value, parseFloat(priceInput.value))
                       sizeInput.value = ''
+                      priceInput.value = ''
                     }
                   }}
                 >
@@ -412,29 +443,37 @@ export default function NewProductPage() {
               {/* Size Prices List */}
               {formData.sizePrices.length > 0 && (
                 <div className="space-y-2">
-                  <Label>Eklenen Boyutlar:</Label>
+                  <Label className="text-lg font-semibold">Eklenen Boyutlar ({formData.sizePrices.length} adet):</Label>
                   <div className="space-y-2">
                     {formData.sizePrices.map((sizePrice, index) => (
-                      <div key={index} className="flex items-center gap-2 p-3 border rounded-lg">
-                        <Input
-                          value={sizePrice.size}
-                          onChange={(e) => updateSizePrice(index, 'size', e.target.value)}
-                          className="flex-1"
-                        />
-                        <Input
-                          type="number"
-                          step="0.01"
-                          value={sizePrice.price}
-                          onChange={(e) => updateSizePrice(index, 'price', parseFloat(e.target.value) || 0)}
-                          className="flex-1"
-                        />
-                        <span className="text-sm text-gray-500">$</span>
+                      <div key={index} className="flex items-center gap-2 p-3 border rounded-lg bg-gray-50">
+                        <div className="flex-1">
+                          <Label className="text-sm text-gray-600">Boyut:</Label>
+                          <Input
+                            value={sizePrice.size}
+                            onChange={(e) => updateSizePrice(index, 'size', e.target.value)}
+                            className="mt-1"
+                          />
+                        </div>
+                        <div className="flex-1">
+                          <Label className="text-sm text-gray-600">Fiyat:</Label>
+                          <div className="flex items-center mt-1">
+                            <Input
+                              type="number"
+                              step="0.01"
+                              value={sizePrice.price}
+                              onChange={(e) => updateSizePrice(index, 'price', parseFloat(e.target.value) || 0)}
+                              className="flex-1"
+                            />
+                            <span className="ml-2 text-sm text-gray-500 font-medium">$</span>
+                          </div>
+                        </div>
                         <Button
                           type="button"
                           variant="outline"
                           size="sm"
                           onClick={() => removeSizePrice(index)}
-                          className="text-red-600 hover:text-red-700 hover:bg-red-50"
+                          className="text-red-600 hover:text-red-700 hover:bg-red-50 mt-6"
                         >
                           ×
                         </Button>
@@ -493,31 +532,31 @@ export default function NewProductPage() {
 
             <div className="space-y-2">
               <Label>Renk Seçenekleri</Label>
-              <div className="flex gap-2">
+              <div className="grid grid-cols-2 gap-2">
                 <Input
-                  placeholder="Renk ekle (örn: Kırmızı, Beyaz, Mavi)"
-                  onKeyPress={(e) => {
-                    if (e.key === 'Enter') {
-                      e.preventDefault()
-                      addColor((e.target as HTMLInputElement).value)
-                      ;(e.target as HTMLInputElement).value = ''
-                    }
-                  }}
+                  placeholder="Türkçe Renk (örn: Kırmızı)"
+                  id="color-tr"
                 />
-                <Button
-                  type="button"
-                  variant="outline"
-                  onClick={() => {
-                    const input = document.querySelector('input[placeholder="Renk ekle (örn: Kırmızı, Beyaz, Mavi)"]') as HTMLInputElement
-                    if (input) {
-                      addColor(input.value)
-                      input.value = ''
-                    }
-                  }}
-                >
-                  Ekle
-                </Button>
+                <Input
+                  placeholder="English Color (e.g. Red)"
+                  id="color-en"
+                />
               </div>
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => {
+                  const trInput = document.getElementById('color-tr') as HTMLInputElement
+                  const enInput = document.getElementById('color-en') as HTMLInputElement
+                  if (trInput && enInput) {
+                    addColor(trInput.value, enInput.value)
+                    trInput.value = ''
+                    enInput.value = ''
+                  }
+                }}
+              >
+                Renk Ekle
+              </Button>
               
               {formData.colors.length > 0 && (
                 <div className="flex flex-wrap gap-2 mt-2">
@@ -526,7 +565,7 @@ export default function NewProductPage() {
                       key={index}
                       className="inline-flex items-center px-3 py-1 rounded-full text-sm bg-green-100 text-green-800"
                     >
-                      {color}
+                      {color.tr} / {color.en}
                       <button
                         type="button"
                         onClick={() => removeColor(index)}

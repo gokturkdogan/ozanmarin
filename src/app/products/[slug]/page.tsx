@@ -7,27 +7,35 @@ import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { useCartStore } from '@/lib/cart'
+import { useLanguage, getTranslatedText, getTranslatedColors } from '@/lib/language'
 import { CustomToast } from '@/components/custom-toast'
 import { FileUpload } from '@/components/file-upload'
 import { ShoppingCart, ArrowLeft, Star, Shield, Waves, ChevronLeft, ChevronRight } from 'lucide-react'
-import { getUSDExchangeRate, convertUSDToTRY, formatTRYPrice } from '@/lib/exchangeRate'
+import { getUSDExchangeRate, convertUSDToTRY, formatPrice } from '@/lib/exchangeRate'
 
 interface Product {
   id: string
   name: string
+  nameEn?: string
   slug: string
+  slugEn?: string
   description: string
+  descriptionEn?: string
   images: string[]
   stock: number
   sizePrices: { size: string; price: number }[]
-  colors: string[]
+  colors: { tr: string; en: string }[] // Updated colors interface
   category: {
     name: string
+    nameEn?: string
     slug: string
+    slugEn?: string
   }
   brand?: {
     name: string
+    nameEn?: string
     slug: string
+    slugEn?: string
   }
 }
 
@@ -53,6 +61,60 @@ export default function ProductPage({ params }: ProductPageProps) {
   const [exchangeRate, setExchangeRate] = useState<number>(34.50) // Default fallback rate
   const { addItem } = useCartStore()
   const router = useRouter()
+  const { language } = useLanguage()
+
+  const content = {
+    tr: {
+      loading: "Ürün yükleniyor...",
+      notFound: "Ürün bulunamadı",
+      backToProducts: "Ürünlere Dön",
+      products: "Ürünler",
+      brand: "Marka:",
+      selectSize: "Boyut Seçin:",
+      selectSizePlaceholder: "Boyut seçin",
+      selectColor: "Renk Seçin:",
+      selectColorPlaceholder: "Renk seçin",
+      quantity: "Miktar:",
+      embroidery: "Nakış (+₺100)",
+      embroideryDesign: "Nakış Tasarımı:",
+      embroideryRequired: "Nakış seçtiyseniz tasarım dosyasını yüklemelisiniz.",
+      addToCart: "Sepete Ekle",
+      viewCart: "Sepeti Görüntüle",
+      outOfStock: "Stokta Yok",
+      imageAlt: "Görsel",
+      addedToCart: "Sepete Eklendi!",
+      selectSizeFirst: "Boyut seçiniz",
+      uvProtected: "UV Korumalı",
+      waterproof: "Su Geçirmez",
+      premiumQuality: "Premium Kalite"
+    },
+    en: {
+      loading: "Loading product...",
+      notFound: "Product not found",
+      backToProducts: "Back to Products",
+      products: "Products",
+      brand: "Brand:",
+      selectSize: "Select Size:",
+      selectSizePlaceholder: "Select size",
+      selectColor: "Select Color:",
+      selectColorPlaceholder: "Select color",
+      quantity: "Quantity:",
+      embroidery: "Embroidery (+₺100)",
+      embroideryDesign: "Embroidery Design:",
+      embroideryRequired: "You must upload a design file if you select embroidery.",
+      addToCart: "Add to Cart",
+      viewCart: "View Cart",
+      outOfStock: "Out of Stock",
+      imageAlt: "Image",
+      addedToCart: "Added to Cart!",
+      selectSizeFirst: "Select size first",
+      uvProtected: "UV Protected",
+      waterproof: "Waterproof",
+      premiumQuality: "Premium Quality"
+    }
+  }
+
+  const t = content[language]
 
   useEffect(() => {
     const getSlug = async () => {
@@ -107,7 +169,8 @@ export default function ProductPage({ params }: ProductPageProps) {
       }
       // İlk rengi seçili hale getir
       if (data.product.colors && data.product.colors.length > 0) {
-        setSelectedColor(data.product.colors[0])
+        const translatedColors = getTranslatedColors(data.product.colors, language)
+        setSelectedColor(translatedColors[0])
       }
     } catch (error) {
       console.error('Error fetching product:', error)
@@ -121,19 +184,19 @@ export default function ProductPage({ params }: ProductPageProps) {
       for (let i = 0; i < quantity; i++) {
         addItem({
           id: product.id,
-          name: product.name,
-          price: convertUSDToTRY(selectedSizePrice.price, exchangeRate), // Convert USD to TRY
+          name: getTranslatedText(product.name, product.nameEn, language),
+          price: convertUSDToTRY(selectedSizePrice.price, exchangeRate, language), // Convert USD to TRY or keep USD
           image: product.images[0] || '/placeholder.jpg',
           size: selectedSizePrice.size,
           color: selectedColor || '',
           hasEmbroidery: hasEmbroidery,
           embroideryFile: embroideryUrl || undefined,
-          embroideryPrice: hasEmbroidery ? 100 : 0,
-          categoryName: product.category.name,
-          brandName: product.brand?.name
+          embroideryPrice: hasEmbroidery ? (language === 'tr' ? 100 : 0) : 0,
+          categoryName: getTranslatedText(product.category.name, product.category.nameEn, language),
+          brandName: product.brand ? getTranslatedText(product.brand.name, product.brand.nameEn, language) : undefined
         })
       }
-      setToastMessage(`${quantity} adet ${product.name} sepete eklendi!`)
+      setToastMessage(`${quantity} adet ${getTranslatedText(product.name, product.nameEn, language)} sepete eklendi!`)
       setShowToast(true)
       
       // Toast gösterildikten sonra ürünler sayfasına yönlendir
@@ -160,7 +223,7 @@ export default function ProductPage({ params }: ProductPageProps) {
       <div className="min-h-screen flex items-center justify-center">
         <div className="text-center">
           <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-primary mx-auto"></div>
-          <p className="mt-4 text-gray-600">Ürün yükleniyor...</p>
+          <p className="mt-4 text-gray-600">{t.loading}</p>
         </div>
       </div>
     )
@@ -170,9 +233,9 @@ export default function ProductPage({ params }: ProductPageProps) {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="text-center">
-          <h1 className="text-2xl font-bold text-gray-900 mb-4">Ürün bulunamadı</h1>
+          <h1 className="text-2xl font-bold text-gray-900 mb-4">{t.notFound}</h1>
           <Link href="/products">
-            <Button>Ürünlere Dön</Button>
+            <Button>{t.backToProducts}</Button>
           </Link>
         </div>
       </div>
@@ -185,14 +248,14 @@ export default function ProductPage({ params }: ProductPageProps) {
         {/* Breadcrumb */}
         <div className="flex items-center space-x-2 text-sm text-gray-600 mb-8">
           <Link href="/products" className="hover:text-primary">
-            Ürünler
+            {t.products}
           </Link>
           <span>/</span>
           <Link href={`/products?category=${product.category.slug}`} className="hover:text-primary">
-            {product.category.name}
+            {getTranslatedText(product.category.name, product.category.nameEn, language)}
           </Link>
           <span>/</span>
-          <span className="text-gray-900">{product.name}</span>
+          <span className="text-gray-900">{getTranslatedText(product.name, product.nameEn, language)}</span>
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
@@ -204,7 +267,7 @@ export default function ProductPage({ params }: ProductPageProps) {
                 <>
                   <img
                     src={product.images[selectedImage]}
-                    alt={product.name}
+                    alt={getTranslatedText(product.name, product.nameEn, language)}
                     className="w-full h-96 object-cover rounded-lg"
                   />
                   {/* Navigation Buttons */}
@@ -249,7 +312,7 @@ export default function ProductPage({ params }: ProductPageProps) {
                   >
                     <img
                       src={image}
-                      alt={`${product.name} - Görsel ${index + 1}`}
+                      alt={`${getTranslatedText(product.name, product.nameEn, language)} - ${t.imageAlt} ${index + 1}`}
                       className="w-full h-20 object-cover"
                     />
                   </button>
@@ -263,48 +326,48 @@ export default function ProductPage({ params }: ProductPageProps) {
             <div>
               <div className="mb-2">
                 <span className="text-sm text-primary font-medium">
-                  {product.category.name}
+                  {getTranslatedText(product.category.name, product.category.nameEn, language)}
                 </span>
               </div>
               {product.brand && (
                 <div className="mb-3">
                   <div className="flex items-center space-x-2">
                     <span className="text-sm text-gray-500 font-medium uppercase tracking-wide">
-                      Marka:
+                      {t.brand}
                     </span>
                     <span className="text-lg text-primary font-bold">
-                      {product.brand.name}
+                      {getTranslatedText(product.brand.name, product.brand.nameEn, language)}
                     </span>
                   </div>
                 </div>
               )}
               <h1 className="text-3xl font-bold text-gray-900 mb-4">
-                {product.name}
+                {getTranslatedText(product.name, product.nameEn, language)}
               </h1>
               <p className="text-xl text-primary font-bold mb-6">
                 {selectedSizePrice ? (
                   <span>
-                    {formatTRYPrice((convertUSDToTRY(selectedSizePrice.price, exchangeRate) + (hasEmbroidery ? 100 : 0)) * quantity)}
+                    {formatPrice((convertUSDToTRY(selectedSizePrice.price, exchangeRate, language) + (hasEmbroidery ? (language === 'tr' ? 100 : 0) : 0)) * quantity, language)}
                     {quantity > 1 && (
                       <span className="text-sm text-gray-600 ml-2">
-                        ({quantity} × {formatTRYPrice(convertUSDToTRY(selectedSizePrice.price, exchangeRate) + (hasEmbroidery ? 100 : 0))})
+                        ({quantity} × {formatPrice(convertUSDToTRY(selectedSizePrice.price, exchangeRate, language) + (hasEmbroidery ? (language === 'tr' ? 100 : 0) : 0), language)})
                       </span>
                     )}
                     {hasEmbroidery && (
                       <span className="text-sm text-gray-600 ml-2 block">
-                        {formatTRYPrice(convertUSDToTRY(selectedSizePrice.price, exchangeRate))} + ₺100 nakış
+                        {formatPrice(convertUSDToTRY(selectedSizePrice.price, exchangeRate, language), language)} + {language === 'tr' ? '₺100 nakış' : '$0 embroidery'}
                       </span>
                     )}
                   </span>
                 ) : (
-                  'Boyut seçiniz'
+                  t.selectSizeFirst
                 )}
               </p>
             </div>
 
             <div className="prose max-w-none">
               <p className="text-gray-600 leading-relaxed">
-                {product.description}
+                {getTranslatedText(product.description, product.descriptionEn, language)}
               </p>
             </div>
 
@@ -312,15 +375,15 @@ export default function ProductPage({ params }: ProductPageProps) {
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
               <div className="flex items-center space-x-2 text-sm">
                 <Shield className="w-5 h-5 text-primary" />
-                <span>UV Korumalı</span>
+                <span>{t.uvProtected}</span>
               </div>
               <div className="flex items-center space-x-2 text-sm">
                 <Waves className="w-5 h-5 text-primary" />
-                <span>Su Geçirmez</span>
+                <span>{t.waterproof}</span>
               </div>
               <div className="flex items-center space-x-2 text-sm">
                 <Star className="w-5 h-5 text-primary" />
-                <span>Premium Kalite</span>
+                <span>{t.premiumQuality}</span>
               </div>
             </div>
 
@@ -329,7 +392,7 @@ export default function ProductPage({ params }: ProductPageProps) {
               {/* Size Selection */}
               {product.sizePrices && product.sizePrices.length > 0 && (
                 <div className="mb-4">
-                  <label className="text-sm font-medium mb-2 block">Boyut Seçin:</label>
+                  <label className="text-sm font-medium mb-2 block">{t.selectSize}</label>
                   <Select 
                     value={selectedSizePrice ? selectedSizePrice.size : ''} 
                     onValueChange={(value) => {
@@ -340,12 +403,12 @@ export default function ProductPage({ params }: ProductPageProps) {
                     }}
                   >
                     <SelectTrigger className="w-full">
-                      <SelectValue placeholder="Boyut seçin" />
+                      <SelectValue placeholder={t.selectSizePlaceholder} />
                     </SelectTrigger>
                     <SelectContent>
                       {product.sizePrices.map((sizePrice) => (
                         <SelectItem key={sizePrice.size} value={sizePrice.size}>
-                          {sizePrice.size} - {formatTRYPrice(convertUSDToTRY(sizePrice.price, exchangeRate))}
+                          {sizePrice.size} - {formatPrice(convertUSDToTRY(sizePrice.price, exchangeRate, language), language)}
                         </SelectItem>
                       ))}
                     </SelectContent>
@@ -356,14 +419,14 @@ export default function ProductPage({ params }: ProductPageProps) {
               {/* Color Selection */}
               {product.colors && product.colors.length > 0 && (
                 <div className="mb-4">
-                  <label className="text-sm font-medium mb-2 block">Renk Seçin:</label>
+                  <label className="text-sm font-medium mb-2 block">{t.selectColor}</label>
                   <Select value={selectedColor} onValueChange={setSelectedColor}>
                     <SelectTrigger className="w-full">
-                      <SelectValue placeholder="Renk seçin" />
+                      <SelectValue placeholder={t.selectColorPlaceholder} />
                     </SelectTrigger>
                     <SelectContent>
-                      {product.colors.map((color) => (
-                        <SelectItem key={color} value={color}>
+                      {getTranslatedColors(product.colors, language).map((color, index) => (
+                        <SelectItem key={index} value={color}>
                           {color}
                         </SelectItem>
                       ))}
@@ -383,13 +446,13 @@ export default function ProductPage({ params }: ProductPageProps) {
                     className="rounded"
                   />
                   <label htmlFor="embroidery" className="text-sm font-medium cursor-pointer">
-                    Nakış (+₺100)
+                    {t.embroidery}
                   </label>
                 </div>
                 
                 {hasEmbroidery && (
                   <div className="mt-3">
-                    <label className="text-sm font-medium mb-2 block">Nakış Tasarımı:</label>
+                    <label className="text-sm font-medium mb-2 block">{t.embroideryDesign}</label>
                     <FileUpload
                       onFileSelect={(file, url) => {
                         setEmbroideryFile(file)
@@ -403,7 +466,7 @@ export default function ProductPage({ params }: ProductPageProps) {
               </div>
               
               <div className="flex items-center space-x-4 mb-4">
-                <label className="text-sm font-medium">Adet:</label>
+                <label className="text-sm font-medium">{t.quantity}</label>
                 <div className="flex items-center space-x-2">
                   <Button
                     variant="outline"
@@ -431,27 +494,27 @@ export default function ProductPage({ params }: ProductPageProps) {
                   disabled={product.stock === 0 || !selectedSizePrice || (hasEmbroidery && !embroideryUrl)}
                 >
                   <ShoppingCart className="w-5 h-5 mr-2" />
-                  Sepete Ekle
+                  {t.addToCart}
                 </Button>
                 <Link href="/cart">
                   <Button variant="outline" size="lg" className="cursor-pointer hover:bg-gray-50 transition-colors">
-                    Sepeti Görüntüle
+                    {t.viewCart}
                   </Button>
                 </Link>
               </div>
               
               {hasEmbroidery && !embroideryUrl && (
                 <p className="text-sm text-red-600 mt-2">
-                  Nakış seçtiyseniz tasarım dosyasını yüklemelisiniz.
+                  {t.embroideryRequired}
                 </p>
               )}
               
               {product.stock === 0 && (
-                <p className="text-red-500 text-sm mt-2">Bu ürün şu anda stokta bulunmuyor.</p>
+                <p className="text-red-500 text-sm mt-2">{t.outOfStock}</p>
               )}
               
               {!selectedSizePrice && product.sizePrices && product.sizePrices.length > 0 && (
-                <p className="text-orange-500 text-sm mt-2">Lütfen bir boyut seçiniz.</p>
+                <p className="text-orange-500 text-sm mt-2">{t.selectSizeFirst}</p>
               )}
               
               {product.stock > 0 && product.stock < 10 && selectedSizePrice && (
@@ -463,48 +526,12 @@ export default function ProductPage({ params }: ProductPageProps) {
           </div>
         </div>
 
-        {/* Related Products */}
-        <div className="mt-16">
-          <h2 className="text-2xl font-bold text-gray-900 mb-8">Benzer Ürünler</h2>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            {/* Placeholder for related products */}
-            <Card className="group hover:shadow-lg transition-shadow">
-              <CardContent className="p-6">
-                <div className="w-full h-48 bg-gradient-to-br from-blue-400 to-blue-600 rounded-lg flex items-center justify-center mb-4">
-                  <ShoppingCart className="w-16 h-16 text-white opacity-50" />
-                </div>
-                <h3 className="font-semibold text-lg mb-2">Benzer Ürün 1</h3>
-                <p className="text-primary font-bold">₺1,200</p>
-              </CardContent>
-            </Card>
-            
-            <Card className="group hover:shadow-lg transition-shadow">
-              <CardContent className="p-6">
-                <div className="w-full h-48 bg-gradient-to-br from-blue-400 to-blue-600 rounded-lg flex items-center justify-center mb-4">
-                  <ShoppingCart className="w-16 h-16 text-white opacity-50" />
-                </div>
-                <h3 className="font-semibold text-lg mb-2">Benzer Ürün 2</h3>
-                <p className="text-primary font-bold">₺950</p>
-              </CardContent>
-            </Card>
-            
-            <Card className="group hover:shadow-lg transition-shadow">
-              <CardContent className="p-6">
-                <div className="w-full h-48 bg-gradient-to-br from-blue-400 to-blue-600 rounded-lg flex items-center justify-center mb-4">
-                  <ShoppingCart className="w-16 h-16 text-white opacity-50" />
-                </div>
-                <h3 className="font-semibold text-lg mb-2">Benzer Ürün 3</h3>
-                <p className="text-primary font-bold">₺1,800</p>
-              </CardContent>
-            </Card>
-          </div>
-        </div>
       </div>
       
       {/* Custom Toast */}
       {showToast && (
         <CustomToast
-          title="Sepete Eklendi!"
+          title={t.addedToCart}
           description={toastMessage}
           onClose={() => setShowToast(false)}
           duration={3000}

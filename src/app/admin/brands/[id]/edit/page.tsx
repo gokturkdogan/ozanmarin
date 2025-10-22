@@ -23,6 +23,7 @@ interface Brand {
   name: string
   slug: string
   description: string | null
+  descriptionEn?: string | null
   categoryId: string
   category: {
     name: string
@@ -41,6 +42,7 @@ export default function EditBrandPage({ params }: { params: Promise<{ id: string
     name: '',
     slug: '',
     description: '',
+    descriptionEn: '',
     categoryId: ''
   })
 
@@ -64,6 +66,7 @@ export default function EditBrandPage({ params }: { params: Promise<{ id: string
             name: brandData.brand.name,
             slug: brandData.brand.slug,
             description: brandData.brand.description || '',
+            descriptionEn: brandData.brand.descriptionEn || '',
             categoryId: brandData.brand.categoryId
           })
         } else {
@@ -239,15 +242,28 @@ export default function EditBrandPage({ params }: { params: Promise<{ id: string
               </Select>
             </div>
 
-            <div className="space-y-2">
-              <Label htmlFor="description">Açıklama</Label>
-              <Textarea
-                id="description"
-                value={formData.description}
-                onChange={(e) => handleInputChange('description', e.target.value)}
-                placeholder="Marka açıklaması..."
-                rows={4}
-              />
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="description">Türkçe Açıklama</Label>
+                <Textarea
+                  id="description"
+                  value={formData.description}
+                  onChange={(e) => handleInputChange('description', e.target.value)}
+                  placeholder="Marka açıklaması..."
+                  rows={4}
+                />
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="descriptionEn">English Description</Label>
+                <Textarea
+                  id="descriptionEn"
+                  value={formData.descriptionEn}
+                  onChange={(e) => handleInputChange('descriptionEn', e.target.value)}
+                  placeholder="Brand description..."
+                  rows={4}
+                />
+              </div>
             </div>
 
             <div className="flex gap-4 pt-4">

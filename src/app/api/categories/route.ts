@@ -4,6 +4,15 @@ import { prisma } from '@/lib/prisma'
 export async function GET() {
   try {
     const categories = await prisma.category.findMany({
+      select: {
+        id: true,
+        name: true,
+        nameEn: true,
+        slug: true,
+        slugEn: true,
+        description: true,
+        descriptionEn: true
+      },
       orderBy: {
         name: 'asc'
       }

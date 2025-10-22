@@ -18,8 +18,11 @@ export default function NewCategoryPage() {
   
   const [formData, setFormData] = useState({
     name: '',
+    nameEn: '',
     slug: '',
-    description: ''
+    slugEn: '',
+    description: '',
+    descriptionEn: ''
   })
 
   const { toast } = useToast()
@@ -118,7 +121,7 @@ export default function NewCategoryPage() {
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="space-y-2">
-                <Label htmlFor="name">Kategori Adı *</Label>
+                <Label htmlFor="name">Türkçe Kategori Adı *</Label>
                 <Input
                   id="name"
                   value={formData.name}
@@ -129,7 +132,19 @@ export default function NewCategoryPage() {
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="slug">URL Slug *</Label>
+                <Label htmlFor="nameEn">English Category Name</Label>
+                <Input
+                  id="nameEn"
+                  value={formData.nameEn}
+                  onChange={(e) => handleInputChange('nameEn', e.target.value)}
+                  placeholder="e.g. Yacht Fabric Covers"
+                />
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="slug">Türkçe URL Slug *</Label>
                 <Input
                   id="slug"
                   value={formData.slug}
@@ -138,17 +153,40 @@ export default function NewCategoryPage() {
                   required
                 />
               </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="slugEn">English URL Slug</Label>
+                <Input
+                  id="slugEn"
+                  value={formData.slugEn}
+                  onChange={(e) => handleInputChange('slugEn', e.target.value)}
+                  placeholder="yacht-fabric-covers"
+                />
+              </div>
             </div>
 
-            <div className="space-y-2">
-              <Label htmlFor="description">Açıklama</Label>
-              <Textarea
-                id="description"
-                value={formData.description}
-                onChange={(e) => handleInputChange('description', e.target.value)}
-                placeholder="Kategori açıklaması..."
-                rows={4}
-              />
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="description">Türkçe Açıklama</Label>
+                <Textarea
+                  id="description"
+                  value={formData.description}
+                  onChange={(e) => handleInputChange('description', e.target.value)}
+                  placeholder="Kategori açıklaması..."
+                  rows={4}
+                />
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="descriptionEn">English Description</Label>
+                <Textarea
+                  id="descriptionEn"
+                  value={formData.descriptionEn}
+                  onChange={(e) => handleInputChange('descriptionEn', e.target.value)}
+                  placeholder="Category description..."
+                  rows={4}
+                />
+              </div>
             </div>
 
             <div className="flex gap-4 pt-4">

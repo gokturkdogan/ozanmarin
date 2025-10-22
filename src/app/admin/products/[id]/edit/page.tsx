@@ -27,21 +27,28 @@ interface Brand {
 interface Product {
   id: string
   name: string
+  nameEn?: string
   slug: string
+  slugEn?: string
   stock: number
   description: string
+  descriptionEn?: string
   images: string[]
   sizePrices: { size: string; price: number }[]
-  colors: string[]
+  colors: { tr: string; en: string }[] // Updated colors interface
   category: {
     id: string
     name: string
+    nameEn?: string
     slug: string
+    slugEn?: string
   }
   brand: {
     id: string
     name: string
+    nameEn?: string
     slug: string
+    slugEn?: string
   } | null
 }
 
@@ -59,14 +66,17 @@ export default function EditProductPage({ params }: { params: Promise<{ id: stri
   
   const [formData, setFormData] = useState({
     name: '',
+    nameEn: '',
     slug: '',
+    slugEn: '',
     categoryId: '',
     brandId: '',
     description: '',
+    descriptionEn: '',
     stock: '',
     images: '',
     sizePrices: [] as { size: string; price: number }[],
-    colors: ''
+    colors: [] as { tr: string; en: string }[] // Updated colors interface
   })
 
   const { toast } = useToast()
@@ -103,14 +113,17 @@ export default function EditProductPage({ params }: { params: Promise<{ id: stri
         
         setFormData({
           name: product.name,
+          nameEn: product.nameEn || '',
           slug: product.slug,
+          slugEn: product.slugEn || '',
           categoryId: product.category.id,
           brandId: product.brand?.id || '',
           description: product.description || '',
+          descriptionEn: product.descriptionEn || '',
           stock: product.stock.toString(),
           images: product.images.join(', '),
           sizePrices: product.sizePrices,
-          colors: product.colors.join(', ')
+          colors: product.colors // Already in correct format
         })
         
         setImages(product.images)
@@ -214,6 +227,29 @@ export default function EditProductPage({ params }: { params: Promise<{ id: stri
     }
   }
 
+  const addColor = (trColor: string, enColor: string) => {
+    if (trColor.trim() && enColor.trim()) {
+      const newColor = { tr: trColor.trim(), en: enColor.trim() }
+      const colorExists = formData.colors.some(color => 
+        color.tr === newColor.tr || color.en === newColor.en
+      )
+      
+      if (!colorExists) {
+        setFormData(prev => ({
+          ...prev,
+          colors: [...prev.colors, newColor]
+        }))
+      }
+    }
+  }
+
+  const removeColor = (index: number) => {
+    setFormData(prev => ({
+      ...prev,
+      colors: prev.colors.filter((_, i) => i !== index)
+    }))
+  }
+
   const handleCategoryChange = (categorySlug: string) => {
     const category = categories.find(c => c.slug === categorySlug)
     setSelectedCategory(categorySlug)
@@ -230,14 +266,10 @@ export default function EditProductPage({ params }: { params: Promise<{ id: stri
     setError('')
 
     try {
-      // Parse arrays from strings
-      const colors = formData.colors.split(',').map(color => color.trim()).filter(color => color)
-
       const productData = {
         ...formData,
         stock: parseInt(formData.stock),
         images,
-        colors,
         brandId: formData.brandId || null
       }
 
@@ -315,7 +347,7 @@ export default function EditProductPage({ params }: { params: Promise<{ id: stri
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="space-y-2">
-                <Label htmlFor="name">Ürün Adı *</Label>
+                <Label htmlFor="name">Türkçe Ürün Adı *</Label>
                 <Input
                   id="name"
                   value={formData.name}
@@ -326,13 +358,35 @@ export default function EditProductPage({ params }: { params: Promise<{ id: stri
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="slug">URL Slug *</Label>
+                <Label htmlFor="nameEn">English Product Name</Label>
+                <Input
+                  id="nameEn"
+                  value={formData.nameEn}
+                  onChange={(e) => handleInputChange('nameEn', e.target.value)}
+                  placeholder="e.g. Yacht Seat Cover Premium"
+                />
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="slug">Türkçe URL Slug *</Label>
                 <Input
                   id="slug"
                   value={formData.slug}
                   onChange={(e) => handleInputChange('slug', e.target.value)}
                   placeholder="yat-koltuk-kilifi-premium"
                   required
+                />
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="slugEn">English URL Slug</Label>
+                <Input
+                  id="slugEn"
+                  value={formData.slugEn}
+                  onChange={(e) => handleInputChange('slugEn', e.target.value)}
+                  placeholder="yacht-seat-cover-premium"
                 />
               </div>
             </div>
@@ -389,15 +443,28 @@ export default function EditProductPage({ params }: { params: Promise<{ id: stri
               </div>
             </div>
 
-            <div className="space-y-2">
-              <Label htmlFor="description">Açıklama</Label>
-              <Textarea
-                id="description"
-                value={formData.description}
-                onChange={(e) => handleInputChange('description', e.target.value)}
-                placeholder="Ürün açıklaması..."
-                rows={4}
-              />
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="description">Türkçe Açıklama</Label>
+                <Textarea
+                  id="description"
+                  value={formData.description}
+                  onChange={(e) => handleInputChange('description', e.target.value)}
+                  placeholder="Ürün açıklaması..."
+                  rows={4}
+                />
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="descriptionEn">English Description</Label>
+                <Textarea
+                  id="descriptionEn"
+                  value={formData.descriptionEn}
+                  onChange={(e) => handleInputChange('descriptionEn', e.target.value)}
+                  placeholder="Product description..."
+                  rows={4}
+                />
+              </div>
             </div>
 
             <div className="space-y-4">
@@ -547,16 +614,52 @@ export default function EditProductPage({ params }: { params: Promise<{ id: stri
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="colors">Renkler</Label>
-              <Input
-                id="colors"
-                value={formData.colors}
-                onChange={(e) => handleInputChange('colors', e.target.value)}
-                placeholder="Kırmızı, Beyaz, Mavi"
-              />
-              <p className="text-sm text-gray-500">
-                Virgülle ayırarak renkleri ekleyebilirsiniz
-              </p>
+              <Label>Renk Seçenekleri</Label>
+              <div className="grid grid-cols-2 gap-2">
+                <Input
+                  placeholder="Türkçe Renk (örn: Kırmızı)"
+                  id="color-tr"
+                />
+                <Input
+                  placeholder="English Color (e.g. Red)"
+                  id="color-en"
+                />
+              </div>
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => {
+                  const trInput = document.getElementById('color-tr') as HTMLInputElement
+                  const enInput = document.getElementById('color-en') as HTMLInputElement
+                  if (trInput && enInput) {
+                    addColor(trInput.value, enInput.value)
+                    trInput.value = ''
+                    enInput.value = ''
+                  }
+                }}
+              >
+                Renk Ekle
+              </Button>
+              
+              {formData.colors.length > 0 && (
+                <div className="flex flex-wrap gap-2 mt-2">
+                  {formData.colors.map((color, index) => (
+                    <span
+                      key={index}
+                      className="inline-flex items-center px-3 py-1 rounded-full text-sm bg-green-100 text-green-800"
+                    >
+                      {color.tr} / {color.en}
+                      <button
+                        type="button"
+                        onClick={() => removeColor(index)}
+                        className="ml-2 text-green-600 hover:text-green-800"
+                      >
+                        ×
+                      </button>
+                    </span>
+                  ))}
+                </div>
+              )}
             </div>
 
             <div className="flex gap-4 pt-4">

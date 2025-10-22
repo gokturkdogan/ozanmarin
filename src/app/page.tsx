@@ -1,9 +1,118 @@
+'use client'
+
 import Link from 'next/link'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Anchor, Waves, Shield, Star } from 'lucide-react'
+import { useLanguage } from '@/lib/language'
 
 export default function Home() {
+  const { language } = useLanguage()
+
+  const content = {
+    tr: {
+      tagline: "yachting & boating",
+      title: "Denizcilik Tekstili",
+      subtitle: "Premium Kalite",
+      description: "Yat ve tekne sahiplerine özel tasarlanmış kumaş kılıfları, minderler ve branda çözümleri. Deniz koşullarına dayanıklı, UV korumalı ve uzun ömürlü ürünler.",
+      exploreProducts: "Ürünleri İncele",
+      contactUs: "İletişime Geç",
+      features: {
+        title: "Neden Ozan Marin?",
+        subtitle: "Denizcilik deneyimimiz ve kalite anlayışımızla fark yaratıyoruz",
+        quality: {
+          title: "Premium Kalite",
+          description: "En kaliteli malzemeler ve uzman işçilik"
+        },
+        durability: {
+          title: "Dayanıklılık",
+          description: "Deniz koşullarına dayanıklı, uzun ömürlü ürünler"
+        },
+        uvProtection: {
+          title: "UV Koruması",
+          description: "Güneş ışınlarına karşı koruma sağlayan teknoloji"
+        },
+        customization: {
+          title: "Özel Tasarım",
+          description: "İhtiyaçlarınıza göre özelleştirilmiş çözümler"
+        }
+      },
+      categories: {
+        title: "Ürün Kategorileri",
+        subtitle: "Denizcilik ihtiyaçlarınız için geniş ürün yelpazesi",
+        covers: {
+          title: "Yat Kumaş Kılıfları",
+          description: "Premium kumaşlardan üretilmiş, özel tasarım kılıflar"
+        },
+        cushions: {
+          title: "Tekne Minderleri",
+          description: "Konforlu ve dayanıklı tekne oturma çözümleri"
+        },
+        tarpaulins: {
+          title: "Marin Güneşlik & Branda",
+          description: "Güneş ve hava koşullarından koruma sağlayan brandalar"
+        }
+      },
+      cta: {
+        title: "Denizcilik Deneyiminizi Yükseltin",
+        subtitle: "Premium kalitede denizcilik tekstili çözümleri için hemen iletişime geçin",
+        contact: "İletişime Geç",
+        products: "Ürünleri Gör"
+      }
+    },
+    en: {
+      tagline: "yachting & boating",
+      title: "Marine Textiles",
+      subtitle: "Premium Quality",
+      description: "Specially designed fabric covers, cushions and tarpaulin solutions for yacht and boat owners. Durable, UV-protected and long-lasting products for marine conditions.",
+      exploreProducts: "Explore Products",
+      contactUs: "Contact Us",
+      features: {
+        title: "Why Ozan Marin?",
+        subtitle: "We make a difference with our marine experience and quality approach",
+        quality: {
+          title: "Premium Quality",
+          description: "Highest quality materials and expert craftsmanship"
+        },
+        durability: {
+          title: "Durability",
+          description: "Durable, long-lasting products for marine conditions"
+        },
+        uvProtection: {
+          title: "UV Protection",
+          description: "Technology that provides protection against sun rays"
+        },
+        customization: {
+          title: "Custom Design",
+          description: "Customized solutions according to your needs"
+        }
+      },
+      categories: {
+        title: "Product Categories",
+        subtitle: "Wide range of products for your marine needs",
+        covers: {
+          title: "Yacht Fabric Covers",
+          description: "Premium fabric covers with special design"
+        },
+        cushions: {
+          title: "Boat Cushions",
+          description: "Comfortable and durable boat seating solutions"
+        },
+        tarpaulins: {
+          title: "Marine Sunshade & Tarpaulin",
+          description: "Tarpaulins that provide protection from sun and weather conditions"
+        }
+      },
+      cta: {
+        title: "Elevate Your Marine Experience",
+        subtitle: "Contact us now for premium quality marine textile solutions",
+        contact: "Contact Us",
+        products: "View Products"
+      }
+    }
+  }
+
+  const t = content[language]
   return (
     <div className="min-h-screen">
       {/* Hero Section */}
@@ -21,26 +130,25 @@ export default function Home() {
                     <span className="text-lg text-gray-600 leading-tight">marin</span>
                   </div>
                 </div>
-                <div className="text-sm text-gray-500 font-medium">yachting & boating</div>
+                <div className="text-sm text-gray-500 font-medium">{t.tagline}</div>
               </div>
             </div>
             <h1 className="text-4xl md:text-6xl font-bold text-gray-900 mb-6">
-              Denizcilik Tekstili
-              <span className="block text-primary">Premium Kalite</span>
+              {t.title}
+              <span className="block text-primary">{t.subtitle}</span>
             </h1>
             <p className="text-xl text-gray-600 mb-8 max-w-3xl mx-auto">
-              Yat ve tekne sahiplerine özel tasarlanmış kumaş kılıfları, minderler ve branda çözümleri. 
-              Deniz koşullarına dayanıklı, UV korumalı ve uzun ömürlü ürünler.
+              {t.description}
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
               <Link href="/products">
                 <Button size="lg" className="w-full sm:w-auto">
-                  Ürünleri İncele
+                  {t.exploreProducts}
                 </Button>
               </Link>
               <Link href="/contact">
                 <Button variant="outline" size="lg" className="w-full sm:w-auto">
-                  İletişime Geç
+                  {t.contactUs}
                 </Button>
               </Link>
             </div>
@@ -52,9 +160,9 @@ export default function Home() {
       <section className="py-16 bg-white">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-12">
-            <h2 className="text-3xl font-bold text-gray-900 mb-4">Neden Ozan Marin?</h2>
+            <h2 className="text-3xl font-bold text-gray-900 mb-4">{t.features.title}</h2>
             <p className="text-lg text-gray-600 max-w-2xl mx-auto">
-              Denizcilik tekstilinde uzman ekibimizle, kaliteli ve dayanıklı ürünler sunuyoruz.
+              {t.features.subtitle}
             </p>
           </div>
           
@@ -62,11 +170,11 @@ export default function Home() {
             <Card className="text-center p-6 hover:shadow-lg transition-shadow">
               <CardHeader>
                 <Waves className="h-12 w-12 text-primary mx-auto mb-4" />
-                <CardTitle className="text-xl">Deniz Koşullarına Dayanıklı</CardTitle>
+                <CardTitle className="text-xl">{t.features.durability.title}</CardTitle>
               </CardHeader>
               <CardContent>
                 <p className="text-gray-600">
-                  Tuzlu su, UV ışınları ve zorlu hava koşullarına karşı üstün koruma sağlayan özel kumaşlar.
+                  {t.features.durability.description}
                 </p>
               </CardContent>
             </Card>
@@ -74,11 +182,11 @@ export default function Home() {
             <Card className="text-center p-6 hover:shadow-lg transition-shadow">
               <CardHeader>
                 <Star className="h-12 w-12 text-primary mx-auto mb-4" />
-                <CardTitle className="text-xl">Üstün Kalite ve İşçilik</CardTitle>
+                <CardTitle className="text-xl">{t.features.quality.title}</CardTitle>
               </CardHeader>
               <CardContent>
                 <p className="text-gray-600">
-                  Her ürünümüzde detaylara verilen önem ve el işçiliği ile uzun ömürlü kullanım.
+                  {t.features.quality.description}
                 </p>
               </CardContent>
             </Card>
@@ -86,11 +194,11 @@ export default function Home() {
             <Card className="text-center p-6 hover:shadow-lg transition-shadow">
               <CardHeader>
                 <Anchor className="h-12 w-12 text-primary mx-auto mb-4" />
-                <CardTitle className="text-xl">Modern ve Şık Tasarım</CardTitle>
+                <CardTitle className="text-xl">{t.features.customization.title}</CardTitle>
               </CardHeader>
               <CardContent>
                 <p className="text-gray-600">
-                  Yat ve teknelerinizin estetiğini tamamlayan, modern ve sade tasarımlar.
+                  {t.features.customization.description}
                 </p>
               </CardContent>
             </Card>
@@ -102,9 +210,9 @@ export default function Home() {
       <section className="py-16 bg-gray-50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-12">
-            <h2 className="text-3xl font-bold text-gray-900 mb-4">Kategorilerimiz</h2>
+            <h2 className="text-3xl font-bold text-gray-900 mb-4">{t.categories.title}</h2>
             <p className="text-lg text-gray-600 max-w-2xl mx-auto">
-              Denizcilik ihtiyaçlarınıza uygun geniş ürün yelpazesi
+              {t.categories.subtitle}
             </p>
           </div>
           
@@ -115,11 +223,11 @@ export default function Home() {
                   <div className="w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center mx-auto mb-4">
                     <Shield className="h-8 w-8 text-primary" />
                   </div>
-                  <CardTitle className="text-xl">Yat Kumaş Kılıfları</CardTitle>
+                  <CardTitle className="text-xl">{t.categories.covers.title}</CardTitle>
                 </CardHeader>
                 <CardContent>
                   <p className="text-gray-600">
-                    Yatlarınız için özel tasarlanmış su geçirmez ve UV korumalı kumaş kılıfları.
+                    {t.categories.covers.description}
                   </p>
                 </CardContent>
               </Card>
@@ -131,11 +239,11 @@ export default function Home() {
                   <div className="w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center mx-auto mb-4">
                     <Star className="h-8 w-8 text-primary" />
                   </div>
-                  <CardTitle className="text-xl">Tekne Minderleri</CardTitle>
+                  <CardTitle className="text-xl">{t.categories.cushions.title}</CardTitle>
                 </CardHeader>
                 <CardContent>
                   <p className="text-gray-600">
-                    Deniz koşullarına dayanıklı, hızlı kuruyan ve konforlu tekne minderleri.
+                    {t.categories.cushions.description}
                   </p>
                 </CardContent>
               </Card>
@@ -147,11 +255,11 @@ export default function Home() {
                   <div className="w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center mx-auto mb-4">
                     <Waves className="h-8 w-8 text-primary" />
                   </div>
-                  <CardTitle className="text-xl">Marin Güneşlik & Branda</CardTitle>
+                  <CardTitle className="text-xl">{t.categories.tarpaulins.title}</CardTitle>
                 </CardHeader>
                 <CardContent>
                   <p className="text-gray-600">
-                    UV korumalı güneşlik ve branda çözümleri ile güneşten korunun.
+                    {t.categories.tarpaulins.description}
                   </p>
                 </CardContent>
               </Card>
@@ -163,20 +271,19 @@ export default function Home() {
       {/* Call to Action */}
       <section className="py-16 bg-primary text-primary-foreground">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-          <h2 className="text-3xl font-bold mb-4">Denizdeki Konforunuz İçin</h2>
+          <h2 className="text-3xl font-bold mb-4">{t.cta.title}</h2>
           <p className="text-lg mb-8 max-w-2xl mx-auto">
-            Ozan Marin ile yat ve teknelerinizi en iyi şekilde donatın. 
-            Uzman ekibimiz size en uygun çözümleri sunar.
+            {t.cta.subtitle}
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
             <Link href="/products">
               <Button size="lg" variant="secondary" className="w-full sm:w-auto">
-                Ürünleri Keşfet
+                {t.cta.products}
               </Button>
             </Link>
             <Link href="/contact">
               <Button size="lg" variant="outline" className="w-full sm:w-auto border-primary-foreground text-primary-foreground hover:bg-primary-foreground hover:text-primary">
-                Bize Ulaşın
+                {t.cta.contact}
               </Button>
             </Link>
           </div>

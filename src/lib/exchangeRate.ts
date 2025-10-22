@@ -34,17 +34,28 @@ export async function getUSDExchangeRate(): Promise<number> {
   }
 }
 
-// Dolar fiyatını TL'ye çevir
-export function convertUSDToTRY(usdPrice: number, exchangeRate: number): number {
-  return usdPrice * exchangeRate
+// Dolar fiyatını TL'ye çevir (sadece Türkçe için)
+export function convertUSDToTRY(usdPrice: number, exchangeRate: number, language: 'tr' | 'en' = 'tr'): number {
+  if (language === 'en') {
+    return usdPrice // İngilizce için direkt USD değeri
+  }
+  return usdPrice * exchangeRate // Türkçe için kur ile çarp
 }
 
-// TL fiyatını formatla
+// Fiyatı formatla (dil bazlı)
+export function formatPrice(price: number, language: 'tr' | 'en' = 'tr'): string {
+  if (language === 'en') {
+    return `$${price.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
+  }
+  return `₺${price.toLocaleString('tr-TR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
+}
+
+// TL fiyatını formatla (geriye uyumluluk için)
 export function formatTRYPrice(tryPrice: number): string {
   return `₺${tryPrice.toLocaleString('tr-TR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
 }
 
-// Dolar fiyatını formatla
+// Dolar fiyatını formatla (geriye uyumluluk için)
 export function formatUSDPrice(usdPrice: number): string {
   return `$${usdPrice.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
 }

@@ -18,7 +18,7 @@ interface Product {
   stock: number
   images: string[]
   sizePrices: { size: string; price: number }[]
-  colors: string[]
+  colors: { tr: string; en: string }[] // Updated colors interface
   category: {
     name: string
     slug: string
@@ -383,9 +383,9 @@ export default function AdminProductsPage() {
 
                   {product.colors.length > 0 && (
                     <div className="flex flex-wrap gap-1">
-                      {product.colors.map((color) => (
-                        <Badge key={color} variant="secondary" className="text-xs bg-green-100 text-green-800">
-                          {color}
+                      {product.colors.map((color, index) => (
+                        <Badge key={index} variant="secondary" className="text-xs bg-green-100 text-green-800">
+                          {color.tr} / {color.en}
                         </Badge>
                       ))}
                     </div>

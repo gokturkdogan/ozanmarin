@@ -5,17 +5,23 @@ import { z } from 'zod'
 
 const productUpdateSchema = z.object({
   name: z.string().min(1, 'Ürün adı gerekli'),
+  nameEn: z.string().optional(),
   slug: z.string().min(1, 'Slug gerekli'),
+  slugEn: z.string().optional(),
   categoryId: z.string().min(1, 'Kategori gerekli'),
   brandId: z.string().optional(),
   description: z.string().optional(),
+  descriptionEn: z.string().optional(),
   stock: z.number().int().min(0, 'Stok negatif olamaz'),
   images: z.array(z.string()),
   sizePrices: z.array(z.object({
     size: z.string().min(1, 'Boyut gerekli'),
     price: z.number().positive('Fiyat pozitif olmalı')
   })),
-  colors: z.array(z.string())
+  colors: z.array(z.object({
+    tr: z.string().min(1, 'Türkçe renk gerekli'),
+    en: z.string().min(1, 'İngilizce renk gerekli')
+  }))
 })
 
 export async function GET(
@@ -168,10 +174,13 @@ export async function PUT(
       where: { id },
       data: {
         name: validatedData.name,
+        nameEn: validatedData.nameEn || null,
         slug: validatedData.slug,
+        slugEn: validatedData.slugEn || null,
         categoryId: validatedData.categoryId,
         brandId: validatedData.brandId || null,
         description: validatedData.description || null,
+        descriptionEn: validatedData.descriptionEn || null,
         stock: validatedData.stock,
         images: validatedData.images,
         sizePrices: validatedData.sizePrices,

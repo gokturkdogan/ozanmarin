@@ -5,8 +5,11 @@ import { z } from 'zod'
 
 const categoryUpdateSchema = z.object({
   name: z.string().min(1, 'Kategori adı gerekli'),
+  nameEn: z.string().optional(),
   slug: z.string().min(1, 'Slug gerekli'),
-  description: z.string().optional()
+  slugEn: z.string().optional(),
+  description: z.string().optional(),
+  descriptionEn: z.string().optional()
 })
 
 export async function PUT(
@@ -69,8 +72,11 @@ export async function PUT(
       where: { id },
       data: {
         name: validatedData.name,
+        nameEn: validatedData.nameEn || null,
         slug: validatedData.slug,
-        description: validatedData.description || null
+        slugEn: validatedData.slugEn || null,
+        description: validatedData.description || null,
+        descriptionEn: validatedData.descriptionEn || null
       }
     })
 

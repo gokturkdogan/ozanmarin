@@ -10,11 +10,20 @@ export async function GET(request: NextRequest) {
 
     const brands = await prisma.brand.findMany({
       where,
-      include: {
+      select: {
+        id: true,
+        name: true,
+        nameEn: true,
+        slug: true,
+        slugEn: true,
+        description: true,
+        descriptionEn: true,
         category: {
           select: {
             name: true,
-            slug: true
+            nameEn: true,
+            slug: true,
+            slugEn: true
           }
         }
       },

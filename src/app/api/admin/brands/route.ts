@@ -7,6 +7,7 @@ const brandSchema = z.object({
   name: z.string().min(1, 'Marka adı gerekli'),
   slug: z.string().min(1, 'Slug gerekli'),
   description: z.string().optional(),
+  descriptionEn: z.string().optional(),
   categoryId: z.string().min(1, 'Kategori gerekli')
 })
 
@@ -64,6 +65,7 @@ export async function POST(request: NextRequest) {
         name: validatedData.name,
         slug: validatedData.slug,
         description: validatedData.description || null,
+        descriptionEn: validatedData.descriptionEn || null,
         categoryId: validatedData.categoryId
       },
       include: {
