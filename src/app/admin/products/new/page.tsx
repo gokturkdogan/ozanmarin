@@ -393,26 +393,15 @@ export default function NewProductPage() {
                       }}
                     />
                   </div>
-                  <div>
-                    <Label htmlFor="price-input">Fiyat ($)</Label>
-                    <Input
-                      id="price-input"
-                      type="number"
-                      step="0.01"
-                      placeholder="45.00"
-                    />
-                  </div>
                 </div>
                 <Button
                   type="button"
                   variant="outline"
                   onClick={() => {
                     const sizeInput = document.getElementById('size-input') as HTMLInputElement
-                    const priceInput = document.getElementById('price-input') as HTMLInputElement
-                    if (sizeInput.value && priceInput.value) {
-                      addSizePrice(sizeInput.value, parseFloat(priceInput.value))
+                    if (sizeInput.value) {
+                      addSizePrice(sizeInput.value, 0) // Default price 0, admin will set it in the list
                       sizeInput.value = ''
-                      priceInput.value = ''
                     }
                   }}
                 >

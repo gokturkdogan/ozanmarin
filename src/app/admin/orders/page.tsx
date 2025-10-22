@@ -619,8 +619,16 @@ export default function AdminOrdersPage() {
                           </div>
                         </>
                       ) : (
-                        <div className="text-center text-gray-500 py-4">
-                          Misafir Müşteri
+                        <div className="space-y-3">
+                          <div className="text-center text-gray-500 py-2">
+                            <span className="font-medium">Misafir Müşteri</span>
+                          </div>
+                          {selectedOrder.shippingAddress?.email && (
+                            <div className="flex justify-between">
+                              <span className="text-gray-600">E-posta:</span>
+                              <span className="font-medium">{selectedOrder.shippingAddress.email}</span>
+                            </div>
+                          )}
                         </div>
                       )}
                     </CardContent>
