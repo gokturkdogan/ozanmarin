@@ -35,7 +35,7 @@ export default function AdminDashboard() {
         fetch('/api/products'),
         fetch('/api/categories'),
         fetch('/api/brands'),
-        fetch('/api/orders'),
+        fetch('/api/admin/orders'),
         fetch('/api/admin/users')
       ])
 
