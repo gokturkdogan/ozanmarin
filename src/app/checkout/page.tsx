@@ -12,6 +12,7 @@ import Link from 'next/link'
 import { countries } from '@/lib/countries'
 import { AddressModal } from '@/components/address-modal'
 import { formatTRYPrice } from '@/lib/exchangeRate'
+import { useLanguage } from '@/lib/language'
 
 interface Address {
   id: string
@@ -33,6 +34,7 @@ interface User {
 
 export default function CheckoutPage() {
   const { items, getTotalPrice, getTotalItems, clearCart } = useCartStore()
+  const { language, t } = useLanguage()
   const [user, setUser] = useState<User | null>(null)
   const [addresses, setAddresses] = useState<Address[]>([])
   const [selectedAddressId, setSelectedAddressId] = useState<string>('')
@@ -51,6 +53,118 @@ export default function CheckoutPage() {
     district: '',
     address: ''
   })
+
+  // Dil bazlı içerik
+  const content = {
+    tr: {
+      emptyCart: "Sepetiniz Boş",
+      emptyCartDesc: "Önce sepetinize ürün eklemeniz gerekiyor.",
+      viewProducts: "Ürünleri İncele",
+      loading: "Yükleniyor...",
+      backToCart: "Sepete Dön",
+      completeOrder: "Siparişi Tamamla",
+      deliveryInfo: "Teslimat Bilgileri",
+      defaultAddress: "Varsayılan",
+      edit: "Düzenle",
+      addNewAddress: "Yeni Adres Ekle",
+      noAddress: "Henüz kayıtlı adresiniz yok.",
+      addFirstAddress: "İlk Adresinizi Ekleyin",
+      fullName: "Ad Soyad",
+      email: "E-posta",
+      phone: "Telefon",
+      country: "Ülke",
+      city: "Şehir",
+      district: "İlçe",
+      address: "Adres",
+      selectCountry: "Ülke seçiniz",
+      addressPlaceholder: "Mahalle, sokak, bina no, daire no",
+      paymentMethod: "Ödeme Yöntemi",
+      onlinePayment: "Online Ödeme",
+      onlinePaymentDesc: "Kredi kartı ile güvenli ödeme",
+      onlinePaymentDescDisabled: "Sadece Türkiye için geçerli",
+      bankTransfer: "Havale/EFT",
+      bankTransferDesc: "Banka hesabına transfer",
+      bankInfo: "Havale/EFT Bilgileri",
+      bank: "Banka:",
+      accountName: "Hesap Adı:",
+      iban: "IBAN:",
+      bankNote: "Ödeme yaptıktan sonra dekontu WhatsApp'tan gönderebilirsiniz.",
+      orderSummary: "Sipariş Özeti",
+      productCount: "Ürün Sayısı:",
+      subtotal: "Ara Toplam:",
+      shipping: "Kargo:",
+      shippingNote: "(teslimat adresine göre değişiklik gösterebilir)",
+      shippingNoteIntl: "(uluslararası kargo)",
+      total: "Toplam:",
+      proceedToPayment: "Ödemeye Devam Et",
+      selectAddress: "Lütfen bir teslimat adresi seçin.",
+      fillForm: "Lütfen tüm teslimat bilgilerini doldurun.",
+      addressNotFound: "Teslimat adresi bulunamadı.",
+      orderError: "Sipariş oluşturulurken bir hata oluştu.",
+      paymentError: "Ödeme oluşturulurken bir hata oluştu.",
+      paymentProcessError: "Ödeme sırasında bir hata oluştu. Lütfen tekrar deneyin.",
+      addressUpdateError: "Adres güncellenirken bir hata oluştu:",
+      addressCreateError: "Adres oluşturulurken bir hata oluştu:",
+      generalError: "Bir hata oluştu. Lütfen tekrar deneyin.",
+      shippingCost: "Kargo Ücreti",
+      shippingCategory: "Kargo"
+    },
+    en: {
+      emptyCart: "Your Cart is Empty",
+      emptyCartDesc: "You need to add products to your cart first.",
+      viewProducts: "View Products",
+      loading: "Loading...",
+      backToCart: "Back to Cart",
+      completeOrder: "Complete Order",
+      deliveryInfo: "Delivery Information",
+      defaultAddress: "Default",
+      edit: "Edit",
+      addNewAddress: "Add New Address",
+      noAddress: "You don't have any saved addresses yet.",
+      addFirstAddress: "Add Your First Address",
+      fullName: "Full Name",
+      email: "Email",
+      phone: "Phone",
+      country: "Country",
+      city: "City",
+      district: "District",
+      address: "Address",
+      selectCountry: "Select country",
+      addressPlaceholder: "Neighborhood, street, building no, apartment no",
+      paymentMethod: "Payment Method",
+      onlinePayment: "Online Payment",
+      onlinePaymentDesc: "Secure payment with credit card",
+      onlinePaymentDescDisabled: "Only valid for Turkey",
+      bankTransfer: "Bank Transfer/EFT",
+      bankTransferDesc: "Transfer to bank account",
+      bankInfo: "Bank Transfer Information",
+      bank: "Bank:",
+      accountName: "Account Name:",
+      iban: "IBAN:",
+      bankNote: "You can send the receipt via WhatsApp after payment.",
+      orderSummary: "Order Summary",
+      productCount: "Product Count:",
+      subtotal: "Subtotal:",
+      shipping: "Shipping:",
+      shippingNote: "(may vary according to delivery address)",
+      shippingNoteIntl: "(international shipping)",
+      total: "Total:",
+      proceedToPayment: "Proceed to Payment",
+      selectAddress: "Please select a delivery address.",
+      fillForm: "Please fill in all delivery information.",
+      addressNotFound: "Delivery address not found.",
+      orderError: "An error occurred while creating the order.",
+      paymentError: "An error occurred while creating payment.",
+      paymentProcessError: "An error occurred during payment. Please try again.",
+      addressUpdateError: "An error occurred while updating address:",
+      addressCreateError: "An error occurred while creating address:",
+      generalError: "An error occurred. Please try again.",
+      shippingCost: "Shipping Cost",
+      shippingCategory: "Shipping"
+    }
+  }
+
+  const t_content = content[language]
 
   // Check if selected country is Turkey
   const isTurkeySelected = () => {
@@ -142,7 +256,7 @@ export default function CheckoutPage() {
         } else {
           const errorData = await response.json()
           console.error('Address update failed:', errorData.message)
-          alert('Adres güncellenirken bir hata oluştu: ' + errorData.message)
+          alert(t_content.addressUpdateError + ' ' + errorData.message)
         }
       } else {
         // Create new address
@@ -160,12 +274,12 @@ export default function CheckoutPage() {
         } else {
           const errorData = await response.json()
           console.error('Address creation failed:', errorData.message)
-          alert('Adres oluşturulurken bir hata oluştu: ' + errorData.message)
+          alert(t_content.addressCreateError + ' ' + errorData.message)
         }
       }
     } catch (error) {
       console.error('Address operation failed:', error)
-      alert('Bir hata oluştu. Lütfen tekrar deneyin.')
+      alert(t_content.generalError)
     }
   }
 
@@ -180,14 +294,14 @@ export default function CheckoutPage() {
       if (user) {
         // Logged in user - check if address is selected
         if (!selectedAddressId) {
-          alert('Lütfen bir teslimat adresi seçin.')
+          alert(t_content.selectAddress)
           return
         }
       } else {
         // Guest user - check if form is filled
         if (!guestForm.fullName || !guestForm.email || !guestForm.phone || 
             !guestForm.city || !guestForm.district || !guestForm.address) {
-          alert('Lütfen tüm teslimat bilgilerini doldurun.')
+          alert(t_content.fillForm)
           return
         }
       }
@@ -198,7 +312,7 @@ export default function CheckoutPage() {
         : guestForm
 
       if (!shippingAddress) {
-        alert('Teslimat adresi bulunamadı.')
+        alert(t_content.addressNotFound)
         return
       }
 
@@ -232,7 +346,7 @@ export default function CheckoutPage() {
             // Kargo ücreti
             {
               productId: 'shipping',
-              productName: 'Kargo Ücreti',
+              productName: t_content.shippingCost,
               productPrice: getShippingCost(),
               productImage: null,
               quantity: 1,
@@ -241,7 +355,7 @@ export default function CheckoutPage() {
               hasEmbroidery: false,
               embroideryFile: null,
               embroideryPrice: 0,
-              categoryName: 'Kargo',
+              categoryName: t_content.shippingCategory,
               brandName: null,
               isShipping: true,
               shippingCost: getShippingCost()
@@ -264,7 +378,7 @@ export default function CheckoutPage() {
           clearCart()
           window.location.href = `/payment/success?paymentId=${result.order.id}&method=bank_transfer`
         } else {
-          alert(result.error || 'Sipariş oluşturulurken bir hata oluştu.')
+          alert(result.error || t_content.orderError)
         }
         return
       }
@@ -345,8 +459,8 @@ export default function CheckoutPage() {
           })),
           {
             id: 'shipping',
-            name: 'Kargo',
-            category1: 'Kargo',
+            name: t_content.shippingCategory,
+            category1: t_content.shippingCategory,
             itemType: 'PHYSICAL',
             price: getShippingCost().toFixed(2)
           }
@@ -383,7 +497,7 @@ export default function CheckoutPage() {
           // Kargo ücreti
           {
             productId: 'shipping',
-            productName: 'Kargo Ücreti',
+            productName: t_content.shippingCost,
             productPrice: getShippingCost(),
             productImage: null,
             quantity: 1,
@@ -392,7 +506,7 @@ export default function CheckoutPage() {
             hasEmbroidery: false,
             embroideryFile: null,
             embroideryPrice: 0,
-            categoryName: 'Kargo',
+            categoryName: t_content.shippingCategory,
             brandName: null,
             isShipping: true,
             shippingCost: getShippingCost()
@@ -411,7 +525,7 @@ export default function CheckoutPage() {
       const orderResult = await orderResponse.json()
 
       if (!orderResult.success) {
-        alert(orderResult.error || 'Sipariş oluşturulurken bir hata oluştu.')
+        alert(orderResult.error || t_content.orderError)
         return
       }
 
@@ -448,11 +562,11 @@ export default function CheckoutPage() {
         window.location.href = result.paymentPageUrl
       } else {
         console.error('Iyzico Error:', result)
-        alert(result.errorMessage || 'Ödeme oluşturulurken bir hata oluştu.')
+        alert(result.errorMessage || t_content.paymentError)
       }
     } catch (error) {
       console.error('Payment error:', error)
-      alert('Ödeme sırasında bir hata oluştu. Lütfen tekrar deneyin.')
+      alert(t_content.paymentProcessError)
     }
   }
 
@@ -461,13 +575,13 @@ export default function CheckoutPage() {
       <div className="min-h-screen bg-gray-50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
           <div className="text-center py-16">
-            <h1 className="text-2xl font-bold text-gray-900 mb-4">Sepetiniz Boş</h1>
+            <h1 className="text-2xl font-bold text-gray-900 mb-4">{t_content.emptyCart}</h1>
             <p className="text-gray-600 mb-8">
-              Önce sepetinize ürün eklemeniz gerekiyor.
+              {t_content.emptyCartDesc}
             </p>
             <Link href="/products">
               <Button size="lg">
-                Ürünleri İncele
+                {t_content.viewProducts}
               </Button>
             </Link>
           </div>
@@ -481,7 +595,7 @@ export default function CheckoutPage() {
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="text-center">
           <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-primary mx-auto mb-4"></div>
-          <p className="text-gray-600">Yükleniyor...</p>
+          <p className="text-gray-600">{t_content.loading}</p>
         </div>
       </div>
     )
@@ -496,10 +610,10 @@ export default function CheckoutPage() {
             <Link href="/cart">
               <Button variant="outline" size="sm">
                 <ArrowLeft className="w-4 h-4 mr-2" />
-                Sepete Dön
+                {t_content.backToCart}
               </Button>
             </Link>
-            <h1 className="text-3xl font-bold text-gray-900">Siparişi Tamamla</h1>
+            <h1 className="text-3xl font-bold text-gray-900">{t_content.completeOrder}</h1>
           </div>
         </div>
 
@@ -511,7 +625,7 @@ export default function CheckoutPage() {
               <CardHeader>
                 <CardTitle className="flex items-center">
                   <MapPin className="w-5 h-5 mr-2" />
-                  Teslimat Bilgileri
+                  {t_content.deliveryInfo}
                 </CardTitle>
               </CardHeader>
               <CardContent>
@@ -550,7 +664,7 @@ export default function CheckoutPage() {
                                 <div className="flex flex-col items-end space-y-2">
                                   {address.isDefault && (
                                     <span className="text-xs bg-primary text-white px-2 py-1 rounded">
-                                      Varsayılan
+                                      {t_content.defaultAddress}
                                     </span>
                                   )}
                                   <Button
@@ -563,7 +677,7 @@ export default function CheckoutPage() {
                                     className="h-8 px-2"
                                   >
                                     <Edit className="w-3 h-3 mr-1" />
-                                    Düzenle
+                                    {t_content.edit}
                                   </Button>
                                 </div>
                               </div>
@@ -577,15 +691,15 @@ export default function CheckoutPage() {
                           className="w-full"
                         >
                           <Plus className="w-4 h-4 mr-2" />
-                          Yeni Adres Ekle
+                          {t_content.addNewAddress}
                         </Button>
                       </>
                     ) : (
                       <div className="text-center py-8">
-                        <p className="text-gray-600 mb-4">Henüz kayıtlı adresiniz yok.</p>
+                        <p className="text-gray-600 mb-4">{t_content.noAddress}</p>
                         <Button onClick={() => setShowAddressModal(true)}>
                           <Plus className="w-4 h-4 mr-2" />
-                          İlk Adresinizi Ekleyin
+                          {t_content.addFirstAddress}
                         </Button>
                       </div>
                     )}
@@ -595,28 +709,28 @@ export default function CheckoutPage() {
                   <div className="space-y-4">
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                       <div>
-                        <Label htmlFor="guest-fullName">Ad Soyad *</Label>
+                        <Label htmlFor="guest-fullName">{t_content.fullName} *</Label>
                         <Input
                           id="guest-fullName"
                           value={guestForm.fullName}
                           onChange={(e) => handleGuestInputChange('fullName', e.target.value)}
-                          placeholder="Ad Soyad"
+                          placeholder={t_content.fullName}
                         />
                       </div>
                       <div>
-                        <Label htmlFor="guest-email">E-posta *</Label>
+                        <Label htmlFor="guest-email">{t_content.email} *</Label>
                         <Input
                           id="guest-email"
                           type="email"
                           value={guestForm.email}
                           onChange={(e) => handleGuestInputChange('email', e.target.value)}
-                          placeholder="ornek@email.com"
+                          placeholder="example@email.com"
                         />
                       </div>
                     </div>
                     
                     <div>
-                      <Label htmlFor="guest-phone">Telefon *</Label>
+                      <Label htmlFor="guest-phone">{t_content.phone} *</Label>
                       <Input
                         id="guest-phone"
                         value={guestForm.phone}
@@ -627,10 +741,10 @@ export default function CheckoutPage() {
                     
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                       <div>
-                        <Label htmlFor="guest-country">Ülke *</Label>
+                        <Label htmlFor="guest-country">{t_content.country} *</Label>
                         <Select value={guestForm.country} onValueChange={(value) => handleGuestInputChange('country', value)}>
                           <SelectTrigger>
-                            <SelectValue placeholder="Ülke seçiniz" />
+                            <SelectValue placeholder={t_content.selectCountry} />
                           </SelectTrigger>
                           <SelectContent className="max-h-60">
                             {countries.map((country) => (
@@ -642,32 +756,32 @@ export default function CheckoutPage() {
                         </Select>
                       </div>
                       <div>
-                        <Label htmlFor="guest-city">Şehir *</Label>
+                        <Label htmlFor="guest-city">{t_content.city} *</Label>
                         <Input
                           id="guest-city"
                           value={guestForm.city}
                           onChange={(e) => handleGuestInputChange('city', e.target.value)}
-                          placeholder="Şehir"
+                          placeholder={t_content.city}
                         />
                       </div>
                       <div>
-                        <Label htmlFor="guest-district">İlçe *</Label>
+                        <Label htmlFor="guest-district">{t_content.district} *</Label>
                         <Input
                           id="guest-district"
                           value={guestForm.district}
                           onChange={(e) => handleGuestInputChange('district', e.target.value)}
-                          placeholder="İlçe"
+                          placeholder={t_content.district}
                         />
                       </div>
                     </div>
                     
                     <div>
-                      <Label htmlFor="guest-address">Adres *</Label>
+                      <Label htmlFor="guest-address">{t_content.address} *</Label>
                       <Input
                         id="guest-address"
                         value={guestForm.address}
                         onChange={(e) => handleGuestInputChange('address', e.target.value)}
-                        placeholder="Mahalle, sokak, bina no, daire no"
+                        placeholder={t_content.addressPlaceholder}
                       />
                     </div>
                   </div>
@@ -680,7 +794,7 @@ export default function CheckoutPage() {
               <CardHeader>
                 <CardTitle className="flex items-center">
                   <CreditCard className="w-5 h-5 mr-2" />
-                  Ödeme Yöntemi
+                  {t_content.paymentMethod}
                 </CardTitle>
               </CardHeader>
               <CardContent>
@@ -698,11 +812,11 @@ export default function CheckoutPage() {
                     <div className="flex items-center">
                       <CreditCard className="w-6 h-6 text-primary mr-3" />
                       <div className="text-left">
-                        <h4 className="font-medium text-gray-900">Online Ödeme</h4>
+                        <h4 className="font-medium text-gray-900">{t_content.onlinePayment}</h4>
                         <p className="text-sm text-gray-600">
                           {isTurkeySelected() 
-                            ? 'Kredi kartı ile güvenli ödeme' 
-                            : 'Sadece Türkiye için geçerli'
+                            ? t_content.onlinePaymentDesc
+                            : t_content.onlinePaymentDescDisabled
                           }
                         </p>
                       </div>
@@ -723,8 +837,8 @@ export default function CheckoutPage() {
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
                       </svg>
                       <div className="text-left">
-                        <h4 className="font-medium text-gray-900">Havale/EFT</h4>
-                        <p className="text-sm text-gray-600">Banka hesabına transfer</p>
+                        <h4 className="font-medium text-gray-900">{t_content.bankTransfer}</h4>
+                        <p className="text-sm text-gray-600">{t_content.bankTransferDesc}</p>
                       </div>
                     </div>
                   </button>
@@ -732,13 +846,13 @@ export default function CheckoutPage() {
                 
                 {paymentMethod === 'bank_transfer' && (
                   <div className="mt-4 p-4 bg-blue-50 border border-blue-200 rounded-lg">
-                    <h5 className="font-medium text-blue-900 mb-2">Havale/EFT Bilgileri</h5>
+                    <h5 className="font-medium text-blue-900 mb-2">{t_content.bankInfo}</h5>
                     <div className="text-sm text-blue-800 space-y-1">
-                      <p><strong>Banka:</strong> Türkiye İş Bankası</p>
-                      <p><strong>Hesap Adı:</strong> Ozan Marin Denizcilik</p>
-                      <p><strong>IBAN:</strong> TR12 0006 4000 0011 2345 6789 01</p>
+                      <p><strong>{t_content.bank}</strong> Türkiye İş Bankası</p>
+                      <p><strong>{t_content.accountName}</strong> Ozan Marin Denizcilik</p>
+                      <p><strong>{t_content.iban}</strong> TR12 0006 4000 0011 2345 6789 01</p>
                       <p className="text-xs text-blue-600 mt-2">
-                        Ödeme yaptıktan sonra dekontu WhatsApp'tan gönderebilirsiniz.
+                        {t_content.bankNote}
                       </p>
                     </div>
                   </div>
@@ -751,27 +865,27 @@ export default function CheckoutPage() {
           <div className="lg:col-span-1">
             <Card className="sticky top-8">
               <CardHeader>
-                <CardTitle>Sipariş Özeti</CardTitle>
+                <CardTitle>{t_content.orderSummary}</CardTitle>
               </CardHeader>
               <CardContent className="space-y-4">
                 <div className="flex justify-between text-sm">
-                  <span>Ürün Sayısı:</span>
-                  <span>{getTotalItems()} adet</span>
+                  <span>{t_content.productCount}</span>
+                  <span>{getTotalItems()} {language === 'tr' ? 'adet' : 'items'}</span>
                 </div>
                 
                 <div className="flex justify-between text-sm">
-                  <span>Ara Toplam:</span>
+                  <span>{t_content.subtotal}</span>
                   <span>{formatTRYPrice(getTotalPrice())}</span>
                 </div>
                 
                 <div className="flex justify-between text-sm">
-                  <span>Kargo:</span>
+                  <span>{t_content.shipping}</span>
                   <div className="text-right">
                     <div>{formatTRYPrice(getShippingCost())}</div>
                     <div className="text-gray-500 text-xs">
                       {getShippingCost() === 200 
-                        ? '(teslimat adresine göre değişiklik gösterebilir)'
-                        : '(uluslararası kargo)'
+                        ? t_content.shippingNote
+                        : t_content.shippingNoteIntl
                       }
                     </div>
                   </div>
@@ -779,7 +893,7 @@ export default function CheckoutPage() {
                 
                 <div className="border-t pt-4">
                   <div className="flex justify-between text-lg font-bold">
-                    <span>Toplam:</span>
+                    <span>{t_content.total}</span>
                     <span>{formatTRYPrice(getTotalPrice() + getShippingCost())}</span>
                   </div>
                 </div>
@@ -790,7 +904,7 @@ export default function CheckoutPage() {
                   onClick={handleProceedToPayment}
                 >
                   <CreditCard className="w-5 h-5 mr-2" />
-                  Ödemeye Devam Et
+                  {t_content.proceedToPayment}
                 </Button>
               </CardContent>
             </Card>

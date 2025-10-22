@@ -1,6 +1,7 @@
 'use client'
 
 import { createContext, useContext, useState, useEffect, ReactNode } from 'react'
+import { useCartStore } from './cart'
 
 type Language = 'tr' | 'en'
 
@@ -8,6 +9,14 @@ interface LanguageContextType {
   language: Language
   setLanguage: (lang: Language) => void
   t: (tr: string, en?: string) => string
+  isChangingLanguage: boolean
+  showLanguageModal: (targetLanguage: Language) => void
+  modalState: {
+    isOpen: boolean
+    targetLanguage: Language
+    confirmChange: () => void
+    cancelChange: () => void
+  }
 }
 
 const LanguageContext = createContext<LanguageContextType | undefined>(undefined)
@@ -18,6 +27,10 @@ interface LanguageProviderProps {
 
 export function LanguageProvider({ children }: LanguageProviderProps) {
   const [language, setLanguage] = useState<Language>('tr')
+  const [isChangingLanguage, setIsChangingLanguage] = useState(false)
+  const [showModal, setShowModal] = useState(false)
+  const [targetLanguage, setTargetLanguage] = useState<Language>('en')
+  const { clearCart } = useCartStore()
 
   // Load language from localStorage on mount
   useEffect(() => {
@@ -32,6 +45,36 @@ export function LanguageProvider({ children }: LanguageProviderProps) {
     localStorage.setItem('language', language)
   }, [language])
 
+  // Show language change modal
+  const showLanguageModal = (newLanguage: Language) => {
+    if (newLanguage !== language) {
+      setTargetLanguage(newLanguage)
+      setShowModal(true)
+    }
+  }
+
+  // Confirm language change
+  const confirmLanguageChange = () => {
+    setShowModal(false)
+    setIsChangingLanguage(true)
+    
+    // Clear cart to avoid price confusion
+    clearCart()
+    
+    // Set new language
+    setLanguage(targetLanguage)
+    
+    // Refresh page to ensure all components use new language
+    setTimeout(() => {
+      window.location.reload()
+    }, 1000)
+  }
+
+  // Cancel language change
+  const cancelLanguageChange = () => {
+    setShowModal(false)
+  }
+
   // Translation function
   const t = (tr: string, en?: string) => {
     if (language === 'en' && en) {
@@ -41,7 +84,19 @@ export function LanguageProvider({ children }: LanguageProviderProps) {
   }
 
   return (
-    <LanguageContext.Provider value={{ language, setLanguage, t }}>
+    <LanguageContext.Provider value={{ 
+      language, 
+      setLanguage: showLanguageModal, 
+      t, 
+      isChangingLanguage,
+      showLanguageModal,
+      modalState: {
+        isOpen: showModal,
+        targetLanguage,
+        confirmChange: confirmLanguageChange,
+        cancelChange: cancelLanguageChange
+      }
+    }}>
       {children}
     </LanguageContext.Provider>
   )

@@ -99,7 +99,7 @@ export default function ProductPage({ params }: ProductPageProps) {
       selectColor: "Select Color:",
       selectColorPlaceholder: "Select color",
       quantity: "Quantity:",
-      embroidery: "Embroidery (+₺100)",
+      embroidery: "Embroidery (+$5)",
       embroideryDesign: "Embroidery Design:",
       embroideryRequired: "You must upload a design file if you select embroidery.",
       addToCart: "Add to Cart",
@@ -185,13 +185,13 @@ export default function ProductPage({ params }: ProductPageProps) {
         addItem({
           id: product.id,
           name: getTranslatedText(product.name, product.nameEn, language),
-          price: convertUSDToTRY(selectedSizePrice.price, exchangeRate, language), // Convert USD to TRY or keep USD
+          price: convertUSDToTRY(selectedSizePrice.price, exchangeRate, language), // Store price in the language it was ordered
           image: product.images[0] || '/placeholder.jpg',
           size: selectedSizePrice.size,
           color: selectedColor || '',
           hasEmbroidery: hasEmbroidery,
           embroideryFile: embroideryUrl || undefined,
-          embroideryPrice: hasEmbroidery ? (language === 'tr' ? 100 : 0) : 0,
+          embroideryPrice: hasEmbroidery ? (language === 'tr' ? 100 : 5) : 0,
           categoryName: getTranslatedText(product.category.name, product.category.nameEn, language),
           brandName: product.brand ? getTranslatedText(product.brand.name, product.brand.nameEn, language) : undefined
         })
@@ -347,15 +347,15 @@ export default function ProductPage({ params }: ProductPageProps) {
               <p className="text-xl text-primary font-bold mb-6">
                 {selectedSizePrice ? (
                   <span>
-                    {formatPrice((convertUSDToTRY(selectedSizePrice.price, exchangeRate, language) + (hasEmbroidery ? (language === 'tr' ? 100 : 0) : 0)) * quantity, language)}
+                    {formatPrice((convertUSDToTRY(selectedSizePrice.price, exchangeRate, language) + (hasEmbroidery ? (language === 'tr' ? 100 : 5) : 0)) * quantity, language)}
                     {quantity > 1 && (
                       <span className="text-sm text-gray-600 ml-2">
-                        ({quantity} × {formatPrice(convertUSDToTRY(selectedSizePrice.price, exchangeRate, language) + (hasEmbroidery ? (language === 'tr' ? 100 : 0) : 0), language)})
+                        ({quantity} × {formatPrice(convertUSDToTRY(selectedSizePrice.price, exchangeRate, language) + (hasEmbroidery ? (language === 'tr' ? 100 : 5) : 0), language)})
                       </span>
                     )}
                     {hasEmbroidery && (
                       <span className="text-sm text-gray-600 ml-2 block">
-                        {formatPrice(convertUSDToTRY(selectedSizePrice.price, exchangeRate, language), language)} + {language === 'tr' ? '₺100 nakış' : '$0 embroidery'}
+                        {formatPrice(convertUSDToTRY(selectedSizePrice.price, exchangeRate, language), language)} + {language === 'tr' ? '₺100 nakış' : '$5 embroidery'}
                       </span>
                     )}
                   </span>

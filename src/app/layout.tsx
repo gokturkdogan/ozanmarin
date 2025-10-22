@@ -5,6 +5,8 @@ import { Header } from "@/components/header";
 import { Footer } from "@/components/footer";
 import { Toaster } from "@/components/ui/toaster";
 import { LanguageProvider } from "@/lib/language";
+import { LanguageLoader } from "@/components/language-loader";
+import { LanguageModalWrapper } from "@/components/language-modal-wrapper";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -31,14 +33,16 @@ export default function RootLayout({
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
-        <LanguageProvider>
-          <Header />
-          <main className="min-h-screen">
-            {children}
-          </main>
-          <Footer />
-          <Toaster />
-        </LanguageProvider>
+            <LanguageProvider>
+              <Header />
+              <main className="min-h-screen">
+                {children}
+              </main>
+              <Footer />
+              <Toaster />
+              <LanguageLoader />
+              <LanguageModalWrapper />
+            </LanguageProvider>
       </body>
     </html>
   );

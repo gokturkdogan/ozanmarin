@@ -7,6 +7,7 @@ import { Label } from '@/components/ui/label'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { X } from 'lucide-react'
 import { countries } from '@/lib/countries'
+import { useLanguage } from '@/lib/language'
 
 interface AddressModalProps {
   isOpen: boolean
@@ -16,6 +17,7 @@ interface AddressModalProps {
 }
 
 export function AddressModal({ isOpen, onClose, onSubmit, editingAddress }: AddressModalProps) {
+  const { language, t } = useLanguage()
   const [formData, setFormData] = useState({
     title: '',
     fullName: '',
@@ -26,6 +28,54 @@ export function AddressModal({ isOpen, onClose, onSubmit, editingAddress }: Addr
     address: '',
     isDefault: false
   })
+
+  // Dil bazlı içerik
+  const content = {
+    tr: {
+      editAddress: "Adresi Düzenle",
+      addAddress: "Yeni Adres Ekle",
+      addressTitle: "Adres Başlığı",
+      addressTitlePlaceholder: "Ev, İş, vb.",
+      fullName: "Ad Soyad",
+      fullNamePlaceholder: "Ad Soyad",
+      phone: "Telefon",
+      phonePlaceholder: "0555 123 45 67",
+      country: "Ülke",
+      selectCountry: "Ülke seçiniz",
+      city: "Şehir",
+      cityPlaceholder: "Şehir",
+      district: "İlçe",
+      districtPlaceholder: "İlçe",
+      address: "Adres",
+      addressPlaceholder: "Mahalle, sokak, bina no, daire no",
+      setAsDefault: "Bu adresi varsayılan adres olarak ayarla",
+      cancel: "İptal",
+      saveAddress: "Adresi Kaydet"
+    },
+    en: {
+      editAddress: "Edit Address",
+      addAddress: "Add New Address",
+      addressTitle: "Address Title",
+      addressTitlePlaceholder: "Home, Work, etc.",
+      fullName: "Full Name",
+      fullNamePlaceholder: "Full Name",
+      phone: "Phone",
+      phonePlaceholder: "0555 123 45 67",
+      country: "Country",
+      selectCountry: "Select country",
+      city: "City",
+      cityPlaceholder: "City",
+      district: "District",
+      districtPlaceholder: "District",
+      address: "Address",
+      addressPlaceholder: "Neighborhood, street, building no, apartment no",
+      setAsDefault: "Set this address as default address",
+      cancel: "Cancel",
+      saveAddress: "Save Address"
+    }
+  }
+
+  const t_content = content[language]
 
   // Update form data when editingAddress changes
   useEffect(() => {
@@ -82,7 +132,7 @@ export function AddressModal({ isOpen, onClose, onSubmit, editingAddress }: Addr
       <div className="bg-white rounded-lg max-w-2xl w-full max-h-[90vh] overflow-y-auto">
         <div className="flex items-center justify-between p-6 border-b">
           <h2 className="text-xl font-semibold">
-            {editingAddress ? 'Adresi Düzenle' : 'Yeni Adres Ekle'}
+            {editingAddress ? t_content.editAddress : t_content.addAddress}
           </h2>
           <Button
             variant="ghost"
@@ -96,34 +146,34 @@ export function AddressModal({ isOpen, onClose, onSubmit, editingAddress }: Addr
 
         <form onSubmit={handleSubmit} className="p-6 space-y-4">
           <div>
-            <Label htmlFor="title">Adres Başlığı *</Label>
+            <Label htmlFor="title">{t_content.addressTitle} *</Label>
             <Input
               id="title"
               value={formData.title}
               onChange={(e) => handleInputChange('title', e.target.value)}
-              placeholder="Ev, İş, vb."
+              placeholder={t_content.addressTitlePlaceholder}
               required
             />
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
-              <Label htmlFor="fullName">Ad Soyad *</Label>
+              <Label htmlFor="fullName">{t_content.fullName} *</Label>
               <Input
                 id="fullName"
                 value={formData.fullName}
                 onChange={(e) => handleInputChange('fullName', e.target.value)}
-                placeholder="Ad Soyad"
+                placeholder={t_content.fullNamePlaceholder}
                 required
               />
             </div>
             <div>
-              <Label htmlFor="phone">Telefon *</Label>
+              <Label htmlFor="phone">{t_content.phone} *</Label>
               <Input
                 id="phone"
                 value={formData.phone}
                 onChange={(e) => handleInputChange('phone', e.target.value)}
-                placeholder="0555 123 45 67"
+                placeholder={t_content.phonePlaceholder}
                 required
               />
             </div>
@@ -131,10 +181,10 @@ export function AddressModal({ isOpen, onClose, onSubmit, editingAddress }: Addr
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <div>
-              <Label htmlFor="country">Ülke *</Label>
+              <Label htmlFor="country">{t_content.country} *</Label>
               <Select value={formData.country} onValueChange={(value) => handleInputChange('country', value)}>
                 <SelectTrigger>
-                  <SelectValue placeholder="Ülke seçiniz" />
+                  <SelectValue placeholder={t_content.selectCountry} />
                 </SelectTrigger>
                 <SelectContent className="max-h-60">
                   {countries.map((country) => (
@@ -146,34 +196,34 @@ export function AddressModal({ isOpen, onClose, onSubmit, editingAddress }: Addr
               </Select>
             </div>
             <div>
-              <Label htmlFor="city">Şehir *</Label>
+              <Label htmlFor="city">{t_content.city} *</Label>
               <Input
                 id="city"
                 value={formData.city}
                 onChange={(e) => handleInputChange('city', e.target.value)}
-                placeholder="Şehir"
+                placeholder={t_content.cityPlaceholder}
                 required
               />
             </div>
             <div>
-              <Label htmlFor="district">İlçe *</Label>
+              <Label htmlFor="district">{t_content.district} *</Label>
               <Input
                 id="district"
                 value={formData.district}
                 onChange={(e) => handleInputChange('district', e.target.value)}
-                placeholder="İlçe"
+                placeholder={t_content.districtPlaceholder}
                 required
               />
             </div>
           </div>
 
           <div>
-            <Label htmlFor="address">Adres *</Label>
+            <Label htmlFor="address">{t_content.address} *</Label>
             <Input
               id="address"
               value={formData.address}
               onChange={(e) => handleInputChange('address', e.target.value)}
-              placeholder="Mahalle, sokak, bina no, daire no"
+              placeholder={t_content.addressPlaceholder}
               required
             />
           </div>
@@ -187,16 +237,16 @@ export function AddressModal({ isOpen, onClose, onSubmit, editingAddress }: Addr
               className="rounded"
             />
             <Label htmlFor="isDefault" className="text-sm">
-              Bu adresi varsayılan adres olarak ayarla
+              {t_content.setAsDefault}
             </Label>
           </div>
 
           <div className="flex justify-end space-x-3 pt-4">
             <Button type="button" variant="outline" onClick={onClose}>
-              İptal
+              {t_content.cancel}
             </Button>
             <Button type="submit">
-              Adresi Kaydet
+              {t_content.saveAddress}
             </Button>
           </div>
         </form>

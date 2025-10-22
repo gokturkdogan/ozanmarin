@@ -5,12 +5,59 @@ import Link from 'next/link'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { useCartStore } from '@/lib/cart'
+import { useLanguage } from '@/lib/language'
 import { ShoppingCart, Plus, Minus, Trash2, ArrowLeft } from 'lucide-react'
-import { formatTRYPrice } from '@/lib/exchangeRate'
+import { formatPrice } from '@/lib/exchangeRate'
 
 export default function CartPage() {
   const { items, updateQuantity, removeItem, clearCart, getTotalPrice, getTotalItems } = useCartStore()
   const [isCheckingOut, setIsCheckingOut] = useState(false)
+  const { language } = useLanguage()
+
+  const content = {
+    tr: {
+      emptyCart: "Sepetiniz Boş",
+      emptyCartDesc: "Henüz sepetinize ürün eklemediniz. Ürünlerimizi keşfetmek için aşağıdaki butona tıklayın.",
+      exploreProducts: "Ürünleri İncele",
+      shoppingCart: "Alışveriş Sepeti",
+      backToProducts: "Ürünlere Dön",
+      productDetails: "Ürün Detayları",
+      category: "Kategori:",
+      brand: "Marka:",
+      size: "Boyut:",
+      color: "Renk:",
+      quantity: "Miktar:",
+      embroidery: "Nakışlı",
+      remove: "Kaldır",
+      subtotal: "Ara Toplam",
+      total: "Toplam",
+      checkout: "Siparişi Tamamla",
+      clearCart: "Sepeti Temizle",
+      continueShopping: "Alışverişe Devam Et"
+    },
+    en: {
+      emptyCart: "Your Cart is Empty",
+      emptyCartDesc: "You haven't added any products to your cart yet. Click the button below to explore our products.",
+      exploreProducts: "Explore Products",
+      shoppingCart: "Shopping Cart",
+      backToProducts: "Back to Products",
+      productDetails: "Product Details",
+      category: "Category:",
+      brand: "Brand:",
+      size: "Size:",
+      color: "Color:",
+      quantity: "Quantity:",
+      embroidery: "With Embroidery",
+      remove: "Remove",
+      subtotal: "Subtotal",
+      total: "Total",
+      checkout: "Proceed to Checkout",
+      clearCart: "Clear Cart",
+      continueShopping: "Continue Shopping"
+    }
+  }
+
+  const t = content[language]
 
   const handleQuantityChange = (id: string, newQuantity: number) => {
     if (newQuantity <= 0) {
@@ -32,13 +79,13 @@ export default function CartPage() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
           <div className="text-center py-16">
             <ShoppingCart className="w-24 h-24 text-gray-300 mx-auto mb-6" />
-            <h1 className="text-2xl font-bold text-gray-900 mb-4">Sepetiniz Boş</h1>
+            <h1 className="text-2xl font-bold text-gray-900 mb-4">{t.emptyCart}</h1>
             <p className="text-gray-600 mb-8">
-              Henüz sepetinize ürün eklemediniz. Ürünlerimizi keşfetmek için aşağıdaki butona tıklayın.
+              {t.emptyCartDesc}
             </p>
             <Link href="/products">
               <Button size="lg">
-                Ürünleri İncele
+                {t.exploreProducts}
               </Button>
             </Link>
           </div>
@@ -56,10 +103,10 @@ export default function CartPage() {
             <Link href="/products">
               <Button variant="outline" size="sm">
                 <ArrowLeft className="w-4 h-4 mr-2" />
-                Alışverişe Devam Et
+                {t.continueShopping}
               </Button>
             </Link>
-            <h1 className="text-3xl font-bold text-gray-900">Sepetim</h1>
+            <h1 className="text-3xl font-bold text-gray-900">{t.shoppingCart}</h1>
           </div>
           <Button 
             variant="outline" 
@@ -67,7 +114,7 @@ export default function CartPage() {
             className="cursor-pointer hover:bg-red-50 hover:text-red-600 hover:border-red-300 transition-colors"
           >
             <Trash2 className="w-4 h-4 mr-2" />
-            Sepeti Temizle
+            {t.clearCart}
           </Button>
         </div>
 
@@ -100,23 +147,23 @@ export default function CartPage() {
                       </h3>
                       {(item.size || item.color || item.hasEmbroidery) && (
                         <div className="text-sm text-gray-600 mt-1 space-y-1">
-                          {item.size && <div>Boyut: {item.size}</div>}
-                          {item.color && <div>Renk: {item.color}</div>}
+                          {item.size && <div>{t.size} {item.size}</div>}
+                          {item.color && <div>{t.color} {item.color}</div>}
                           {item.hasEmbroidery && (
                             <div className="text-green-600 font-medium">
-                              ✓ Nakış (+₺100)
+                              ✓ {t.embroidery} {language === 'tr' ? '(+₺100)' : '(+$5)'}
                               {item.embroideryFile && (
-                                <span className="text-gray-500 ml-1">- Dosya yüklendi</span>
+                                <span className="text-gray-500 ml-1">{language === 'tr' ? '- Dosya yüklendi' : '- File uploaded'}</span>
                               )}
                             </div>
                           )}
                         </div>
                       )}
                       <p className="text-primary font-bold text-lg">
-                        {formatTRYPrice(item.price + (item.embroideryPrice || 0))}
+                        {formatPrice(item.price + (item.embroideryPrice || 0), language)}
                         {item.hasEmbroidery && (
                           <span className="text-sm text-gray-600 ml-2">
-                            ({formatTRYPrice(item.price)} + ₺100 nakış)
+                            ({formatPrice(item.price, language)} + {language === 'tr' ? '₺100 nakış' : '$5 embroidery'})
                           </span>
                         )}
                       </p>
@@ -148,11 +195,11 @@ export default function CartPage() {
                     {/* Item Total */}
                     <div className="text-right">
                       <p className="text-lg font-bold text-gray-900">
-                        {formatTRYPrice((item.price + (item.embroideryPrice || 0)) * item.quantity)}
+                        {formatPrice((item.price + (item.embroideryPrice || 0)) * item.quantity, language)}
                       </p>
                       {item.hasEmbroidery && (
                         <p className="text-sm text-gray-600">
-                          ({formatTRYPrice(item.price)} + ₺{(item.embroideryPrice || 0).toLocaleString()} nakış) × {item.quantity}
+                          ({formatPrice(item.price, language)} + {formatPrice(item.embroideryPrice || 0, language)} {language === 'tr' ? 'nakış' : 'embroidery'}) × {item.quantity}
                         </p>
                       )}
                     </div>
@@ -176,31 +223,31 @@ export default function CartPage() {
           <div className="lg:col-span-1">
             <Card className="sticky top-8">
               <CardHeader>
-                <CardTitle>Sipariş Özeti</CardTitle>
+                <CardTitle>{t.subtotal}</CardTitle>
               </CardHeader>
               <CardContent className="space-y-4">
                 <div className="flex justify-between text-sm">
-                  <span>Ürün Sayısı:</span>
-                  <span>{getTotalItems()} adet</span>
+                  <span>{language === 'tr' ? 'Ürün Sayısı:' : 'Items:'}</span>
+                  <span>{getTotalItems()} {language === 'tr' ? 'adet' : 'items'}</span>
                 </div>
                 
                 <div className="flex justify-between text-sm">
-                  <span>Ara Toplam:</span>
-                  <span>{formatTRYPrice(getTotalPrice())}</span>
+                  <span>{t.subtotal}:</span>
+                  <span>{formatPrice(getTotalPrice(), language)}</span>
                 </div>
                 
                 <div className="flex justify-between text-sm">
-                  <span>Kargo:</span>
+                  <span>{language === 'tr' ? 'Kargo:' : 'Shipping:'}</span>
                   <div className="text-right">
-                    <div>₺200</div>
-                    <div className="text-gray-500 text-xs">(teslimat adresine göre değişiklik gösterebilir)</div>
+                    <div>{language === 'tr' ? '₺200' : '$0'}</div>
+                    <div className="text-gray-500 text-xs">{language === 'tr' ? '(teslimat adresine göre değişiklik gösterebilir)' : '(may vary based on delivery address)'}</div>
                   </div>
                 </div>
                 
                 <div className="border-t pt-4">
                   <div className="flex justify-between text-lg font-bold">
-                    <span>Toplam:</span>
-                    <span>{formatTRYPrice(getTotalPrice() + 200)}</span>
+                    <span>{t.total}:</span>
+                    <span>{formatPrice(getTotalPrice() + (language === 'tr' ? 200 : 0), language)}</span>
                   </div>
                 </div>
 
@@ -210,12 +257,12 @@ export default function CartPage() {
                   onClick={handleCheckout}
                   disabled={isCheckingOut}
                 >
-                  {isCheckingOut ? 'Yönlendiriliyor...' : 'Siparişi Tamamla'}
+                  {isCheckingOut ? (language === 'tr' ? 'Yönlendiriliyor...' : 'Redirecting...') : t.checkout}
                 </Button>
 
                 <div className="text-xs text-gray-500 text-center">
-                  <p>Güvenli ödeme ile korunuyorsunuz</p>
-                  <p>Kargo ücretsizdir</p>
+                  <p>{language === 'tr' ? 'Güvenli ödeme ile korunuyorsunuz' : 'You are protected by secure payment'}</p>
+                  <p>{language === 'tr' ? 'Kargo ücretsizdir' : 'Free shipping'}</p>
                 </div>
               </CardContent>
             </Card>

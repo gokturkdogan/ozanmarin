@@ -3,6 +3,7 @@
 import { useState, useRef } from 'react'
 import { Button } from '@/components/ui/button'
 import { Upload, X, FileText, Image } from 'lucide-react'
+import { useLanguage } from '@/lib/language'
 
 interface FileUploadProps {
   onFileSelect: (file: File | null, url?: string) => void
@@ -22,18 +23,51 @@ export function FileUpload({
   const [isUploading, setIsUploading] = useState(false)
   const [dragActive, setDragActive] = useState(false)
   const fileInputRef = useRef<HTMLInputElement>(null)
+  const { language, t } = useLanguage()
+
+  // Dil bazlı içerik
+  const content = {
+    tr: {
+      dragText: 'Nakış tasarımınızı buraya sürükleyin veya',
+      selectFile: 'Dosya Seç',
+      uploading: 'Yükleniyor...',
+      uploadingFile: 'Dosya yükleniyor...',
+      supportedFormats: 'Desteklenen formatlar:',
+      maxSize: 'Max',
+      fileTypeError: 'Sadece',
+      fileTypeErrorEnd: 'formatları kabul edilir.',
+      fileSizeError: 'Dosya boyutu',
+      fileSizeErrorEnd: 'MB\'dan küçük olmalıdır.',
+      uploadError: 'Dosya yükleme sırasında bir hata oluştu. Lütfen tekrar deneyin.'
+    },
+    en: {
+      dragText: 'Drag your embroidery design here or',
+      selectFile: 'Select File',
+      uploading: 'Uploading...',
+      uploadingFile: 'Uploading file...',
+      supportedFormats: 'Supported formats:',
+      maxSize: 'Max',
+      fileTypeError: 'Only',
+      fileTypeErrorEnd: 'formats are accepted.',
+      fileSizeError: 'File size must be smaller than',
+      fileSizeErrorEnd: 'MB.',
+      uploadError: 'An error occurred while uploading the file. Please try again.'
+    }
+  }
+
+  const t_content = content[language]
 
   const handleFileSelect = async (file: File) => {
     // Check file type
     const fileExtension = '.' + file.name.split('.').pop()?.toLowerCase()
     if (!acceptedTypes.includes(fileExtension)) {
-      alert(`Sadece ${acceptedTypes.join(', ')} formatları kabul edilir.`)
+      alert(`${t_content.fileTypeError} ${acceptedTypes.join(', ')} ${t_content.fileTypeErrorEnd}`)
       return
     }
 
     // Check file size
     if (file.size > maxSize * 1024 * 1024) {
-      alert(`Dosya boyutu ${maxSize}MB'dan küçük olmalıdır.`)
+      alert(`${t_content.fileSizeError} ${maxSize}${t_content.fileSizeErrorEnd}`)
       return
     }
 
@@ -60,7 +94,7 @@ export function FileUpload({
       onFileSelect(file, result.url)
     } catch (error) {
       console.error('Upload error:', error)
-      alert('Dosya yükleme sırasında bir hata oluştu. Lütfen tekrar deneyin.')
+      alert(t_content.uploadError)
       setSelectedFile(null)
       onFileSelect(null)
     } finally {
@@ -127,7 +161,7 @@ export function FileUpload({
         >
           <Upload className="w-12 h-12 text-gray-400 mx-auto mb-4" />
           <p className="text-sm text-gray-600 mb-2">
-            {isUploading ? 'Dosya yükleniyor...' : 'Nakış tasarımınızı buraya sürükleyin veya'}
+            {isUploading ? t_content.uploadingFile : t_content.dragText}
           </p>
           <Button
             type="button"
@@ -136,10 +170,10 @@ export function FileUpload({
             className="cursor-pointer"
             disabled={isUploading}
           >
-            {isUploading ? 'Yükleniyor...' : 'Dosya Seç'}
+            {isUploading ? t_content.uploading : t_content.selectFile}
           </Button>
           <p className="text-xs text-gray-500 mt-2">
-            Desteklenen formatlar: {acceptedTypes.join(', ')} (Max {maxSize}MB)
+            {t_content.supportedFormats} {acceptedTypes.join(', ')} ({t_content.maxSize} {maxSize}MB)
           </p>
           <input
             ref={fileInputRef}
