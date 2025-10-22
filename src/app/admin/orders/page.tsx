@@ -289,6 +289,25 @@ export default function AdminOrdersPage() {
     }
   }
 
+  const downloadFile = async (url: string, filename: string) => {
+    try {
+      const response = await fetch(url)
+      const blob = await response.blob()
+      const downloadUrl = window.URL.createObjectURL(blob)
+      const link = document.createElement('a')
+      link.href = downloadUrl
+      link.download = filename
+      document.body.appendChild(link)
+      link.click()
+      document.body.removeChild(link)
+      window.URL.revokeObjectURL(downloadUrl)
+    } catch (error) {
+      console.error('Download error:', error)
+      // Fallback: open in new tab
+      window.open(url, '_blank')
+    }
+  }
+
   if (isLoading) {
     return (
       <div className="container mx-auto px-4 py-8">
@@ -734,9 +753,25 @@ export default function AdminOrdersPage() {
                             {item.color && (
                               <p className="text-xs text-gray-500">Renk: {item.color}</p>
                             )}
-                            {item.hasEmbroidery && (
-                              <p className="text-xs text-blue-600">✓ Nakışlı (+₺{(parseFloat(item.embroideryPrice?.toString() || '0')).toLocaleString('tr-TR')})</p>
-                            )}
+                                        {item.hasEmbroidery && (
+                                          <p className="text-xs text-blue-600">✓ Nakışlı (+₺{(parseFloat(item.embroideryPrice?.toString() || '0')).toLocaleString('tr-TR')})</p>
+                                        )}
+                                        {item.hasEmbroidery && item.embroideryFile && (
+                                          <div className="mt-2">
+                                            <button
+                                              onClick={() => {
+                                                const filename = `nakis-${item.productName}-${item.id}.${item.embroideryFile.split('.').pop()}`
+                                                downloadFile(item.embroideryFile, filename)
+                                              }}
+                                              className="inline-flex items-center text-xs text-blue-600 hover:text-blue-800 hover:underline cursor-pointer bg-transparent border-none p-0"
+                                            >
+                                              <svg className="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                                              </svg>
+                                              Nakış Dosyasını İndir
+                                            </button>
+                                          </div>
+                                        )}
                             {item.isShipping && (
                               <p className="text-xs text-orange-600">🚚 Kargo Ücreti</p>
                             )}
