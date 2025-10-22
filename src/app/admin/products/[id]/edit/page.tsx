@@ -377,19 +377,6 @@ export default function EditProductPage({ params }: { params: Promise<{ id: stri
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="space-y-2">
-                <Label htmlFor="price">Fiyat ($) *</Label>
-                <Input
-                  id="price"
-                  type="number"
-                  step="0.01"
-                  value={formData.price}
-                  onChange={(e) => handleInputChange('price', e.target.value)}
-                  placeholder="1250.00"
-                  required
-                />
-              </div>
-
-              <div className="space-y-2">
                 <Label htmlFor="stock">Stok Miktarı *</Label>
                 <Input
                   id="stock"
