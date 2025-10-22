@@ -8,7 +8,7 @@ export async function middleware(request: NextRequest) {
   const isAdminRoute = request.nextUrl.pathname.startsWith('/admin')
   
   // Public routes that don't require authentication
-  const publicRoutes = ['/login', '/register', '/', '/products', '/products/[slug]', '/about', '/contact', '/cart', '/checkout', '/orders']
+  const publicRoutes = ['/login', '/register', '/', '/products', '/products/[slug]', '/about', '/contact', '/cart', '/checkout', '/orders', '/profile', '/addresses']
   const isPublicRoute = publicRoutes.some(route => {
     if (route.includes('[')) {
       // Dynamic route

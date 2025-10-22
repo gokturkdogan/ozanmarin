@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { verifyToken } from '@/lib/auth'
-import { getUserById } from '@/lib/auth'
+import { prisma } from '@/lib/prisma'
 
 export async function GET(request: NextRequest) {
   try {
@@ -22,7 +22,15 @@ export async function GET(request: NextRequest) {
       )
     }
 
-    const user = await getUserById(payload.userId)
+    const user = await prisma.user.findUnique({
+      where: { id: payload.userId },
+      select: {
+        id: true,
+        name: true,
+        email: true,
+        role: true
+      }
+    })
     
     if (!user) {
       return NextResponse.json(
