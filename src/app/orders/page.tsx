@@ -35,6 +35,8 @@ interface Order {
   createdAt: string
   items: OrderItem[]
   shippingAddress?: any
+  shippingCompany?: string
+  trackingNumber?: string
   user?: {
     id: string
     name: string
@@ -371,6 +373,49 @@ export default function OrdersPage() {
                             </div>
                           )}
                         </div>
+                        
+                        {/* Shipping Info */}
+                        {(order.shippingCompany || order.trackingNumber) && (
+                          <div className="mt-6">
+                            <h3 className="font-semibold text-gray-900 mb-4 flex items-center">
+                              <Truck className="w-5 h-5 mr-2" />
+                              Kargo Bilgileri
+                            </h3>
+                            <div className="bg-blue-50 rounded-lg p-4 space-y-2">
+                              {order.shippingCompany && (
+                                <div className="flex items-center justify-between">
+                                  <span className="text-sm font-medium text-gray-700">Kargo Şirketi:</span>
+                                  <span className="text-sm text-gray-900">
+                                    {order.shippingCompany === 'ups' ? 'UPS' : 
+                                     order.shippingCompany === 'yurtici' ? 'Yurtiçi Kargo' : 
+                                     order.shippingCompany}
+                                  </span>
+                                </div>
+                              )}
+                              {order.trackingNumber && (
+                                <div className="flex items-center justify-between">
+                                  <span className="text-sm font-medium text-gray-700">Takip Numarası:</span>
+                                  <span className="text-sm text-gray-900 font-mono">{order.trackingNumber}</span>
+                                </div>
+                              )}
+                              
+                              {/* Kargo Takip Linki */}
+                              {order.trackingNumber && order.shippingCompany === 'yurtici' && (
+                                <div className="mt-4 pt-3 border-t border-blue-200">
+                                  <a
+                                    href={`https://www.yurticikargo.com/tr/online-servisler/gonderi-sorgula?code=${order.trackingNumber}`}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    className="inline-flex items-center text-sm text-blue-600 hover:text-blue-800 hover:underline cursor-pointer"
+                                  >
+                                    <Truck className="w-4 h-4 mr-2" />
+                                    Kargom Nerede? - Yurtiçi Kargo'da Takip Et
+                                  </a>
+                                </div>
+                              )}
+                            </div>
+                          </div>
+                        )}
                       </div>
 
                       {/* Order Summary */}

@@ -36,6 +36,8 @@ interface Order {
   paymentMethod?: string
   iyzicoPaymentId?: string
   shippingAddress: any
+  shippingCompany?: string
+  trackingNumber?: string
   createdAt: string
   updatedAt: string
   user?: {
@@ -61,6 +63,12 @@ const paymentStatusOptions = [
   { value: 'paid', label: 'Ödendi' },
   { value: 'failed', label: 'Başarısız' },
   { value: 'refunded', label: 'İade Edildi' }
+]
+
+const shippingCompanyOptions = [
+  { value: 'none', label: 'Kargo Şirketi Seçin' },
+  { value: 'ups', label: 'UPS' },
+  { value: 'yurtici', label: 'Yurtiçi Kargo' }
 ]
 
 const statusColors = {
@@ -197,6 +205,62 @@ export default function AdminOrdersPage() {
       toast({
         title: "Hata",
         description: "Durum güncellenirken bir hata oluştu.",
+        variant: "destructive",
+      })
+    } finally {
+      setUpdatingStatus(null)
+    }
+  }
+
+  const updateShippingInfo = async (orderId: string, shippingCompany: string, trackingNumber: string) => {
+    try {
+      setUpdatingStatus(orderId)
+      const response = await fetch('/api/admin/orders/update-shipping', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          orderId,
+          shippingCompany,
+          trackingNumber
+        }),
+      })
+
+      if (response.ok) {
+        const data = await response.json()
+        if (data.success) {
+          // Update local state
+          setOrders(prev => prev.map(order => 
+            order.id === orderId ? { 
+              ...order, 
+              shippingCompany, 
+              trackingNumber 
+            } : order
+          ))
+          toast({
+            title: "Başarılı",
+            description: "Kargo bilgileri güncellendi.",
+          })
+        } else {
+          toast({
+            title: "Hata",
+            description: data.error || "Kargo bilgileri güncellenirken bir hata oluştu.",
+            variant: "destructive",
+          })
+        }
+      } else {
+        toast({
+          title: "Hata",
+          description: "Kargo bilgileri güncellenirken bir hata oluştu.",
+          variant: "destructive",
+        })
+      }
+    } catch (error) {
+      console.error('Error updating shipping info:', error)
+      toast({
+        title: "Hata",
+        description: "Kargo bilgileri güncellenirken bir hata oluştu.",
         variant: "destructive",
       })
     } finally {
@@ -565,6 +629,62 @@ export default function AdminOrdersPage() {
                           Adres bilgisi bulunamadı
                         </div>
                       )}
+                    </CardContent>
+                  </Card>
+                  
+                  {/* Shipping Info */}
+                  <Card>
+                    <CardHeader>
+                      <CardTitle>Kargo Bilgileri</CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      <div className="space-y-4">
+                        <div>
+                          <label className="text-sm font-medium text-gray-700 mb-2 block">Kargo Şirketi</label>
+                          <Select
+                            value={selectedOrder.shippingCompany || 'none'}
+                            onValueChange={(value) => {
+                              const newOrder = { ...selectedOrder, shippingCompany: value === 'none' ? null : value }
+                              setSelectedOrder(newOrder)
+                            }}
+                          >
+                            <SelectTrigger>
+                              <SelectValue placeholder="Kargo şirketi seçin" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              {shippingCompanyOptions.map(option => (
+                                <SelectItem key={option.value} value={option.value}>
+                                  {option.label}
+                                </SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                        </div>
+                        
+                        <div>
+                          <label className="text-sm font-medium text-gray-700 mb-2 block">Takip Numarası</label>
+                          <Input
+                            placeholder="Kargo takip numarası"
+                            value={selectedOrder.trackingNumber || ''}
+                            onChange={(e) => {
+                              const newOrder = { ...selectedOrder, trackingNumber: e.target.value }
+                              setSelectedOrder(newOrder)
+                            }}
+                          />
+                        </div>
+                        
+                        <Button
+                          onClick={() => updateShippingInfo(
+                            selectedOrder.id, 
+                            selectedOrder.shippingCompany || '', 
+                            selectedOrder.trackingNumber || ''
+                          )}
+                          disabled={updatingStatus === selectedOrder.id}
+                          className="w-full cursor-pointer"
+                        >
+                          {updatingStatus === selectedOrder.id ? 'Güncelleniyor...' : 'Kargo Bilgilerini Güncelle'}
+                        </Button>
+                      </div>
                     </CardContent>
                   </Card>
                 </div>
