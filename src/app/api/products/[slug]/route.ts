@@ -19,7 +19,6 @@ export async function GET(
         description: true,
         descriptionEn: true,
         images: true,
-        stock: true,
         sizePrices: true,
         colors: true,
         createdAt: true,

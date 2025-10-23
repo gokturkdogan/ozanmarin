@@ -22,8 +22,7 @@ interface Product {
   description: string
   descriptionEn?: string
   images: string[]
-  stock: number
-  sizePrices: { size: string; price: number }[]
+  sizePrices: { size: string; price: number; stock: number }[]
   colors: { tr: string; en: string }[] // Updated colors interface
   category: {
     name: string
@@ -50,7 +49,7 @@ export default function ProductPage({ params }: ProductPageProps) {
   const [isLoading, setIsLoading] = useState(true)
   const [selectedImage, setSelectedImage] = useState(0)
   const [quantity, setQuantity] = useState(1)
-  const [selectedSizePrice, setSelectedSizePrice] = useState<{ size: string; price: number } | null>(null)
+  const [selectedSizePrice, setSelectedSizePrice] = useState<{ size: string; price: number; stock: number } | null>(null)
   const [selectedColor, setSelectedColor] = useState<string>('')
   const [slug, setSlug] = useState<string>('')
   const [showToast, setShowToast] = useState(false)
@@ -182,6 +181,16 @@ export default function ProductPage({ params }: ProductPageProps) {
 
   const handleAddToCart = () => {
     if (product && selectedSizePrice) {
+      // Stok kontrolü
+      if (selectedSizePrice.stock < quantity) {
+        setToastMessage(language === 'tr' 
+          ? `Stokta sadece ${selectedSizePrice.stock} adet ${selectedSizePrice.size} boyutu mevcut!` 
+          : `Only ${selectedSizePrice.stock} pieces of ${selectedSizePrice.size} size available in stock!`)
+        setToastType('error')
+        setShowToast(true)
+        return
+      }
+
       // Renk seçimi kontrolü
       if (product.colors && product.colors.length > 0 && !selectedColor) {
         setToastMessage(language === 'tr' 
@@ -420,8 +429,13 @@ export default function ProductPage({ params }: ProductPageProps) {
                     </SelectTrigger>
                     <SelectContent>
                       {product.sizePrices.map((sizePrice) => (
-                        <SelectItem key={sizePrice.size} value={sizePrice.size}>
+                        <SelectItem 
+                          key={sizePrice.size} 
+                          value={sizePrice.size}
+                          disabled={sizePrice.stock === 0}
+                        >
                           {sizePrice.size} - {formatPrice(convertUSDToTRY(sizePrice.price, exchangeRate, language), language)}
+                          {sizePrice.stock === 0 && ' (Stokta Yok)'}
                         </SelectItem>
                       ))}
                     </SelectContent>
@@ -505,7 +519,7 @@ export default function ProductPage({ params }: ProductPageProps) {
                   size="lg" 
                   className="flex-1 cursor-pointer hover:bg-primary/90 transition-colors"
                   onClick={handleAddToCart}
-                  disabled={product.stock === 0 || !selectedSizePrice || (hasEmbroidery && !embroideryUrl)}
+                  disabled={!selectedSizePrice || selectedSizePrice.stock === 0 || (hasEmbroidery && !embroideryUrl)}
                 >
                   <ShoppingCart className="w-5 h-5 mr-2" />
                   {t.addToCart}
@@ -523,7 +537,7 @@ export default function ProductPage({ params }: ProductPageProps) {
                 </p>
               )}
               
-              {product.stock === 0 && (
+              {selectedSizePrice && selectedSizePrice.stock === 0 && (
                 <p className="text-red-500 text-sm mt-2">{t.outOfStock}</p>
               )}
               
@@ -531,9 +545,11 @@ export default function ProductPage({ params }: ProductPageProps) {
                 <p className="text-orange-500 text-sm mt-2">{t.selectSizeFirst}</p>
               )}
               
-              {product.stock > 0 && product.stock < 10 && selectedSizePrice && (
+              {selectedSizePrice && selectedSizePrice.stock > 0 && selectedSizePrice.stock < 10 && (
                 <p className="text-orange-500 text-sm mt-2">
-                  Son {product.stock} adet kaldı!
+                  {language === 'tr' 
+                    ? `Son ${selectedSizePrice.stock} adet kaldı!` 
+                    : `Only ${selectedSizePrice.stock} pieces left!`}
                 </p>
               )}
             </div>

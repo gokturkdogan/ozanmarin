@@ -12,11 +12,11 @@ const productUpdateSchema = z.object({
   brandId: z.string().optional(),
   description: z.string().optional(),
   descriptionEn: z.string().optional(),
-  stock: z.number().int().min(0, 'Stok negatif olamaz'),
   images: z.array(z.string()),
   sizePrices: z.array(z.object({
     size: z.string().min(1, 'Boyut gerekli'),
-    price: z.number().positive('Fiyat pozitif olmalı')
+    price: z.number().positive('Fiyat pozitif olmalı'),
+    stock: z.number().int().min(0, 'Stok negatif olamaz')
   })),
   colors: z.array(z.object({
     tr: z.string().min(1, 'Türkçe renk gerekli'),
@@ -181,7 +181,6 @@ export async function PUT(
         brandId: validatedData.brandId || null,
         description: validatedData.description || null,
         descriptionEn: validatedData.descriptionEn || null,
-        stock: validatedData.stock,
         images: validatedData.images,
         sizePrices: validatedData.sizePrices,
         colors: validatedData.colors

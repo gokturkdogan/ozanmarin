@@ -66,11 +66,10 @@ model Product {
   description String?
   descriptionEn String? // English description
   images      String[]
-  stock       Int      @default(0)
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
   brandId     String?
-  sizePrices  Json     // Boyut ve fiyat bilgileri: [{"size": "S", "price": 100}, {"size": "M", "price": 120}]
+  sizePrices  Json     // Boyut, fiyat ve stok bilgileri: [{"size": "S", "price": 100, "stock": 50}, {"size": "M", "price": 120, "stock": 30}]
   colors      Json     // Renk seçenekleri: [{"tr": "Kırmızı", "en": "Red"}, {"tr": "Beyaz", "en": "White"}]
   brand       Brand?   @relation(fields: [brandId], references: [id])
   category    Category @relation(fields: [categoryId], references: [id], onDelete: Cascade)

@@ -340,8 +340,8 @@ export default function AdminProductsPage() {
                       {product.brand && ` • ${product.brand.name}`}
                     </CardDescription>
                   </div>
-                  <Badge variant={product.stock > 0 ? "default" : "destructive"}>
-                    {product.stock} adet
+                  <Badge variant={product.sizePrices && product.sizePrices.some(sp => sp.stock > 0) ? "default" : "destructive"}>
+                    {product.sizePrices ? product.sizePrices.reduce((total, sp) => total + sp.stock, 0) : 0} adet
                   </Badge>
                 </div>
               </CardHeader>

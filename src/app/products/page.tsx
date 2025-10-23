@@ -295,7 +295,7 @@ export default function ProductsPage() {
                         {getTranslatedText(product.category.name, product.category.nameEn || null, language)}
                       </span>
                     </div>
-                    {product.stock === 0 && (
+                    {product.sizePrices && product.sizePrices.every(sizePrice => sizePrice.stock === 0) && (
                       <div className="absolute top-2 right-2">
                         <span className="bg-red-500 text-white text-xs px-2 py-1 rounded-full font-medium">
                           {t.outOfStock}

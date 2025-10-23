@@ -30,11 +30,10 @@ interface Product {
   nameEn?: string
   slug: string
   slugEn?: string
-  stock: number
   description: string
   descriptionEn?: string
   images: string[]
-  sizePrices: { size: string; price: number }[]
+  sizePrices: { size: string; price: number; stock: number }[]
   colors: { tr: string; en: string }[] // Updated colors interface
   category: {
     id: string
@@ -73,9 +72,8 @@ export default function EditProductPage({ params }: { params: Promise<{ id: stri
     brandId: '',
     description: '',
     descriptionEn: '',
-    stock: '',
     images: '',
-    sizePrices: [] as { size: string; price: number }[],
+    sizePrices: [] as { size: string; price: number; stock: number }[],
     colors: [] as { tr: string; en: string }[] // Updated colors interface
   })
 
@@ -120,10 +118,9 @@ export default function EditProductPage({ params }: { params: Promise<{ id: stri
           brandId: product.brand?.id || '',
           description: product.description || '',
           descriptionEn: product.descriptionEn || '',
-          stock: product.stock.toString(),
           images: product.images.join(', '),
-          sizePrices: product.sizePrices,
-          colors: product.colors // Already in correct format
+          sizePrices: product.sizePrices || [],
+          colors: product.colors || []
         })
         
         setImages(product.images)
@@ -268,7 +265,6 @@ export default function EditProductPage({ params }: { params: Promise<{ id: stri
     try {
       const productData = {
         ...formData,
-        stock: parseInt(formData.stock),
         images,
         brandId: formData.brandId || null
       }
@@ -431,20 +427,6 @@ export default function EditProductPage({ params }: { params: Promise<{ id: stri
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="space-y-2">
-                <Label htmlFor="stock">Stok Miktarı *</Label>
-                <Input
-                  id="stock"
-                  type="number"
-                  value={formData.stock}
-                  onChange={(e) => handleInputChange('stock', e.target.value)}
-                  placeholder="15"
-                  required
-                />
-              </div>
-            </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div className="space-y-2">
                 <Label htmlFor="description">Türkçe Açıklama</Label>
                 <Textarea
                   id="description"
@@ -523,11 +505,11 @@ export default function EditProductPage({ params }: { params: Promise<{ id: stri
             </div>
 
             <div className="space-y-4">
-              <Label>Boyut ve Fiyat Seçenekleri</Label>
+              <Label>Boyut, Fiyat ve Stok Seçenekleri</Label>
               
               {/* Add Size Price Form */}
               <div className="border rounded-lg p-4 space-y-4">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                   <div>
                     <Label htmlFor="size-input">Boyut</Label>
                     <Input
@@ -544,6 +526,15 @@ export default function EditProductPage({ params }: { params: Promise<{ id: stri
                       placeholder="1250.00"
                     />
                   </div>
+                  <div>
+                    <Label htmlFor="stock-input">Stok</Label>
+                    <Input
+                      id="stock-input"
+                      type="number"
+                      min="0"
+                      placeholder="50"
+                    />
+                  </div>
                 </div>
                 <Button
                   type="button"
@@ -551,14 +542,16 @@ export default function EditProductPage({ params }: { params: Promise<{ id: stri
                   onClick={() => {
                     const sizeInput = document.getElementById('size-input') as HTMLInputElement
                     const priceInput = document.getElementById('price-input') as HTMLInputElement
-                    if (sizeInput.value && priceInput.value) {
-                      const newSizePrice = { size: sizeInput.value, price: parseFloat(priceInput.value) }
+                    const stockInput = document.getElementById('stock-input') as HTMLInputElement
+                    if (sizeInput.value && priceInput.value && stockInput.value) {
+                      const newSizePrice = { size: sizeInput.value, price: parseFloat(priceInput.value), stock: parseInt(stockInput.value) }
                       setFormData(prev => ({
                         ...prev,
                         sizePrices: [...prev.sizePrices, newSizePrice]
                       }))
                       sizeInput.value = ''
                       priceInput.value = ''
+                      stockInput.value = ''
                     }
                   }}
                 >
@@ -574,7 +567,7 @@ export default function EditProductPage({ params }: { params: Promise<{ id: stri
                     {formData.sizePrices.map((sizePrice, index) => (
                       <div key={index} className="flex items-center gap-2 p-3 border rounded-lg">
                         <Input
-                          value={sizePrice.size}
+                          value={sizePrice.size || ''}
                           onChange={(e) => {
                             const newSizePrices = [...formData.sizePrices]
                             newSizePrices[index] = { ...newSizePrices[index], size: e.target.value }
@@ -585,10 +578,21 @@ export default function EditProductPage({ params }: { params: Promise<{ id: stri
                         <Input
                           type="number"
                           step="0.01"
-                          value={sizePrice.price}
+                          value={sizePrice.price || 0}
                           onChange={(e) => {
                             const newSizePrices = [...formData.sizePrices]
                             newSizePrices[index] = { ...newSizePrices[index], price: parseFloat(e.target.value) || 0 }
+                            setFormData(prev => ({ ...prev, sizePrices: newSizePrices }))
+                          }}
+                          className="flex-1"
+                        />
+                        <Input
+                          type="number"
+                          min="0"
+                          value={sizePrice.stock || 0}
+                          onChange={(e) => {
+                            const newSizePrices = [...formData.sizePrices]
+                            newSizePrices[index] = { ...newSizePrices[index], stock: parseInt(e.target.value) || 0 }
                             setFormData(prev => ({ ...prev, sizePrices: newSizePrices }))
                           }}
                           className="flex-1"
