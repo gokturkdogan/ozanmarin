@@ -98,8 +98,12 @@ export default function AboutPage() {
               </div>
             </div>
             <div className="aspect-w-16 aspect-h-9">
-              <div className="w-full h-96 bg-gradient-to-br from-blue-400 to-blue-600 rounded-lg flex items-center justify-center">
-                <Anchor className="w-32 h-32 text-white opacity-50" />
+              <div className="w-full h-96 rounded-lg overflow-hidden">
+                <img 
+                  src="https://res.cloudinary.com/dfj76zhgk/image/upload/v1761225213/ozan-marin-logo_vjk61q.png" 
+                  alt="Ozan Marin Logo" 
+                  className="w-full h-full object-contain"
+                />
               </div>
             </div>
           </div>

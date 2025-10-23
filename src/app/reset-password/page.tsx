@@ -213,7 +213,7 @@ function ResetPasswordContent() {
                 </div>
                 <Button
                   type="submit"
-                  className="w-full"
+                  className="w-full cursor-pointer"
                   disabled={isLoading}
                 >
                   {isLoading ? (language === 'tr' ? 'Güncelleniyor...' : 'Updating...') : t.updatePassword}
@@ -234,7 +234,7 @@ function ResetPasswordContent() {
                 </div>
                 <Button
                   type="submit"
-                  className="w-full"
+                  className="w-full cursor-pointer"
                   disabled={isLoading}
                 >
                   {isLoading ? (language === 'tr' ? 'Gönderiliyor...' : 'Sending...') : t.sendResetLink}

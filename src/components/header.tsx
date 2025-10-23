@@ -113,16 +113,12 @@ export function Header() {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between items-center h-16">
           {/* Logo */}
-          <Link href="/" className="flex items-center space-x-2">
-            <div className="flex items-center space-x-2">
-              <div className="w-8 h-8 bg-primary rounded-full flex items-center justify-center">
-                <span className="text-primary-foreground font-bold text-sm">O</span>
-              </div>
-              <div className="flex flex-col">
-                <span className="text-lg font-bold text-primary leading-tight">OZAN</span>
-                <span className="text-xs text-gray-600 leading-tight">marin</span>
-              </div>
-            </div>
+          <Link href="/" className="hidden md:flex items-center space-x-2">
+            <img 
+              src="https://res.cloudinary.com/dfj76zhgk/image/upload/v1761225213/ozan-marin-logo_vjk61q.png" 
+              alt="Ozan Marin Logo" 
+              className="h-14 w-auto"
+            />
           </Link>
 
           {/* Desktop Navigation */}

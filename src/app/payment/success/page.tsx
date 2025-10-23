@@ -172,12 +172,12 @@ function PaymentSuccessContent() {
           
           <div className="space-y-6">
             <Link href="/products">
-              <Button size="lg" className="w-full">
+              <Button size="lg" className="w-full cursor-pointer">
                 {t_content.continueShopping}
               </Button>
             </Link>
             <Link href="/orders">
-              <Button size="lg" variant="outline" className="w-full">
+              <Button size="lg" variant="outline" className="w-full cursor-pointer">
                 {t_content.viewOrders}
               </Button>
             </Link>

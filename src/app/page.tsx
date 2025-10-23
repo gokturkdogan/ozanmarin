@@ -37,22 +37,6 @@ export default function Home() {
           description: "İhtiyaçlarınıza göre özelleştirilmiş çözümler"
         }
       },
-      categories: {
-        title: "Ürün Kategorileri",
-        subtitle: "Denizcilik ihtiyaçlarınız için geniş ürün yelpazesi",
-        covers: {
-          title: "Yat Kumaş Kılıfları",
-          description: "Premium kumaşlardan üretilmiş, özel tasarım kılıflar"
-        },
-        cushions: {
-          title: "Tekne Minderleri",
-          description: "Konforlu ve dayanıklı tekne oturma çözümleri"
-        },
-        tarpaulins: {
-          title: "Marin Güneşlik & Branda",
-          description: "Güneş ve hava koşullarından koruma sağlayan brandalar"
-        }
-      },
       cta: {
         title: "Denizcilik Deneyiminizi Yükseltin",
         subtitle: "Premium kalitede denizcilik tekstili çözümleri için hemen iletişime geçin",
@@ -87,22 +71,6 @@ export default function Home() {
           description: "Customized solutions according to your needs"
         }
       },
-      categories: {
-        title: "Product Categories",
-        subtitle: "Wide range of products for your marine needs",
-        covers: {
-          title: "Yacht Fabric Covers",
-          description: "Premium fabric covers with special design"
-        },
-        cushions: {
-          title: "Boat Cushions",
-          description: "Comfortable and durable boat seating solutions"
-        },
-        tarpaulins: {
-          title: "Marine Sunshade & Tarpaulin",
-          description: "Tarpaulins that provide protection from sun and weather conditions"
-        }
-      },
       cta: {
         title: "Elevate Your Marine Experience",
         subtitle: "Contact us now for premium quality marine textile solutions",
@@ -121,15 +89,11 @@ export default function Home() {
           <div className="text-center">
             <div className="mb-8">
               <div className="flex flex-col items-center space-y-4">
-                <div className="flex items-center space-x-3">
-                  <div className="w-12 h-12 bg-primary rounded-full flex items-center justify-center">
-                    <span className="text-primary-foreground font-bold text-xl">O</span>
-                  </div>
-                  <div className="flex flex-col">
-                    <span className="text-3xl font-bold text-primary leading-tight">OZAN</span>
-                    <span className="text-lg text-gray-600 leading-tight">marin</span>
-                  </div>
-                </div>
+                <img 
+                  src="https://res.cloudinary.com/dfj76zhgk/image/upload/v1761225471/ozan-marin-logo-no-bg_rlmqc5.png" 
+                  alt="Ozan Marin Logo" 
+                  className="h-24 w-auto"
+                />
                 <div className="text-sm text-gray-500 font-medium">{t.tagline}</div>
               </div>
             </div>
@@ -142,12 +106,12 @@ export default function Home() {
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
               <Link href="/products">
-                <Button size="lg" className="w-full sm:w-auto">
+                <Button size="lg" className="w-full sm:w-auto cursor-pointer">
                   {t.exploreProducts}
                 </Button>
               </Link>
               <Link href="/contact">
-                <Button variant="outline" size="lg" className="w-full sm:w-auto">
+                <Button variant="outline" size="lg" className="w-full sm:w-auto cursor-pointer">
                   {t.contactUs}
                 </Button>
               </Link>
@@ -206,67 +170,6 @@ export default function Home() {
         </div>
       </section>
 
-      {/* Categories Section */}
-      <section className="py-16 bg-gray-50">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center mb-12">
-            <h2 className="text-3xl font-bold text-gray-900 mb-4">{t.categories.title}</h2>
-            <p className="text-lg text-gray-600 max-w-2xl mx-auto">
-              {t.categories.subtitle}
-            </p>
-          </div>
-          
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-            <Link href="/products?category=yat-kumas-kiliflari">
-              <Card className="text-center p-6 hover:shadow-lg transition-shadow cursor-pointer h-full">
-                <CardHeader>
-                  <div className="w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center mx-auto mb-4">
-                    <Shield className="h-8 w-8 text-primary" />
-                  </div>
-                  <CardTitle className="text-xl">{t.categories.covers.title}</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <p className="text-gray-600">
-                    {t.categories.covers.description}
-                  </p>
-                </CardContent>
-              </Card>
-            </Link>
-
-            <Link href="/products?category=tekne-minderleri">
-              <Card className="text-center p-6 hover:shadow-lg transition-shadow cursor-pointer h-full">
-                <CardHeader>
-                  <div className="w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center mx-auto mb-4">
-                    <Star className="h-8 w-8 text-primary" />
-                  </div>
-                  <CardTitle className="text-xl">{t.categories.cushions.title}</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <p className="text-gray-600">
-                    {t.categories.cushions.description}
-                  </p>
-                </CardContent>
-              </Card>
-            </Link>
-
-            <Link href="/products?category=marin-guneslik-branda">
-              <Card className="text-center p-6 hover:shadow-lg transition-shadow cursor-pointer h-full">
-                <CardHeader>
-                  <div className="w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center mx-auto mb-4">
-                    <Waves className="h-8 w-8 text-primary" />
-                  </div>
-                  <CardTitle className="text-xl">{t.categories.tarpaulins.title}</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <p className="text-gray-600">
-                    {t.categories.tarpaulins.description}
-                  </p>
-                </CardContent>
-              </Card>
-            </Link>
-          </div>
-        </div>
-      </section>
 
       {/* Call to Action */}
       <section className="py-16 bg-primary text-primary-foreground">
@@ -277,12 +180,12 @@ export default function Home() {
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
             <Link href="/products">
-              <Button size="lg" variant="secondary" className="w-full sm:w-auto">
+              <Button size="lg" variant="secondary" className="w-full sm:w-auto cursor-pointer">
                 {t.cta.products}
               </Button>
             </Link>
             <Link href="/contact">
-              <Button size="lg" variant="outline" className="w-full sm:w-auto border-primary-foreground text-primary-foreground hover:bg-primary-foreground hover:text-primary">
+              <Button size="lg" variant="outline" className="w-full sm:w-auto border-primary-foreground text-black hover:bg-primary-foreground hover:text-primary cursor-pointer">
                 {t.cta.contact}
               </Button>
             </Link>

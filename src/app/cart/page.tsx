@@ -84,7 +84,7 @@ export default function CartPage() {
               {t.emptyCartDesc}
             </p>
             <Link href="/products">
-              <Button size="lg">
+              <Button size="lg" className="cursor-pointer">
                 {t.exploreProducts}
               </Button>
             </Link>
@@ -101,7 +101,7 @@ export default function CartPage() {
         <div className="flex items-center justify-between mb-8">
           <div className="flex items-center space-x-4">
             <Link href="/products">
-              <Button variant="outline" size="sm">
+              <Button variant="outline" size="sm" className="cursor-pointer">
                 <ArrowLeft className="w-4 h-4 mr-2" />
                 {t.continueShopping}
               </Button>
@@ -262,7 +262,6 @@ export default function CartPage() {
 
                 <div className="text-xs text-gray-500 text-center">
                   <p>{language === 'tr' ? 'Güvenli ödeme ile korunuyorsunuz' : 'You are protected by secure payment'}</p>
-                  <p>{language === 'tr' ? 'Kargo ücretsizdir' : 'Free shipping'}</p>
                 </div>
               </CardContent>
             </Card>
