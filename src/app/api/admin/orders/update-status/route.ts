@@ -14,7 +14,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Prepare update data
-    const updateData: any = {
+    const updateData: { updatedAt: Date; status?: string; paymentStatus?: string } = {
       updatedAt: new Date()
     };
 
@@ -61,7 +61,7 @@ export async function POST(request: NextRequest) {
     // Send email if status changed
     if (status && updatedOrder) {
       try {
-        const shippingAddress = updatedOrder.shippingAddress as any
+        const shippingAddress = updatedOrder.shippingAddress as { email?: string; fullName?: string; firstName?: string; lastName?: string } | null
         const customerEmail = updatedOrder.user?.email || shippingAddress?.email
         const customerName = updatedOrder.user?.name || shippingAddress?.fullName || shippingAddress?.firstName + ' ' + shippingAddress?.lastName
 

@@ -1,5 +1,6 @@
 import { NextRequest } from "next/server";
 import { prisma } from "@/lib/prisma";
+import Iyzipay from "iyzipay";
 
 function getBaseUrl(request: NextRequest): string {
   if (process.env.NEXT_PUBLIC_BASE_URL) {
@@ -19,7 +20,6 @@ function getBaseUrl(request: NextRequest): string {
 
 export async function POST(request: NextRequest) {
   try {
-    const Iyzipay = require("iyzipay");
     const formData = await request.formData();
     const token = formData.get("token") as string;
     const status = formData.get("status") as string;
@@ -47,8 +47,8 @@ export async function POST(request: NextRequest) {
       uri: process.env.IYZICO_BASE_URL || "https://sandbox-api.iyzipay.com",
     });
 
-    const paymentResult = await new Promise<any>((resolve) => {
-      iyzipay.checkoutForm.retrieve({ locale: "tr", token }, (err: any, result: any) => {
+    const paymentResult = await new Promise<{ status: string; paymentStatus?: string; token?: string; paymentId?: string; error?: unknown }>((resolve) => {
+      iyzipay.checkoutForm.retrieve({ locale: "tr", token }, (err: unknown, result: { status: string; paymentStatus?: string; token?: string; paymentId?: string }) => {
         if (err) {
           console.error("İyzico Retrieve Error:", err);
           resolve({ status: "failure", error: err });

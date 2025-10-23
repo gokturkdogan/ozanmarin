@@ -1,10 +1,10 @@
 import { NextRequest, NextResponse } from "next/server";
+import Iyzipay from "iyzipay";
 
 export async function POST(request: NextRequest) {
   const startTime = Date.now();
   
   try {
-    const Iyzipay = require("iyzipay");
     const body = await request.json();
 
     console.log("\n========================================");
@@ -47,12 +47,12 @@ export async function POST(request: NextRequest) {
     console.log("\n🚀 İyzico SDK çağrılıyor...");
     
     // Promise wrapper ile SDK callback'ini async/await'e çeviriyoruz
-    const result = await new Promise<any>((resolve, reject) => {
+    const result = await new Promise<{ success?: boolean; status: string; token?: string; paymentPageUrl?: string; errorCode?: string; errorMessage?: string }>((resolve, reject) => {
       const timeoutId = setTimeout(() => {
         reject(new Error("İyzico SDK timeout (30s)"));
       }, 30000);
 
-      iyzipay.checkoutFormInitialize.create(body, (err: any, res: any) => {
+      iyzipay.checkoutFormInitialize.create(body, (err: unknown, res: { status: string; token?: string; paymentPageUrl?: string; errorCode?: string; errorMessage?: string }) => {
         clearTimeout(timeoutId);
         
         const elapsed = Date.now() - startTime;
@@ -89,12 +89,12 @@ export async function POST(request: NextRequest) {
     
     return NextResponse.json(result);
     
-  } catch (error: any) {
+  } catch (error: unknown) {
     const elapsed = Date.now() - startTime;
     console.error("\n💥 FATAL ERROR:");
-    console.error("  Name:", error.name);
-    console.error("  Message:", error.message);
-    console.error("  Stack:", error.stack);
+    console.error("  Name:", error instanceof Error ? error.name : 'Unknown');
+    console.error("  Message:", error instanceof Error ? error.message : 'Unknown error');
+    console.error("  Stack:", error instanceof Error ? error.stack : 'No stack trace');
     console.error("  Elapsed:", elapsed + "ms");
     console.error("========================================\n");
     
@@ -102,7 +102,7 @@ export async function POST(request: NextRequest) {
       { 
         success: false, 
         status: "failure",
-        error: error.message || "İyzico bağlantı hatası",
+        error: error instanceof Error ? error.message : "İyzico bağlantı hatası",
         elapsed: elapsed + "ms"
       },
       { status: 500 }
