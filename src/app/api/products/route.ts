@@ -74,6 +74,16 @@ export async function GET(request: NextRequest) {
     })
   } catch (error) {
     console.error('Products API error:', error)
+    
+    // Prisma Query Engine hatası için özel kontrol
+    if (error instanceof Error && error.message.includes('Query Engine')) {
+      console.error('Prisma Query Engine not found:', error.message)
+      return NextResponse.json(
+        { error: 'Database connection error - Query Engine not found' },
+        { status: 500 }
+      )
+    }
+    
     return NextResponse.json(
       { error: 'Sunucu hatası' },
       { status: 500 }
