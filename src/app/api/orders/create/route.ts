@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { verifyToken } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
+import { sendOrderConfirmationEmail } from '@/lib/resend'
 
 export async function POST(request: NextRequest) {
   try {
@@ -34,11 +35,17 @@ export async function POST(request: NextRequest) {
       }
     }
 
+    // Calculate total price from items
+    const calculatedTotalPrice = items.reduce((total, item) => {
+      const itemPrice = item.productPrice + (item.embroideryPrice || 0)
+      return total + (itemPrice * item.quantity)
+    }, 0)
+
     // Create order
     const order = await prisma.order.create({
       data: {
         userId: userId,
-        totalPrice: totalPrice,
+        totalPrice: calculatedTotalPrice,
         status: status,
         paymentStatus: paymentStatus,
         paymentMethod: paymentMethod,
@@ -75,6 +82,43 @@ export async function POST(request: NextRequest) {
         }
       }
     })
+
+    // Send confirmation email
+    try {
+      const customerEmail = order.user?.email || shippingAddress.email
+      const customerName = order.user?.name || shippingAddress.fullName || shippingAddress.firstName + ' ' + shippingAddress.lastName
+      
+      if (customerEmail) {
+        await sendOrderConfirmationEmail({
+          orderId: order.id,
+          customerName: customerName,
+          customerEmail: customerEmail,
+          totalPrice: parseFloat(order.totalPrice.toString()),
+          currency: language === 'en' ? '$' : '₺',
+          language: language as 'tr' | 'en',
+          items: order.items.map(item => ({
+            name: item.productName,
+            quantity: item.quantity,
+            price: parseFloat(item.productPrice.toString()) + parseFloat((item.embroideryPrice || 0).toString()),
+            size: item.size || undefined,
+            color: item.color || undefined,
+            hasEmbroidery: item.hasEmbroidery
+          })),
+          shippingAddress: {
+            fullName: shippingAddress.fullName || `${shippingAddress.firstName} ${shippingAddress.lastName}`,
+            address: shippingAddress.address,
+            city: shippingAddress.city,
+            country: shippingAddress.country,
+            phone: shippingAddress.phone
+          },
+          paymentMethod: paymentMethod,
+          paymentStatus: paymentStatus
+        })
+      }
+    } catch (emailError) {
+      console.error('Email sending failed:', emailError)
+      // Email hatası sipariş oluşturmayı engellemez
+    }
 
     return NextResponse.json({
       success: true,

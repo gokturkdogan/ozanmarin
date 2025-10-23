@@ -8,6 +8,8 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Anchor } from 'lucide-react'
+import { useLanguage } from '@/lib/language'
+import { CustomToast } from '@/components/custom-toast'
 
 export default function RegisterPage() {
   const [formData, setFormData] = useState({
@@ -18,7 +20,60 @@ export default function RegisterPage() {
   })
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState('')
+  const [showToast, setShowToast] = useState(false)
+  const [toastMessage, setToastMessage] = useState('')
   const router = useRouter()
+  const { language } = useLanguage()
+
+  // Dil bazlı içerik
+  const content = {
+    tr: {
+      title: 'Hesap Oluşturun',
+      subtitle: 'Zaten hesabınız var mı?',
+      loginLink: 'Giriş yapın',
+      cardTitle: 'Kayıt Ol',
+      cardDescription: 'Yeni hesap oluşturmak için bilgilerinizi girin',
+      nameLabel: 'Ad Soyad',
+      namePlaceholder: 'Adınız ve soyadınız',
+      emailLabel: 'Email Adresi',
+      emailPlaceholder: 'ornek@email.com',
+      passwordLabel: 'Şifre',
+      passwordPlaceholder: 'En az 6 karakter',
+      confirmPasswordLabel: 'Şifre Tekrar',
+      confirmPasswordPlaceholder: 'Şifrenizi tekrar girin',
+      registerButton: 'Kayıt Ol',
+      registeringButton: 'Kayıt olunuyor...',
+      passwordsNotMatch: 'Şifreler eşleşmiyor',
+      registerError: 'Kayıt olurken bir hata oluştu',
+      serverError: 'Sunucu hatası',
+      successMessage: 'Kayıt başarılı! Hoş geldiniz emaili gönderildi.',
+      redirectingMessage: 'Giriş sayfasına yönlendiriliyorsunuz...'
+    },
+    en: {
+      title: 'Create Account',
+      subtitle: 'Already have an account?',
+      loginLink: 'Sign in',
+      cardTitle: 'Register',
+      cardDescription: 'Enter your information to create a new account',
+      nameLabel: 'Full Name',
+      namePlaceholder: 'Your first and last name',
+      emailLabel: 'Email Address',
+      emailPlaceholder: 'example@email.com',
+      passwordLabel: 'Password',
+      passwordPlaceholder: 'At least 6 characters',
+      confirmPasswordLabel: 'Confirm Password',
+      confirmPasswordPlaceholder: 'Re-enter your password',
+      registerButton: 'Register',
+      registeringButton: 'Registering...',
+      passwordsNotMatch: 'Passwords do not match',
+      registerError: 'An error occurred while registering',
+      serverError: 'Server error',
+      successMessage: 'Registration successful! Welcome email sent.',
+      redirectingMessage: 'Redirecting to login page...'
+    }
+  }
+
+  const t = content[language]
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -27,7 +82,7 @@ export default function RegisterPage() {
 
     // Password confirmation check
     if (formData.password !== formData.confirmPassword) {
-      setError('Şifreler eşleşmiyor')
+      setError(t.passwordsNotMatch)
       setIsLoading(false)
       return
     }
@@ -42,20 +97,29 @@ export default function RegisterPage() {
           action: 'register',
           name: formData.name,
           email: formData.email,
-          password: formData.password
+          password: formData.password,
+          language: language
         }),
       })
 
       const data = await response.json()
 
       if (response.ok) {
-        router.push('/')
-        router.refresh()
+        setToastMessage(t.successMessage)
+        setShowToast(true)
+        
+        // 2 saniye sonra login sayfasına yönlendir
+        setTimeout(() => {
+          setToastMessage(t.redirectingMessage)
+          setTimeout(() => {
+            router.push('/login')
+          }, 1000)
+        }, 2000)
       } else {
-        setError(data.error || 'Kayıt olurken bir hata oluştu')
+        setError(data.error || t.registerError)
       }
     } catch (error) {
-      setError('Sunucu hatası')
+      setError(t.serverError)
     } finally {
       setIsLoading(false)
     }
@@ -79,21 +143,21 @@ export default function RegisterPage() {
             <span className="text-2xl font-bold text-primary">Ozan Marin</span>
           </div>
           <h2 className="text-3xl font-bold text-gray-900">
-            Hesap Oluşturun
+            {t.title}
           </h2>
           <p className="mt-2 text-sm text-gray-600">
-            Zaten hesabınız var mı?{' '}
+            {t.subtitle}{' '}
             <Link href="/login" className="font-medium text-primary hover:text-primary/80">
-              Giriş yapın
+              {t.loginLink}
             </Link>
           </p>
         </div>
 
         <Card>
           <CardHeader>
-            <CardTitle>Kayıt Ol</CardTitle>
+            <CardTitle>{t.cardTitle}</CardTitle>
             <CardDescription>
-              Yeni hesap oluşturmak için bilgilerinizi girin
+              {t.cardDescription}
             </CardDescription>
           </CardHeader>
           <CardContent>
@@ -105,7 +169,7 @@ export default function RegisterPage() {
               )}
               
               <div className="space-y-2">
-                <Label htmlFor="name">Ad Soyad</Label>
+                <Label htmlFor="name">{t.nameLabel}</Label>
                 <Input
                   id="name"
                   name="name"
@@ -113,12 +177,12 @@ export default function RegisterPage() {
                   required
                   value={formData.name}
                   onChange={handleChange}
-                  placeholder="Adınız ve soyadınız"
+                  placeholder={t.namePlaceholder}
                 />
               </div>
               
               <div className="space-y-2">
-                <Label htmlFor="email">Email Adresi</Label>
+                <Label htmlFor="email">{t.emailLabel}</Label>
                 <Input
                   id="email"
                   name="email"
@@ -126,12 +190,12 @@ export default function RegisterPage() {
                   required
                   value={formData.email}
                   onChange={handleChange}
-                  placeholder="ornek@email.com"
+                  placeholder={t.emailPlaceholder}
                 />
               </div>
               
               <div className="space-y-2">
-                <Label htmlFor="password">Şifre</Label>
+                <Label htmlFor="password">{t.passwordLabel}</Label>
                 <Input
                   id="password"
                   name="password"
@@ -139,12 +203,12 @@ export default function RegisterPage() {
                   required
                   value={formData.password}
                   onChange={handleChange}
-                  placeholder="En az 6 karakter"
+                  placeholder={t.passwordPlaceholder}
                 />
               </div>
               
               <div className="space-y-2">
-                <Label htmlFor="confirmPassword">Şifre Tekrar</Label>
+                <Label htmlFor="confirmPassword">{t.confirmPasswordLabel}</Label>
                 <Input
                   id="confirmPassword"
                   name="confirmPassword"
@@ -152,17 +216,24 @@ export default function RegisterPage() {
                   required
                   value={formData.confirmPassword}
                   onChange={handleChange}
-                  placeholder="Şifrenizi tekrar girin"
+                  placeholder={t.confirmPasswordPlaceholder}
                 />
               </div>
               
               <Button type="submit" className="w-full" disabled={isLoading}>
-                {isLoading ? 'Kayıt olunuyor...' : 'Kayıt Ol'}
+                {isLoading ? t.registeringButton : t.registerButton}
               </Button>
             </form>
           </CardContent>
         </Card>
       </div>
+      
+      <CustomToast
+        show={showToast}
+        message={toastMessage}
+        onClose={() => setShowToast(false)}
+        duration={5000}
+      />
     </div>
   )
 }

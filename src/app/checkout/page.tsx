@@ -374,9 +374,14 @@ export default function CheckoutPage() {
       // Check payment method
       if (paymentMethod === 'bank_transfer') {
         // Create order directly for bank transfer
+        // Dil değerine göre fiyat hesapla (ödeme yöntemi farketmez)
+        const totalPrice = language === 'en' 
+          ? getTotalPrice() + getShippingCost() // USD değerler
+          : getTotalPrice() + getShippingCostTRY() // TRY değerler
+        
         const orderData = {
           userId: user ? user.id : null,
-          totalPrice: getTotalPrice() + getShippingCostTRY(),
+          totalPrice: totalPrice,
           status: 'received',
           paymentStatus: 'pending',
           paymentMethod: 'bank_transfer',
@@ -386,14 +391,14 @@ export default function CheckoutPage() {
             ...items.map(item => ({
               productId: item.id,
               productName: item.name,
-              productPrice: item.price + (item.embroideryPrice || 0),
+              productPrice: item.price, // Sadece ürün fiyatı
               productImage: item.image,
               quantity: item.quantity,
               size: item.size,
               color: item.color,
               hasEmbroidery: item.hasEmbroidery || false,
               embroideryFile: item.embroideryFile || null,
-              embroideryPrice: item.embroideryPrice || 0,
+              embroideryPrice: item.embroideryPrice || 0, // Nakış fiyatı ayrı
               categoryName: item.categoryName,
               brandName: item.brandName,
               isShipping: false,
@@ -403,7 +408,7 @@ export default function CheckoutPage() {
             {
               productId: 'shipping',
               productName: t_content.shippingCost,
-              productPrice: getShippingCost(), // Dil bazlı değer
+              productPrice: language === 'en' ? getShippingCost() : getShippingCostTRY(), // Dil değerine göre
               productImage: null,
               quantity: 1,
               size: null,
@@ -414,7 +419,7 @@ export default function CheckoutPage() {
               categoryName: t_content.shippingCategory,
               brandName: null,
               isShipping: true,
-              shippingCost: language === 'en' ? getShippingCostUSD() : getShippingCostTRY()
+              shippingCost: language === 'en' ? getShippingCost() : getShippingCostTRY() // Dil değerine göre
             }
           ]
         }
@@ -548,14 +553,14 @@ export default function CheckoutPage() {
           ...items.map(item => ({
             productId: item.id,
             productName: item.name,
-            productPrice: item.price + (item.embroideryPrice || 0),
+            productPrice: item.price, // Sadece ürün fiyatı
             productImage: item.image,
             quantity: item.quantity,
             size: item.size,
             color: item.color,
             hasEmbroidery: item.hasEmbroidery || false,
             embroideryFile: item.embroideryFile || null,
-            embroideryPrice: item.embroideryPrice || 0,
+            embroideryPrice: item.embroideryPrice || 0, // Nakış fiyatı ayrı
             categoryName: item.categoryName,
             brandName: item.brandName,
             isShipping: false,

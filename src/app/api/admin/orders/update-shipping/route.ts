@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
+import { sendShippingUpdateEmail } from '@/lib/resend';
 
 export async function POST(request: NextRequest) {
   try {
@@ -40,6 +41,45 @@ export async function POST(request: NextRequest) {
         items: true
       }
     });
+
+    // Send email if tracking number is provided
+    if (trackingNumber && shippingCompany && shippingCompany !== 'none' && updatedOrder) {
+      try {
+        const shippingAddress = updatedOrder.shippingAddress as any
+        const customerEmail = updatedOrder.user?.email || shippingAddress?.email
+        const customerName = updatedOrder.user?.name || shippingAddress?.fullName || shippingAddress?.firstName + ' ' + shippingAddress?.lastName
+
+        // Generate tracking URL based on shipping company
+        let trackingUrl = ''
+        if (shippingCompany === 'ups') {
+          trackingUrl = `https://www.ups.com/track?tracknum=${trackingNumber}`
+        } else if (shippingCompany === 'yurtici') {
+          trackingUrl = `https://www.yurticikargo.com/tr/online-servisler/gonderi-sorgula?code=${trackingNumber}`
+        }
+
+        // Get shipping company name
+        const shippingCompanyNames = {
+          ups: 'UPS',
+          yurtici: 'Yurtiçi Kargo'
+        }
+        const shippingCompanyName = shippingCompanyNames[shippingCompany as keyof typeof shippingCompanyNames] || shippingCompany
+
+        if (customerEmail) {
+          await sendShippingUpdateEmail({
+            orderId: updatedOrder.id,
+            customerName: customerName,
+            customerEmail: customerEmail,
+            trackingNumber: trackingNumber,
+            trackingUrl: trackingUrl || undefined,
+            shippingCompany: shippingCompanyName,
+            language: (updatedOrder.language as 'tr' | 'en') || 'tr'
+          })
+        }
+      } catch (emailError) {
+        console.error('Email sending failed:', emailError)
+        // Email hatası kargo bilgisi güncellemeyi engellemez
+      }
+    }
 
     return NextResponse.json({ 
       success: true, 

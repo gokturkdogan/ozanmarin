@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
+import { sendOrderStatusUpdateEmail } from '@/lib/resend';
 
 export async function POST(request: NextRequest) {
   try {
@@ -56,6 +57,41 @@ export async function POST(request: NextRequest) {
         items: true
       }
     });
+
+    // Send email if status changed
+    if (status && updatedOrder) {
+      try {
+        const shippingAddress = updatedOrder.shippingAddress as any
+        const customerEmail = updatedOrder.user?.email || shippingAddress?.email
+        const customerName = updatedOrder.user?.name || shippingAddress?.fullName || shippingAddress?.firstName + ' ' + shippingAddress?.lastName
+
+        if (customerEmail) {
+          await sendOrderStatusUpdateEmail({
+            orderId: updatedOrder.id,
+            customerName: customerName,
+            customerEmail: customerEmail,
+            status: status,
+            language: (updatedOrder.language as 'tr' | 'en') || 'tr',
+            trackingNumber: updatedOrder.trackingNumber || undefined,
+            trackingUrl: updatedOrder.trackingUrl || undefined,
+            shippingCompany: updatedOrder.shippingCompany || undefined,
+            items: updatedOrder.items?.map(item => ({
+              name: item.productName,
+              quantity: item.quantity,
+              price: parseFloat(item.productPrice.toString()),
+              size: item.size || undefined,
+              color: item.color || undefined,
+              hasEmbroidery: item.hasEmbroidery
+            })),
+            totalPrice: parseFloat(updatedOrder.totalPrice.toString()),
+            currency: (updatedOrder.language as 'tr' | 'en') === 'en' ? '$' : '₺'
+          })
+        }
+      } catch (emailError) {
+        console.error('Email sending failed:', emailError)
+        // Email hatası sipariş güncellemeyi engellemez
+      }
+    }
 
     return NextResponse.json({ 
       success: true, 

@@ -5,25 +5,37 @@ import { CheckCircle, X } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 
 interface CustomToastProps {
-  title: string
-  description: string
+  title?: string
+  description?: string
+  message?: string
+  show?: boolean
   onClose: () => void
   duration?: number
 }
 
-export function CustomToast({ title, description, onClose, duration = 3000 }: CustomToastProps) {
-  const [isVisible, setIsVisible] = useState(true)
+export function CustomToast({ title, description, message, show = true, onClose, duration = 3000 }: CustomToastProps) {
+  const [isVisible, setIsVisible] = useState(show)
 
   useEffect(() => {
+    setIsVisible(show)
+  }, [show])
+
+  useEffect(() => {
+    if (!isVisible) return
+    
     const timer = setTimeout(() => {
       setIsVisible(false)
       setTimeout(onClose, 300) // Animation için delay
     }, duration)
 
     return () => clearTimeout(timer)
-  }, [duration, onClose])
+  }, [duration, onClose, isVisible])
 
   if (!isVisible) return null
+
+  // Eğer message varsa, onu kullan; yoksa title ve description kullan
+  const displayTitle = message ? 'Bilgi' : title
+  const displayDescription = message || description
 
   return (
     <div className="fixed top-4 right-4 z-50 animate-in slide-in-from-right-full duration-300">
@@ -34,10 +46,10 @@ export function CustomToast({ title, description, onClose, duration = 3000 }: Cu
           </div>
           <div className="flex-1 min-w-0">
             <h4 className="text-sm font-semibold text-gray-900 mb-1">
-              {title}
+              {displayTitle}
             </h4>
             <p className="text-sm text-gray-600">
-              {description}
+              {displayDescription}
             </p>
           </div>
           <div className="flex-shrink-0">

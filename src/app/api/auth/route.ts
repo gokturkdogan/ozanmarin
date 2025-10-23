@@ -1,12 +1,14 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { hashPassword, verifyPassword, generateToken } from '@/lib/auth'
+import { sendWelcomeEmail } from '@/lib/resend'
 import { z } from 'zod'
 
 const registerSchema = z.object({
   name: z.string().min(2, 'İsim en az 2 karakter olmalı'),
   email: z.string().email('Geçerli bir email adresi girin'),
-  password: z.string().min(6, 'Şifre en az 6 karakter olmalı')
+  password: z.string().min(6, 'Şifre en az 6 karakter olmalı'),
+  language: z.enum(['tr', 'en']).optional().default('tr')
 })
 
 const loginSchema = z.object({
@@ -20,7 +22,7 @@ export async function POST(request: NextRequest) {
     const { action } = body
 
     if (action === 'register') {
-      const { name, email, password } = registerSchema.parse(body)
+      const { name, email, password, language } = registerSchema.parse(body)
       
       // Email kontrolü
       const existingUser = await prisma.user.findUnique({
@@ -51,6 +53,18 @@ export async function POST(request: NextRequest) {
       })
 
       const token = generateToken(user)
+      
+      // Send welcome email
+      try {
+        await sendWelcomeEmail({
+          customerName: user.name,
+          customerEmail: user.email,
+          language: language as 'tr' | 'en'
+        })
+      } catch (emailError) {
+        console.error('Welcome email sending failed:', emailError)
+        // Email hatası kayıt işlemini engellemez
+      }
       
       const response = NextResponse.json({
         message: 'Kayıt başarılı',

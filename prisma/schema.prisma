@@ -8,15 +8,17 @@ datasource db {
 }
 
 model User {
-  id           String    @id @default(cuid())
-  name         String
-  email        String    @unique
-  passwordHash String
-  role         String    @default("user") // user, admin
-  createdAt    DateTime  @default(now())
-  updatedAt    DateTime  @updatedAt
-  orders       Order[]
-  addresses    Address[]
+  id               String    @id @default(cuid())
+  name             String
+  email            String    @unique
+  passwordHash     String
+  role             String    @default("user") // user, admin
+  resetToken       String?   // Password reset token
+  resetTokenExpiry DateTime? // Password reset token expiry
+  createdAt        DateTime  @default(now())
+  updatedAt        DateTime  @updatedAt
+  orders           Order[]
+  addresses        Address[]
 
   @@map("users")
 }

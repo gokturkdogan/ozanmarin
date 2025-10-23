@@ -8,6 +8,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Anchor } from 'lucide-react'
+import { useLanguage } from '@/lib/language'
 
 export default function LoginPage() {
   const [formData, setFormData] = useState({
@@ -17,6 +18,45 @@ export default function LoginPage() {
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState('')
   const router = useRouter()
+  const { language } = useLanguage()
+
+  // Dil bazlı içerik
+  const content = {
+    tr: {
+      title: 'Hesabınıza Giriş Yapın',
+      subtitle: 'Hesabınız yok mu?',
+      registerLink: 'Kayıt olun',
+      cardTitle: 'Giriş Yap',
+      cardDescription: 'Email adresiniz ve şifrenizle giriş yapın',
+      emailLabel: 'Email Adresi',
+      emailPlaceholder: 'ornek@email.com',
+      passwordLabel: 'Şifre',
+      passwordPlaceholder: 'Şifrenizi girin',
+      forgotPasswordLink: 'Şifremi Unuttum',
+      loginButton: 'Giriş Yap',
+      loggingInButton: 'Giriş yapılıyor...',
+      loginError: 'Giriş yapılırken bir hata oluştu',
+      serverError: 'Sunucu hatası'
+    },
+    en: {
+      title: 'Sign in to your account',
+      subtitle: "Don't have an account?",
+      registerLink: 'Sign up',
+      cardTitle: 'Sign In',
+      cardDescription: 'Sign in with your email and password',
+      emailLabel: 'Email Address',
+      emailPlaceholder: 'example@email.com',
+      passwordLabel: 'Password',
+      passwordPlaceholder: 'Enter your password',
+      forgotPasswordLink: 'Forgot Password',
+      loginButton: 'Sign In',
+      loggingInButton: 'Signing in...',
+      loginError: 'An error occurred while signing in',
+      serverError: 'Server error'
+    }
+  }
+
+  const t = content[language]
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -45,10 +85,10 @@ export default function LoginPage() {
           window.location.href = '/'
         }
       } else {
-        setError(data.error || 'Giriş yapılırken bir hata oluştu')
+        setError(data.error || t.loginError)
       }
     } catch (error) {
-      setError('Sunucu hatası')
+      setError(t.serverError)
     } finally {
       setIsLoading(false)
     }
@@ -72,21 +112,21 @@ export default function LoginPage() {
             <span className="text-2xl font-bold text-primary">Ozan Marin</span>
           </div>
           <h2 className="text-3xl font-bold text-gray-900">
-            Hesabınıza Giriş Yapın
+            {t.title}
           </h2>
           <p className="mt-2 text-sm text-gray-600">
-            Hesabınız yok mu?{' '}
+            {t.subtitle}{' '}
             <Link href="/register" className="font-medium text-primary hover:text-primary/80">
-              Kayıt olun
+              {t.registerLink}
             </Link>
           </p>
         </div>
 
         <Card>
           <CardHeader>
-            <CardTitle>Giriş Yap</CardTitle>
+            <CardTitle>{t.cardTitle}</CardTitle>
             <CardDescription>
-              Email adresiniz ve şifrenizle giriş yapın
+              {t.cardDescription}
             </CardDescription>
           </CardHeader>
           <CardContent>
@@ -98,7 +138,7 @@ export default function LoginPage() {
               )}
               
               <div className="space-y-2">
-                <Label htmlFor="email">Email Adresi</Label>
+                <Label htmlFor="email">{t.emailLabel}</Label>
                 <Input
                   id="email"
                   name="email"
@@ -106,12 +146,17 @@ export default function LoginPage() {
                   required
                   value={formData.email}
                   onChange={handleChange}
-                  placeholder="ornek@email.com"
+                  placeholder={t.emailPlaceholder}
                 />
               </div>
               
               <div className="space-y-2">
-                <Label htmlFor="password">Şifre</Label>
+                <div className="flex justify-between items-center">
+                  <Label htmlFor="password">{t.passwordLabel}</Label>
+                  <Link href="/reset-password" className="text-sm text-primary hover:text-primary/80">
+                    {t.forgotPasswordLink}
+                  </Link>
+                </div>
                 <Input
                   id="password"
                   name="password"
@@ -119,12 +164,12 @@ export default function LoginPage() {
                   required
                   value={formData.password}
                   onChange={handleChange}
-                  placeholder="Şifrenizi girin"
+                  placeholder={t.passwordPlaceholder}
                 />
               </div>
               
               <Button type="submit" className="w-full" disabled={isLoading}>
-                {isLoading ? 'Giriş yapılıyor...' : 'Giriş Yap'}
+                {isLoading ? t.loggingInButton : t.loginButton}
               </Button>
             </form>
           </CardContent>
