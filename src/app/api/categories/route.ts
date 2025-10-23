@@ -21,6 +21,11 @@ export async function GET() {
     return NextResponse.json({ categories })
   } catch (error) {
     console.error('Categories API error:', error)
+    console.error('Error details:', {
+      message: error instanceof Error ? error.message : 'Unknown error',
+      stack: error instanceof Error ? error.stack : undefined,
+      name: error instanceof Error ? error.name : undefined
+    })
     
     // Prisma Query Engine hatası için özel kontrol
     if (error instanceof Error && error.message.includes('Query Engine')) {
@@ -32,7 +37,7 @@ export async function GET() {
     }
     
     return NextResponse.json(
-      { error: 'Sunucu hatası' },
+      { error: 'Sunucu hatası', details: error instanceof Error ? error.message : 'Unknown error' },
       { status: 500 }
     )
   }
