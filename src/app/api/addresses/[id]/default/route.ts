@@ -5,9 +5,10 @@ import { verifyToken } from '@/lib/auth'
 // PUT /api/addresses/[id]/default - Adresi varsayılan yap
 export async function PUT(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { id } = await params
     const token = request.cookies.get('auth-token')?.value
     
     if (!token) {
@@ -22,7 +23,7 @@ export async function PUT(
     // Adresin kullanıcıya ait olduğunu kontrol et
     const existingAddress = await prisma.address.findFirst({
       where: { 
-        id: params.id,
+        id: id,
         userId: decoded.userId 
       }
     })
@@ -39,7 +40,7 @@ export async function PUT(
 
     // Sonra seçilen adresi varsayılan yap
     const address = await prisma.address.update({
-      where: { id: params.id },
+      where: { id: id },
       data: { isDefault: true }
     })
 

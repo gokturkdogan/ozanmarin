@@ -44,15 +44,15 @@ export async function POST(request: NextRequest) {
       await prisma.orderItem.create({
         data: {
           orderId: order.id,
-          productId: item.id,
-          productName: item.name,
-          productPrice: item.price,
-          quantity: item.quantity,
-          size: item.size,
-          color: item.color,
-          hasEmbroidery: item.hasEmbroidery || false,
-          embroideryFile: item.embroideryFile,
-          embroideryPrice: item.embroideryPrice || 0
+          productId: (item as any).productId || (item as any).id || 'unknown',
+          productName: (item as any).name,
+          productPrice: (item as any).price,
+          quantity: (item as any).quantity,
+          size: (item as any).size,
+          color: (item as any).color,
+          hasEmbroidery: (item as any).hasEmbroidery || false,
+          embroideryFile: (item as any).embroideryFile,
+          embroideryPrice: (item as any).embroideryPrice || 0
         }
       })
     }

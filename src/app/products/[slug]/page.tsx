@@ -194,8 +194,9 @@ export default function ProductPage({ params }: ProductPageProps) {
 
       for (let i = 0; i < quantity; i++) {
         addItem({
+          cartItemId: `${product.id}-${selectedSizePrice.size}-${selectedColor || 'no-color'}-${hasEmbroidery ? 'emb' : 'no-emb'}-${Date.now()}-${i}`,
           id: product.id,
-          name: getTranslatedText(product.name, product.nameEn, language),
+          name: getTranslatedText(product.name, product.nameEn || null || null, language),
           price: convertUSDToTRY(selectedSizePrice.price, exchangeRate, language), // Store price in the language it was ordered
           image: product.images[0] || '/placeholder.jpg',
           size: selectedSizePrice.size,
@@ -203,11 +204,11 @@ export default function ProductPage({ params }: ProductPageProps) {
           hasEmbroidery: hasEmbroidery,
           embroideryFile: embroideryUrl || undefined,
           embroideryPrice: hasEmbroidery ? (language === 'tr' ? 100 : 5) : 0,
-          categoryName: getTranslatedText(product.category.name, product.category.nameEn, language),
-          brandName: product.brand ? getTranslatedText(product.brand.name, product.brand.nameEn, language) : undefined
+          categoryName: getTranslatedText(product.category.name, product.category.nameEn || null || null, language),
+          brandName: product.brand ? getTranslatedText(product.brand.name, product.brand.nameEn || null || null, language) : undefined
         })
       }
-      setToastMessage(`${quantity} adet ${getTranslatedText(product.name, product.nameEn, language)} sepete eklendi!`)
+      setToastMessage(`${quantity} adet ${getTranslatedText(product.name, product.nameEn || null || null, language)} sepete eklendi!`)
       setToastType('success')
       setShowToast(true)
       
@@ -264,10 +265,10 @@ export default function ProductPage({ params }: ProductPageProps) {
           </Link>
           <span>/</span>
           <Link href={`/products?category=${product.category.slug}`} className="hover:text-primary">
-            {getTranslatedText(product.category.name, product.category.nameEn, language)}
+            {getTranslatedText(product.category.name, product.category.nameEn || null, language)}
           </Link>
           <span>/</span>
-          <span className="text-gray-900">{getTranslatedText(product.name, product.nameEn, language)}</span>
+          <span className="text-gray-900">{getTranslatedText(product.name, product.nameEn || null, language)}</span>
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
@@ -279,7 +280,7 @@ export default function ProductPage({ params }: ProductPageProps) {
                 <>
                   <img
                     src={product.images[selectedImage]}
-                    alt={getTranslatedText(product.name, product.nameEn, language)}
+                    alt={getTranslatedText(product.name, product.nameEn || null, language)}
                     className="w-full h-96 object-cover rounded-lg"
                   />
                   {/* Navigation Buttons */}
@@ -324,7 +325,7 @@ export default function ProductPage({ params }: ProductPageProps) {
                   >
                     <img
                       src={image}
-                      alt={`${getTranslatedText(product.name, product.nameEn, language)} - ${t.imageAlt} ${index + 1}`}
+                      alt={`${getTranslatedText(product.name, product.nameEn || null, language)} - ${t.imageAlt} ${index + 1}`}
                       className="w-full h-20 object-cover"
                     />
                   </button>
@@ -338,7 +339,7 @@ export default function ProductPage({ params }: ProductPageProps) {
             <div>
               <div className="mb-2">
                 <span className="text-sm text-primary font-medium">
-                  {getTranslatedText(product.category.name, product.category.nameEn, language)}
+                  {getTranslatedText(product.category.name, product.category.nameEn || null, language)}
                 </span>
               </div>
               {product.brand && (
@@ -348,13 +349,13 @@ export default function ProductPage({ params }: ProductPageProps) {
                       {t.brand}
                     </span>
                     <span className="text-lg text-primary font-bold">
-                      {getTranslatedText(product.brand.name, product.brand.nameEn, language)}
+                      {getTranslatedText(product.brand.name, product.brand.nameEn || null, language)}
                     </span>
                   </div>
                 </div>
               )}
               <h1 className="text-3xl font-bold text-gray-900 mb-4">
-                {getTranslatedText(product.name, product.nameEn, language)}
+                {getTranslatedText(product.name, product.nameEn || null, language)}
               </h1>
               <p className="text-xl text-primary font-bold mb-6">
                 {selectedSizePrice ? (
@@ -379,7 +380,7 @@ export default function ProductPage({ params }: ProductPageProps) {
 
             <div className="prose max-w-none">
               <p className="text-gray-600 leading-relaxed">
-                {getTranslatedText(product.description, product.descriptionEn, language)}
+                {getTranslatedText(product.description, product.descriptionEn || null, language)}
               </p>
             </div>
 

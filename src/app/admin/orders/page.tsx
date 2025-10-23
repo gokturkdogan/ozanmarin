@@ -20,6 +20,7 @@ interface OrderItem {
   size?: string
   color?: string
   hasEmbroidery?: boolean
+  embroideryFile?: string
   embroideryPrice?: number
   categoryName?: string
   brandName?: string
@@ -37,8 +38,8 @@ interface Order {
   iyzicoPaymentId?: string
   language?: string
   shippingAddress: any
-  shippingCompany?: string
-  trackingNumber?: string
+  shippingCompany?: string | null
+  trackingNumber?: string | null
   createdAt: string
   updatedAt: string
   user?: {

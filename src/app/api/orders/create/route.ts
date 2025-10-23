@@ -36,7 +36,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Calculate total price from items
-    const calculatedTotalPrice = items.reduce((total, item) => {
+    const calculatedTotalPrice = items.reduce((total: number, item: any) => {
       const itemPrice = item.productPrice + (item.embroideryPrice || 0)
       return total + (itemPrice * item.quantity)
     }, 0)

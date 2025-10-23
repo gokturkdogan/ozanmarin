@@ -491,14 +491,14 @@ export default function CheckoutPage() {
           registrationZipCode: '34000'
         },
         shippingAddress: {
-          contactName: cleanText(shippingAddress.fullName || `${shippingAddress.name || ''} ${shippingAddress.surname || ''}`),
+          contactName: cleanText(shippingAddress.fullName || ''),
           city: cleanText(shippingAddress.city),
           country: 'TR',
           address: cleanText(shippingAddress.address),
           zipCode: '34000'
         },
         billingAddress: {
-          contactName: cleanText(shippingAddress.fullName || `${shippingAddress.name || ''} ${shippingAddress.surname || ''}`),
+          contactName: cleanText(shippingAddress.fullName || ''),
           city: cleanText(shippingAddress.city),
           country: 'TR',
           address: cleanText(shippingAddress.address),

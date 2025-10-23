@@ -241,7 +241,7 @@ export default function ProductsPage() {
                   <SelectItem value="all">{t.allCategories}</SelectItem>
                   {categories.map((category) => (
                     <SelectItem key={category.id} value={category.slug}>
-                      {getTranslatedText(category.name, category.nameEn, language)}
+                      {getTranslatedText(category.name, category.nameEn || null, language)}
                     </SelectItem>
                   ))}
                 </SelectContent>
@@ -257,7 +257,7 @@ export default function ProductsPage() {
                     <SelectItem value="all">{t.allBrands}</SelectItem>
                     {brands.map((brand) => (
                       <SelectItem key={brand.id} value={brand.slug}>
-                        {getTranslatedText(brand.name, brand.nameEn, language)}
+                        {getTranslatedText(brand.name, brand.nameEn || null, language)}
                       </SelectItem>
                     ))}
                   </SelectContent>
@@ -282,7 +282,7 @@ export default function ProductsPage() {
                     {product.images && product.images.length > 0 ? (
                       <img 
                         src={product.images[0]} 
-                        alt={getTranslatedText(product.name, product.nameEn, language)}
+                        alt={getTranslatedText(product.name, product.nameEn || null, language)}
                         className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
                       />
                     ) : (
@@ -292,7 +292,7 @@ export default function ProductsPage() {
                     )}
                     <div className="absolute top-2 left-2">
                       <span className="bg-primary text-primary-foreground text-xs px-2 py-1 rounded-full font-medium">
-                        {getTranslatedText(product.category.name, product.category.nameEn, language)}
+                        {getTranslatedText(product.category.name, product.category.nameEn || null, language)}
                       </span>
                     </div>
                     {product.stock === 0 && (
@@ -313,34 +313,34 @@ export default function ProductsPage() {
                           {t.brand}
                         </span>
                         <span className="text-sm text-primary font-semibold">
-                          {getTranslatedText(product.brand.name, product.brand.nameEn, language)}
+                          {getTranslatedText(product.brand.name, product.brand.nameEn || null, language)}
                         </span>
                       </div>
                     )}
                     
                     {/* Product Name */}
                     <h3 className="font-semibold text-lg leading-tight line-clamp-2 group-hover:text-primary transition-colors cursor-pointer">
-                      {getTranslatedText(product.name, product.nameEn, language)}
+                      {getTranslatedText(product.name, product.nameEn || null, language)}
                     </h3>
                     
                     {/* Description */}
                     <p className="text-gray-600 text-sm line-clamp-2 leading-relaxed">
-                      {getTranslatedText(product.description, product.descriptionEn, language)}
+                      {getTranslatedText(product.description, product.descriptionEn || null, language)}
                     </p>
                     
                     {/* Sizes */}
-                    {product.sizes && product.sizes.length > 0 && (
+                    {product.sizePrices && Array.isArray(product.sizePrices) && product.sizePrices.length > 0 && (
                       <div className="space-y-2">
                         <p className="text-xs text-gray-500 font-medium">{t.sizes}</p>
                         <div className="flex flex-wrap gap-1">
-                          {product.sizes.slice(0, 3).map((size, index) => (
+                          {product.sizePrices.slice(0, 3).map((sizePrice: any, index: number) => (
                             <span key={index} className="text-xs bg-gray-100 text-gray-700 px-2 py-1 rounded-md font-medium">
-                              {size}
+                              {sizePrice.size}
                             </span>
                           ))}
-                          {product.sizes.length > 3 && (
+                          {product.sizePrices.length > 3 && (
                             <span className="text-xs text-gray-500 font-medium">
-                              +{product.sizes.length - 3} {language === 'tr' ? 'daha' : 'more'}
+                              +{product.sizePrices.length - 3} {language === 'tr' ? 'daha' : 'more'}
                             </span>
                           )}
                         </div>

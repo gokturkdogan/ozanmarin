@@ -94,7 +94,24 @@ export async function POST(request: NextRequest) {
         totalPrice: validatedData.totalPrice,
         status: 'paid', // Demo için direkt paid olarak işaretliyoruz
         iyzicoPaymentId: paymentResponse.paymentId,
-        items: validatedData.items,
+        items: {
+          create: validatedData.items.map((item: any) => ({
+            productId: item.productId || 'unknown', // productId gerekli
+            productName: item.name,
+            productPrice: item.price,
+            quantity: item.quantity,
+            size: item.size || null,
+            color: item.color || null,
+            hasEmbroidery: item.hasEmbroidery || false,
+            embroideryPrice: item.embroideryPrice || 0,
+            embroideryFile: item.embroideryFile || null,
+            category: item.category || null,
+            brand: item.brand || null,
+            productImage: item.productImage || null,
+            shippingCost: item.shippingCost || 0,
+            isShipping: item.isShipping || false
+          }))
+        },
         shippingAddress: validatedData.shippingAddress
       }
     })

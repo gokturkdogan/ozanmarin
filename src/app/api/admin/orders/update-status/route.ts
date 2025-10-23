@@ -65,6 +65,16 @@ export async function POST(request: NextRequest) {
         const customerEmail = updatedOrder.user?.email || shippingAddress?.email
         const customerName = updatedOrder.user?.name || shippingAddress?.fullName || shippingAddress?.firstName + ' ' + shippingAddress?.lastName
 
+        // Generate tracking URL based on shipping company
+        let trackingUrl = ''
+        if (updatedOrder.shippingCompany && updatedOrder.trackingNumber) {
+          if (updatedOrder.shippingCompany === 'ups') {
+            trackingUrl = `https://www.ups.com/track?tracknum=${updatedOrder.trackingNumber}`
+          } else if (updatedOrder.shippingCompany === 'yurtici') {
+            trackingUrl = `https://www.yurticikargo.com/tr/online-servisler/gonderi-sorgula?code=${updatedOrder.trackingNumber}`
+          }
+        }
+
         if (customerEmail) {
           await sendOrderStatusUpdateEmail({
             orderId: updatedOrder.id,
@@ -73,7 +83,7 @@ export async function POST(request: NextRequest) {
             status: status,
             language: (updatedOrder.language as 'tr' | 'en') || 'tr',
             trackingNumber: updatedOrder.trackingNumber || undefined,
-            trackingUrl: updatedOrder.trackingUrl || undefined,
+            trackingUrl: trackingUrl || undefined,
             shippingCompany: updatedOrder.shippingCompany || undefined,
             items: updatedOrder.items?.map(item => ({
               name: item.productName,

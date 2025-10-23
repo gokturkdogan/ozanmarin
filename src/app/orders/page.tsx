@@ -95,7 +95,6 @@ export default function OrdersPage() {
       shipping: "(Kargo)",
       loadingDetails: "Sipariş detayları yükleniyor...",
       addressNotFound: "Teslimat adresi bilgisi bulunamadı",
-      paymentPending: "Ödeme Bekliyor",
       paymentPendingDesc: "Halen ödeme yapmadıysanız, aşağıdaki hesap bilgilerine ödemenizi yapabilirsiniz:",
       bankTransferInfo: "Banka Havalesi Bilgileri",
       bank: "Banka:",
@@ -144,7 +143,6 @@ export default function OrdersPage() {
       shipping: "(Shipping)",
       loadingDetails: "Loading order details...",
       addressNotFound: "Shipping address information not found",
-      paymentPending: "Payment Pending",
       paymentPendingDesc: "If you haven't made the payment yet, you can make your payment to the following account details:",
       bankTransferInfo: "Bank Transfer Information",
       bank: "Bank:",
@@ -274,8 +272,8 @@ export default function OrdersPage() {
     }
     
     return order.items.reduce((total, item) => {
-      const itemPrice = parseFloat(item.productPrice) || parseFloat(item.price) || 0
-      const embroideryPrice = parseFloat(item.embroideryPrice) || 0
+      const itemPrice = Number(item.productPrice) || Number(item.price) || 0
+      const embroideryPrice = Number(item.embroideryPrice) || 0
       const itemTotal = (itemPrice + embroideryPrice) * item.quantity
       return total + itemTotal
     }, 0)
@@ -436,7 +434,7 @@ export default function OrdersPage() {
                                         {item.isShipping && <span className="text-xs text-orange-600 ml-2">{t_content.shipping}</span>}
                                       </h4>
                                       <div className="text-sm text-gray-600 space-y-1 mt-1">
-                                        <p>{item.quantity} {t_content.items} × {formatPrice(parseFloat(item.productPrice) || parseFloat(item.price) || 0, order.language || language)}</p>
+                                        <p>{item.quantity} {t_content.items} × {formatPrice(Number(item.productPrice) || Number(item.price) || 0, (order.language || language) as 'tr' | 'en')}</p>
                                         {item.categoryName && (
                                           <p className="text-xs text-gray-500">{t_content.category} {item.categoryName}</p>
                                         )}
@@ -450,7 +448,7 @@ export default function OrdersPage() {
                                           <p className="text-xs text-gray-500">{t_content.color} {item.color}</p>
                                         )}
                                         {item.hasEmbroidery && (
-                                          <p className="text-xs text-blue-600">{t_content.embroidery} (+{formatPrice(parseFloat(item.embroideryPrice) || 0, order.language || language)})</p>
+                                          <p className="text-xs text-blue-600">{t_content.embroidery} (+{formatPrice(Number(item.embroideryPrice) || 0, (order.language || language) as 'tr' | 'en')})</p>
                                         )}
                                         {item.isShipping && (
                                           <p className="text-xs text-orange-600">{t_content.shippingCost}</p>
@@ -462,7 +460,7 @@ export default function OrdersPage() {
                                   {/* Price */}
                                   <div className="text-right ml-4">
                                     <p className="font-semibold text-gray-900">
-                                      {formatPrice(((parseFloat(item.productPrice) || parseFloat(item.price) || 0) + (parseFloat(item.embroideryPrice) || 0)) * item.quantity, order.language || language)}
+                                      {formatPrice(((Number(item.productPrice) || Number(item.price) || 0) + (Number(item.embroideryPrice) || 0)) * item.quantity, (order.language || language) as 'tr' | 'en')}
                                     </p>
                                   </div>
                                 </div>
