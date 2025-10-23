@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { CheckCircle, X } from 'lucide-react'
+import { CheckCircle, X, AlertCircle } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 
 interface CustomToastProps {
@@ -11,9 +11,10 @@ interface CustomToastProps {
   show?: boolean
   onClose: () => void
   duration?: number
+  type?: 'success' | 'error' | 'info'
 }
 
-export function CustomToast({ title, description, message, show = true, onClose, duration = 3000 }: CustomToastProps) {
+export function CustomToast({ title, description, message, show = true, onClose, duration = 3000, type = 'info' }: CustomToastProps) {
   const [isVisible, setIsVisible] = useState(show)
 
   useEffect(() => {
@@ -37,12 +38,45 @@ export function CustomToast({ title, description, message, show = true, onClose,
   const displayTitle = message ? 'Bilgi' : title
   const displayDescription = message || description
 
+  // Type'a göre renk ve icon belirle
+  const getToastStyles = () => {
+    switch (type) {
+      case 'success':
+        return {
+          borderColor: 'border-green-200',
+          iconColor: 'text-green-500',
+          icon: CheckCircle,
+          progressBg: 'bg-green-100',
+          progressBar: 'bg-green-500'
+        }
+      case 'error':
+        return {
+          borderColor: 'border-red-200',
+          iconColor: 'text-red-500',
+          icon: AlertCircle,
+          progressBg: 'bg-red-100',
+          progressBar: 'bg-red-500'
+        }
+      default:
+        return {
+          borderColor: 'border-blue-200',
+          iconColor: 'text-blue-500',
+          icon: CheckCircle,
+          progressBg: 'bg-blue-100',
+          progressBar: 'bg-blue-500'
+        }
+    }
+  }
+
+  const styles = getToastStyles()
+  const IconComponent = styles.icon
+
   return (
     <div className="fixed top-4 right-4 z-50 animate-in slide-in-from-right-full duration-300">
-      <div className="bg-white border border-green-200 rounded-lg shadow-lg p-4 min-w-80 max-w-96">
+      <div className={`bg-white border ${styles.borderColor} rounded-lg shadow-lg p-4 min-w-80 max-w-96`}>
         <div className="flex items-start space-x-3">
           <div className="flex-shrink-0">
-            <CheckCircle className="w-6 h-6 text-green-500" />
+            <IconComponent className={`w-6 h-6 ${styles.iconColor}`} />
           </div>
           <div className="flex-1 min-w-0">
             <h4 className="text-sm font-semibold text-gray-900 mb-1">
@@ -66,9 +100,9 @@ export function CustomToast({ title, description, message, show = true, onClose,
             </Button>
           </div>
         </div>
-        <div className="mt-3 bg-green-100 rounded-full h-1 overflow-hidden">
+        <div className={`mt-3 ${styles.progressBg} rounded-full h-1 overflow-hidden`}>
           <div 
-            className="bg-green-500 h-1 rounded-full animate-progress"
+            className={`${styles.progressBar} h-1 rounded-full animate-progress`}
             style={{
               animationDuration: `${duration}ms`
             }}

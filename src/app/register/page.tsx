@@ -233,6 +233,7 @@ export default function RegisterPage() {
         message={toastMessage}
         onClose={() => setShowToast(false)}
         duration={5000}
+        type="success"
       />
     </div>
   )

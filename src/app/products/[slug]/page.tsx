@@ -55,6 +55,7 @@ export default function ProductPage({ params }: ProductPageProps) {
   const [slug, setSlug] = useState<string>('')
   const [showToast, setShowToast] = useState(false)
   const [toastMessage, setToastMessage] = useState('')
+  const [toastType, setToastType] = useState<'success' | 'error'>('success')
   const [hasEmbroidery, setHasEmbroidery] = useState(false)
   const [embroideryFile, setEmbroideryFile] = useState<File | null>(null)
   const [embroideryUrl, setEmbroideryUrl] = useState<string>('')
@@ -62,6 +63,8 @@ export default function ProductPage({ params }: ProductPageProps) {
   const { addItem } = useCartStore()
   const router = useRouter()
   const { language } = useLanguage()
+
+
 
   const content = {
     tr: {
@@ -83,6 +86,7 @@ export default function ProductPage({ params }: ProductPageProps) {
       outOfStock: "Stokta Yok",
       imageAlt: "Görsel",
       addedToCart: "Sepete Eklendi!",
+      errorTitle: "Uyarı",
       selectSizeFirst: "Boyut seçiniz",
       uvProtected: "UV Korumalı",
       waterproof: "Su Geçirmez",
@@ -107,6 +111,7 @@ export default function ProductPage({ params }: ProductPageProps) {
       outOfStock: "Out of Stock",
       imageAlt: "Image",
       addedToCart: "Added to Cart!",
+      errorTitle: "Warning",
       selectSizeFirst: "Select size first",
       uvProtected: "UV Protected",
       waterproof: "Waterproof",
@@ -167,11 +172,7 @@ export default function ProductPage({ params }: ProductPageProps) {
       if (data.product.sizePrices && data.product.sizePrices.length > 0) {
         setSelectedSizePrice(data.product.sizePrices[0])
       }
-      // İlk rengi seçili hale getir
-      if (data.product.colors && data.product.colors.length > 0) {
-        const translatedColors = getTranslatedColors(data.product.colors, language)
-        setSelectedColor(translatedColors[0])
-      }
+      // Renk seçimi yapılmaz, kullanıcı manuel olarak seçmeli
     } catch (error) {
       console.error('Error fetching product:', error)
     } finally {
@@ -181,6 +182,16 @@ export default function ProductPage({ params }: ProductPageProps) {
 
   const handleAddToCart = () => {
     if (product && selectedSizePrice) {
+      // Renk seçimi kontrolü
+      if (product.colors && product.colors.length > 0 && !selectedColor) {
+        setToastMessage(language === 'tr' 
+          ? 'Lütfen bir renk seçin!' 
+          : 'Please select a color!')
+        setToastType('error')
+        setShowToast(true)
+        return
+      }
+
       for (let i = 0; i < quantity; i++) {
         addItem({
           id: product.id,
@@ -197,6 +208,7 @@ export default function ProductPage({ params }: ProductPageProps) {
         })
       }
       setToastMessage(`${quantity} adet ${getTranslatedText(product.name, product.nameEn, language)} sepete eklendi!`)
+      setToastType('success')
       setShowToast(true)
       
       // Toast gösterildikten sonra ürünler sayfasına yönlendir
@@ -532,10 +544,11 @@ export default function ProductPage({ params }: ProductPageProps) {
       {/* Custom Toast */}
       {showToast && (
         <CustomToast
-          title={t.addedToCart}
+          title={toastType === 'success' ? t.addedToCart : t.errorTitle}
           description={toastMessage}
           onClose={() => setShowToast(false)}
           duration={3000}
+          type={toastType}
         />
       )}
     </div>
