@@ -13,6 +13,7 @@ import { ConfirmModal } from '@/components/confirm-modal'
 import { MapPin, Plus, Edit, Trash2, ArrowLeft, Save, X } from 'lucide-react'
 import Link from 'next/link'
 import { countries } from '@/lib/countries'
+import { useLanguage } from '@/lib/language'
 
 interface Address {
   id: string
@@ -55,6 +56,117 @@ export default function AddressesPage() {
   })
   const router = useRouter()
   const { toast } = useToast()
+  const { language, t } = useLanguage()
+
+  // Dil bazlı içerik
+  const content = {
+    tr: {
+      loading: "Adresler yükleniyor...",
+      loginRequired: "Giriş yapmanız gerekiyor",
+      loginButton: "Giriş Yap",
+      backToProfile: "Profilim",
+      pageTitle: "Adreslerim",
+      pageDesc: "Teslimat adreslerinizi yönetin.",
+      newAddress: "Yeni Adres",
+      editAddress: "Adres Düzenle",
+      addAddress: "Yeni Adres Ekle",
+      editDesc: "Adres bilgilerinizi güncelleyin.",
+      addDesc: "Yeni teslimat adresi ekleyin.",
+      addressTitle: "Adres Başlığı",
+      addressTitlePlaceholder: "Ev, İş, vb.",
+      fullName: "Ad Soyad",
+      fullNamePlaceholder: "Ad Soyad",
+      phone: "Telefon",
+      phonePlaceholder: "0555 123 45 67",
+      country: "Ülke",
+      countryPlaceholder: "Ülke seçiniz",
+      city: "Şehir",
+      cityPlaceholder: "İstanbul",
+      district: "İlçe",
+      districtPlaceholder: "Kadıköy",
+      address: "Adres",
+      addressPlaceholder: "Mahalle, sokak, bina no, daire no",
+      setDefault: "Varsayılan adres olarak ayarla",
+      save: "Kaydet",
+      update: "Güncelle",
+      saving: "Kaydediliyor...",
+      cancel: "İptal",
+      noAddresses: "Henüz adres eklenmemiş",
+      noAddressesDesc: "İlk adresinizi ekleyerek başlayın.",
+      addAddressButton: "Adres Ekle",
+      default: "Varsayılan",
+      setAsDefault: "Varsayılan Yap",
+      deleteAddress: "Adresi Sil",
+      deleteConfirm: "Bu adresi silmek istediğinizden emin misiniz? Bu işlem geri alınamaz.",
+      deleteButton: "Sil",
+      cancelButton: "İptal",
+      error: "Hata",
+      userError: "Kullanıcı bilgileri yüklenirken bir hata oluştu.",
+      addressesError: "Adresler yüklenirken bir hata oluştu.",
+      success: "Başarılı",
+      addressUpdated: "Adres başarıyla güncellendi.",
+      addressAdded: "Adres başarıyla eklendi.",
+      addressDeleted: "Adres başarıyla silindi.",
+      defaultUpdated: "Varsayılan adres başarıyla güncellendi.",
+      saveError: "Adres kaydedilirken bir hata oluştu.",
+      deleteError: "Adres silinirken bir hata oluştu.",
+      defaultError: "Varsayılan adres güncellenirken bir hata oluştu."
+    },
+    en: {
+      loading: "Loading addresses...",
+      loginRequired: "You need to log in",
+      loginButton: "Log In",
+      backToProfile: "My Profile",
+      pageTitle: "My Addresses",
+      pageDesc: "Manage your delivery addresses.",
+      newAddress: "New Address",
+      editAddress: "Edit Address",
+      addAddress: "Add New Address",
+      editDesc: "Update your address information.",
+      addDesc: "Add a new delivery address.",
+      addressTitle: "Address Title",
+      addressTitlePlaceholder: "Home, Work, etc.",
+      fullName: "Full Name",
+      fullNamePlaceholder: "Full Name",
+      phone: "Phone",
+      phonePlaceholder: "0555 123 45 67",
+      country: "Country",
+      countryPlaceholder: "Select country",
+      city: "City",
+      cityPlaceholder: "Istanbul",
+      district: "District",
+      districtPlaceholder: "Kadikoy",
+      address: "Address",
+      addressPlaceholder: "Neighborhood, street, building no, apartment no",
+      setDefault: "Set as default address",
+      save: "Save",
+      update: "Update",
+      saving: "Saving...",
+      cancel: "Cancel",
+      noAddresses: "No addresses added yet",
+      noAddressesDesc: "Start by adding your first address.",
+      addAddressButton: "Add Address",
+      default: "Default",
+      setAsDefault: "Set as Default",
+      deleteAddress: "Delete Address",
+      deleteConfirm: "Are you sure you want to delete this address? This action cannot be undone.",
+      deleteButton: "Delete",
+      cancelButton: "Cancel",
+      error: "Error",
+      userError: "An error occurred while loading user information.",
+      addressesError: "An error occurred while loading addresses.",
+      success: "Success",
+      addressUpdated: "Address updated successfully.",
+      addressAdded: "Address added successfully.",
+      addressDeleted: "Address deleted successfully.",
+      defaultUpdated: "Default address updated successfully.",
+      saveError: "An error occurred while saving the address.",
+      deleteError: "An error occurred while deleting the address.",
+      defaultError: "An error occurred while updating the default address."
+    }
+  }
+
+  const t_content = content[language]
 
   useEffect(() => {
     fetchUser()
@@ -75,8 +187,8 @@ export default function AddressesPage() {
     } catch (error) {
       console.error('Error fetching user:', error)
       toast({
-        title: 'Hata',
-        description: 'Kullanıcı bilgileri yüklenirken bir hata oluştu.',
+        title: t_content.error,
+        description: t_content.userError,
         variant: 'destructive'
       })
     }
@@ -96,8 +208,8 @@ export default function AddressesPage() {
     } catch (error) {
       console.error('Error fetching addresses:', error)
       toast({
-        title: 'Hata',
-        description: 'Adresler yüklenirken bir hata oluştu.',
+        title: t_content.error,
+        description: t_content.addressesError,
         variant: 'destructive'
       })
     } finally {
@@ -145,8 +257,8 @@ export default function AddressesPage() {
 
       if (response.ok) {
         toast({
-          title: 'Başarılı',
-          description: editingAddress ? 'Adres başarıyla güncellendi.' : 'Adres başarıyla eklendi.',
+          title: t_content.success,
+          description: editingAddress ? t_content.addressUpdated : t_content.addressAdded,
           variant: 'default'
         })
         resetForm()
@@ -154,16 +266,16 @@ export default function AddressesPage() {
       } else {
         const error = await response.json()
         toast({
-          title: 'Hata',
-          description: error.message || 'Adres kaydedilirken bir hata oluştu.',
+          title: t_content.error,
+          description: error.message || t_content.saveError,
           variant: 'destructive'
         })
       }
     } catch (error) {
       console.error('Error saving address:', error)
       toast({
-        title: 'Hata',
-        description: 'Adres kaydedilirken bir hata oluştu.',
+        title: t_content.error,
+        description: t_content.saveError,
         variant: 'destructive'
       })
     } finally {
@@ -202,24 +314,24 @@ export default function AddressesPage() {
 
       if (response.ok) {
         toast({
-          title: 'Başarılı',
-          description: 'Adres başarıyla silindi.',
+          title: t_content.success,
+          description: t_content.addressDeleted,
           variant: 'default'
         })
         fetchAddresses()
       } else {
         const error = await response.json()
         toast({
-          title: 'Hata',
-          description: error.message || 'Adres silinirken bir hata oluştu.',
+          title: t_content.error,
+          description: error.message || t_content.deleteError,
           variant: 'destructive'
         })
       }
     } catch (error) {
       console.error('Error deleting address:', error)
       toast({
-        title: 'Hata',
-        description: 'Adres silinirken bir hata oluştu.',
+        title: t_content.error,
+        description: t_content.deleteError,
         variant: 'destructive'
       })
     } finally {
@@ -236,24 +348,24 @@ export default function AddressesPage() {
 
       if (response.ok) {
         toast({
-          title: 'Başarılı',
-          description: 'Varsayılan adres başarıyla güncellendi.',
+          title: t_content.success,
+          description: t_content.defaultUpdated,
           variant: 'default'
         })
         fetchAddresses()
       } else {
         const error = await response.json()
         toast({
-          title: 'Hata',
-          description: error.message || 'Varsayılan adres güncellenirken bir hata oluştu.',
+          title: t_content.error,
+          description: error.message || t_content.defaultError,
           variant: 'destructive'
         })
       }
     } catch (error) {
       console.error('Error setting default address:', error)
       toast({
-        title: 'Hata',
-        description: 'Varsayılan adres güncellenirken bir hata oluştu.',
+        title: t_content.error,
+        description: t_content.defaultError,
         variant: 'destructive'
       })
     }
@@ -264,7 +376,7 @@ export default function AddressesPage() {
       <div className="min-h-screen flex items-center justify-center">
         <div className="text-center">
           <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-primary mx-auto"></div>
-          <p className="mt-4 text-gray-600">Adresler yükleniyor...</p>
+          <p className="mt-4 text-gray-600">{t_content.loading}</p>
         </div>
       </div>
     )
@@ -274,9 +386,9 @@ export default function AddressesPage() {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="text-center">
-          <h1 className="text-2xl font-bold text-gray-900 mb-4">Giriş yapmanız gerekiyor</h1>
+          <h1 className="text-2xl font-bold text-gray-900 mb-4">{t_content.loginRequired}</h1>
           <Link href="/login">
-            <Button>Giriş Yap</Button>
+            <Button>{t_content.loginButton}</Button>
           </Link>
         </div>
       </div>
@@ -293,20 +405,20 @@ export default function AddressesPage() {
               <Link href="/profile">
                 <Button variant="outline" size="sm" className="cursor-pointer">
                   <ArrowLeft className="w-4 h-4 mr-2" />
-                  Profilim
+                  {t_content.backToProfile}
                 </Button>
               </Link>
-              <h1 className="text-3xl font-bold text-gray-900">Adreslerim</h1>
+              <h1 className="text-3xl font-bold text-gray-900">{t_content.pageTitle}</h1>
             </div>
             <Button 
               onClick={() => setShowAddForm(true)}
               className="cursor-pointer"
             >
               <Plus className="w-4 h-4 mr-2" />
-              Yeni Adres
+              {t_content.newAddress}
             </Button>
           </div>
-          <p className="text-gray-600">Teslimat adreslerinizi yönetin.</p>
+          <p className="text-gray-600">{t_content.pageDesc}</p>
         </div>
 
         {/* Add/Edit Form */}
@@ -315,32 +427,32 @@ export default function AddressesPage() {
             <CardHeader>
               <CardTitle className="flex items-center space-x-2">
                 <MapPin className="w-5 h-5 text-primary" />
-                <span>{editingAddress ? 'Adres Düzenle' : 'Yeni Adres Ekle'}</span>
+                <span>{editingAddress ? t_content.editAddress : t_content.addAddress}</span>
               </CardTitle>
               <CardDescription>
-                {editingAddress ? 'Adres bilgilerinizi güncelleyin.' : 'Yeni teslimat adresi ekleyin.'}
+                {editingAddress ? t_content.editDesc : t_content.addDesc}
               </CardDescription>
             </CardHeader>
             <CardContent>
               <form onSubmit={handleSubmit} className="space-y-4">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div className="space-y-2">
-                    <Label htmlFor="title">Adres Başlığı</Label>
+                    <Label htmlFor="title">{t_content.addressTitle}</Label>
                     <Input
                       id="title"
                       value={formData.title}
                       onChange={(e) => handleInputChange('title', e.target.value)}
-                      placeholder="Ev, İş, vb."
+                      placeholder={t_content.addressTitlePlaceholder}
                       required
                     />
                   </div>
                   <div className="space-y-2">
-                    <Label htmlFor="fullName">Ad Soyad</Label>
+                    <Label htmlFor="fullName">{t_content.fullName}</Label>
                     <Input
                       id="fullName"
                       value={formData.fullName}
                       onChange={(e) => handleInputChange('fullName', e.target.value)}
-                      placeholder="Ad Soyad"
+                      placeholder={t_content.fullNamePlaceholder}
                       required
                     />
                   </div>
@@ -348,20 +460,20 @@ export default function AddressesPage() {
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div className="space-y-2">
-                    <Label htmlFor="phone">Telefon</Label>
+                    <Label htmlFor="phone">{t_content.phone}</Label>
                     <Input
                       id="phone"
                       value={formData.phone}
                       onChange={(e) => handleInputChange('phone', e.target.value)}
-                      placeholder="0555 123 45 67"
+                      placeholder={t_content.phonePlaceholder}
                       required
                     />
                   </div>
                   <div className="space-y-2">
-                    <Label htmlFor="country">Ülke</Label>
+                    <Label htmlFor="country">{t_content.country}</Label>
                     <Select value={formData.country} onValueChange={(value) => handleInputChange('country', value)}>
                       <SelectTrigger>
-                        <SelectValue placeholder="Ülke seçiniz" />
+                        <SelectValue placeholder={t_content.countryPlaceholder} />
                       </SelectTrigger>
                       <SelectContent className="max-h-60">
                         {countries.map((country) => (
@@ -376,34 +488,34 @@ export default function AddressesPage() {
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div className="space-y-2">
-                    <Label htmlFor="city">Şehir</Label>
+                    <Label htmlFor="city">{t_content.city}</Label>
                     <Input
                       id="city"
                       value={formData.city}
                       onChange={(e) => handleInputChange('city', e.target.value)}
-                      placeholder="İstanbul"
+                      placeholder={t_content.cityPlaceholder}
                       required
                     />
                   </div>
                   <div className="space-y-2">
-                    <Label htmlFor="district">İlçe</Label>
+                    <Label htmlFor="district">{t_content.district}</Label>
                     <Input
                       id="district"
                       value={formData.district}
                       onChange={(e) => handleInputChange('district', e.target.value)}
-                      placeholder="Kadıköy"
+                      placeholder={t_content.districtPlaceholder}
                       required
                     />
                   </div>
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="address">Adres</Label>
+                  <Label htmlFor="address">{t_content.address}</Label>
                   <Textarea
                     id="address"
                     value={formData.address}
                     onChange={(e) => handleInputChange('address', e.target.value)}
-                    placeholder="Mahalle, sokak, bina no, daire no"
+                    placeholder={t_content.addressPlaceholder}
                     required
                     rows={3}
                   />
@@ -417,7 +529,7 @@ export default function AddressesPage() {
                     onChange={(e) => handleInputChange('isDefault', e.target.checked)}
                     className="rounded"
                   />
-                  <Label htmlFor="isDefault">Varsayılan adres olarak ayarla</Label>
+                  <Label htmlFor="isDefault">{t_content.setDefault}</Label>
                 </div>
 
                 <div className="flex space-x-2">
@@ -427,7 +539,7 @@ export default function AddressesPage() {
                     className="cursor-pointer"
                   >
                     <Save className="w-4 h-4 mr-2" />
-                    {isSaving ? 'Kaydediliyor...' : (editingAddress ? 'Güncelle' : 'Kaydet')}
+                    {isSaving ? t_content.saving : (editingAddress ? t_content.update : t_content.save)}
                   </Button>
                   <Button 
                     type="button" 
@@ -436,7 +548,7 @@ export default function AddressesPage() {
                     className="cursor-pointer"
                   >
                     <X className="w-4 h-4 mr-2" />
-                    İptal
+                    {t_content.cancel}
                   </Button>
                 </div>
               </form>
@@ -449,11 +561,11 @@ export default function AddressesPage() {
           <Card>
             <CardContent className="text-center py-12">
               <MapPin className="w-16 h-16 text-gray-400 mx-auto mb-4" />
-              <h3 className="text-lg font-medium text-gray-900 mb-2">Henüz adres eklenmemiş</h3>
-              <p className="text-gray-600 mb-4">İlk adresinizi ekleyerek başlayın.</p>
+              <h3 className="text-lg font-medium text-gray-900 mb-2">{t_content.noAddresses}</h3>
+              <p className="text-gray-600 mb-4">{t_content.noAddressesDesc}</p>
               <Button onClick={() => setShowAddForm(true)} className="cursor-pointer">
                 <Plus className="w-4 h-4 mr-2" />
-                Adres Ekle
+                {t_content.addAddressButton}
               </Button>
             </CardContent>
           </Card>
@@ -468,7 +580,7 @@ export default function AddressesPage() {
                       <span>{address.title}</span>
                       {address.isDefault && (
                         <span className="bg-primary text-primary-foreground text-xs px-2 py-1 rounded-full">
-                          Varsayılan
+                          {t_content.default}
                         </span>
                       )}
                     </CardTitle>
@@ -507,7 +619,7 @@ export default function AddressesPage() {
                         onClick={() => handleSetDefault(address.id)}
                         className="mt-2 cursor-pointer"
                       >
-                        Varsayılan Yap
+                        {t_content.setAsDefault}
                       </Button>
                     )}
                   </div>
@@ -525,10 +637,10 @@ export default function AddressesPage() {
             setAddressToDelete(null)
           }}
           onConfirm={confirmDelete}
-          title="Adresi Sil"
-          message="Bu adresi silmek istediğinizden emin misiniz? Bu işlem geri alınamaz."
-          confirmText="Sil"
-          cancelText="İptal"
+          title={t_content.deleteAddress}
+          message={t_content.deleteConfirm}
+          confirmText={t_content.deleteButton}
+          cancelText={t_content.cancelButton}
           variant="destructive"
           isLoading={isDeleting}
         />

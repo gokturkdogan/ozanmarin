@@ -9,6 +9,7 @@ import { Label } from '@/components/ui/label'
 import { useToast } from '@/hooks/use-toast'
 import { User, Mail, Lock, Save, ArrowLeft } from 'lucide-react'
 import Link from 'next/link'
+import { useLanguage } from '@/lib/language'
 
 interface User {
   id: string
@@ -30,6 +31,89 @@ export default function ProfilePage() {
   })
   const router = useRouter()
   const { toast } = useToast()
+  const { language, t } = useLanguage()
+
+  // Dil bazlı içerik
+  const content = {
+    tr: {
+      loading: "Profil yükleniyor...",
+      loginRequired: "Giriş yapmanız gerekiyor",
+      loginButton: "Giriş Yap",
+      backToHome: "Ana Sayfa",
+      pageTitle: "Profilim",
+      pageDesc: "Hesap bilgilerinizi ve şifrenizi yönetin.",
+      profileInfo: "Profil Bilgileri",
+      profileDesc: "Kişisel bilgilerinizi güncelleyin.",
+      fullName: "Ad Soyad",
+      fullNamePlaceholder: "Adınızı ve soyadınızı girin",
+      email: "E-posta",
+      emailPlaceholder: "E-posta adresinizi girin",
+      saveProfile: "Bilgileri Kaydet",
+      saving: "Kaydediliyor...",
+      changePassword: "Şifre Değiştir",
+      passwordDesc: "Hesap güvenliğiniz için şifrenizi güncelleyin.",
+      currentPassword: "Mevcut Şifre",
+      currentPasswordPlaceholder: "Mevcut şifrenizi girin",
+      newPassword: "Yeni Şifre",
+      newPasswordPlaceholder: "Yeni şifrenizi girin",
+      confirmPassword: "Yeni Şifre Tekrar",
+      confirmPasswordPlaceholder: "Yeni şifrenizi tekrar girin",
+      changePasswordButton: "Şifreyi Değiştir",
+      changing: "Değiştiriliyor...",
+      accountInfo: "Hesap Bilgileri",
+      userId: "Kullanıcı ID",
+      accountType: "Hesap Türü",
+      error: "Hata",
+      success: "Başarılı",
+      userError: "Kullanıcı bilgileri yüklenirken bir hata oluştu.",
+      profileUpdated: "Profil bilgileriniz güncellendi.",
+      profileUpdateError: "Profil güncellenirken bir hata oluştu.",
+      passwordMismatch: "Yeni şifreler eşleşmiyor.",
+      passwordTooShort: "Yeni şifre en az 6 karakter olmalıdır.",
+      passwordChanged: "Şifreniz başarıyla değiştirildi.",
+      passwordChangeError: "Şifre değiştirilirken bir hata oluştu."
+    },
+    en: {
+      loading: "Loading profile...",
+      loginRequired: "You need to log in",
+      loginButton: "Log In",
+      backToHome: "Home",
+      pageTitle: "My Profile",
+      pageDesc: "Manage your account information and password.",
+      profileInfo: "Profile Information",
+      profileDesc: "Update your personal information.",
+      fullName: "Full Name",
+      fullNamePlaceholder: "Enter your first and last name",
+      email: "Email",
+      emailPlaceholder: "Enter your email address",
+      saveProfile: "Save Information",
+      saving: "Saving...",
+      changePassword: "Change Password",
+      passwordDesc: "Update your password for account security.",
+      currentPassword: "Current Password",
+      currentPasswordPlaceholder: "Enter your current password",
+      newPassword: "New Password",
+      newPasswordPlaceholder: "Enter your new password",
+      confirmPassword: "Confirm New Password",
+      confirmPasswordPlaceholder: "Enter your new password again",
+      changePasswordButton: "Change Password",
+      changing: "Changing...",
+      accountInfo: "Account Information",
+      userId: "User ID",
+      accountType: "Account Type",
+      error: "Error",
+      success: "Success",
+      userError: "An error occurred while loading user information.",
+      profileUpdated: "Your profile information has been updated.",
+      profileUpdateError: "An error occurred while updating the profile.",
+      passwordMismatch: "New passwords do not match.",
+      passwordTooShort: "New password must be at least 6 characters.",
+      passwordChanged: "Your password has been changed successfully.",
+      passwordChangeError: "An error occurred while changing the password."
+    }
+  }
+
+  const t_content = content[language]
 
   useEffect(() => {
     fetchUser()
@@ -55,16 +139,16 @@ export default function ProfilePage() {
         return
       } else {
         toast({
-          title: 'Hata',
-          description: 'Kullanıcı bilgileri yüklenirken bir hata oluştu.',
+          title: t_content.error,
+          description: t_content.userError,
           variant: 'destructive'
         })
       }
     } catch (error) {
       console.error('Error fetching user:', error)
       toast({
-        title: 'Hata',
-        description: 'Kullanıcı bilgileri yüklenirken bir hata oluştu.',
+        title: t_content.error,
+        description: t_content.userError,
         variant: 'destructive'
       })
     } finally {
@@ -90,38 +174,36 @@ export default function ProfilePage() {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          name: formData.name,
-          email: formData.email
+          name: formData.name
         }),
       })
 
       if (response.ok) {
         toast({
-          title: 'Başarılı',
-          description: 'Profil bilgileriniz güncellendi.',
+          title: t_content.success,
+          description: t_content.profileUpdated,
           variant: 'default'
         })
         // Update local user state
         if (user) {
           setUser({
             ...user,
-            name: formData.name,
-            email: formData.email
+            name: formData.name
           })
         }
       } else {
         const error = await response.json()
         toast({
-          title: 'Hata',
-          description: error.message || 'Profil güncellenirken bir hata oluştu.',
+          title: t_content.error,
+          description: error.message || t_content.profileUpdateError,
           variant: 'destructive'
         })
       }
     } catch (error) {
       console.error('Error updating profile:', error)
       toast({
-        title: 'Hata',
-        description: 'Profil güncellenirken bir hata oluştu.',
+        title: t_content.error,
+        description: t_content.profileUpdateError,
         variant: 'destructive'
       })
     } finally {
@@ -134,8 +216,8 @@ export default function ProfilePage() {
     
     if (formData.newPassword !== formData.confirmPassword) {
       toast({
-        title: 'Hata',
-        description: 'Yeni şifreler eşleşmiyor.',
+        title: t_content.error,
+        description: t_content.passwordMismatch,
         variant: 'destructive'
       })
       return
@@ -143,8 +225,8 @@ export default function ProfilePage() {
 
     if (formData.newPassword.length < 6) {
       toast({
-        title: 'Hata',
-        description: 'Yeni şifre en az 6 karakter olmalıdır.',
+        title: t_content.error,
+        description: t_content.passwordTooShort,
         variant: 'destructive'
       })
       return
@@ -166,8 +248,8 @@ export default function ProfilePage() {
 
       if (response.ok) {
         toast({
-          title: 'Başarılı',
-          description: 'Şifreniz başarıyla değiştirildi.',
+          title: t_content.success,
+          description: t_content.passwordChanged,
           variant: 'default'
         })
         // Clear password fields
@@ -180,16 +262,16 @@ export default function ProfilePage() {
       } else {
         const error = await response.json()
         toast({
-          title: 'Hata',
-          description: error.message || 'Şifre değiştirilirken bir hata oluştu.',
+          title: t_content.error,
+          description: error.message || t_content.passwordChangeError,
           variant: 'destructive'
         })
       }
     } catch (error) {
       console.error('Error changing password:', error)
       toast({
-        title: 'Hata',
-        description: 'Şifre değiştirilirken bir hata oluştu.',
+        title: t_content.error,
+        description: t_content.passwordChangeError,
         variant: 'destructive'
       })
     } finally {
@@ -202,7 +284,7 @@ export default function ProfilePage() {
       <div className="min-h-screen flex items-center justify-center">
         <div className="text-center">
           <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-primary mx-auto"></div>
-          <p className="mt-4 text-gray-600">Profil yükleniyor...</p>
+          <p className="mt-4 text-gray-600">{t_content.loading}</p>
         </div>
       </div>
     )
@@ -212,9 +294,9 @@ export default function ProfilePage() {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="text-center">
-          <h1 className="text-2xl font-bold text-gray-900 mb-4">Giriş yapmanız gerekiyor</h1>
+          <h1 className="text-2xl font-bold text-gray-900 mb-4">{t_content.loginRequired}</h1>
           <Link href="/login">
-            <Button>Giriş Yap</Button>
+            <Button>{t_content.loginButton}</Button>
           </Link>
         </div>
       </div>
@@ -230,12 +312,12 @@ export default function ProfilePage() {
             <Link href="/">
               <Button variant="outline" size="sm" className="cursor-pointer">
                 <ArrowLeft className="w-4 h-4 mr-2" />
-                Ana Sayfa
+                {t_content.backToHome}
               </Button>
             </Link>
-            <h1 className="text-3xl font-bold text-gray-900">Profilim</h1>
+            <h1 className="text-3xl font-bold text-gray-900">{t_content.pageTitle}</h1>
           </div>
-          <p className="text-gray-600">Hesap bilgilerinizi ve şifrenizi yönetin.</p>
+          <p className="text-gray-600">{t_content.pageDesc}</p>
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
@@ -244,34 +326,35 @@ export default function ProfilePage() {
             <CardHeader>
               <CardTitle className="flex items-center space-x-2">
                 <User className="w-5 h-5 text-primary" />
-                <span>Profil Bilgileri</span>
+                <span>{t_content.profileInfo}</span>
               </CardTitle>
               <CardDescription>
-                Kişisel bilgilerinizi güncelleyin.
+                {t_content.profileDesc}
               </CardDescription>
             </CardHeader>
             <CardContent>
               <form onSubmit={handleSaveProfile} className="space-y-4">
                 <div className="space-y-2">
-                  <Label htmlFor="name">Ad Soyad</Label>
+                  <Label htmlFor="name">{t_content.fullName}</Label>
                   <Input
                     id="name"
                     value={formData.name}
                     onChange={(e) => handleInputChange('name', e.target.value)}
-                    placeholder="Adınızı ve soyadınızı girin"
+                    placeholder={t_content.fullNamePlaceholder}
                     required
                   />
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="email">E-posta</Label>
+                  <Label htmlFor="email">{t_content.email}</Label>
                   <Input
                     id="email"
                     type="email"
                     value={formData.email}
                     onChange={(e) => handleInputChange('email', e.target.value)}
-                    placeholder="E-posta adresinizi girin"
-                    required
+                    placeholder={t_content.emailPlaceholder}
+                    disabled
+                    className="bg-gray-100 cursor-not-allowed"
                   />
                 </div>
 
@@ -281,7 +364,7 @@ export default function ProfilePage() {
                   className="w-full cursor-pointer"
                 >
                   <Save className="w-4 h-4 mr-2" />
-                  {isSaving ? 'Kaydediliyor...' : 'Bilgileri Kaydet'}
+                  {isSaving ? t_content.saving : t_content.saveProfile}
                 </Button>
               </form>
             </CardContent>
@@ -292,46 +375,46 @@ export default function ProfilePage() {
             <CardHeader>
               <CardTitle className="flex items-center space-x-2">
                 <Lock className="w-5 h-5 text-primary" />
-                <span>Şifre Değiştir</span>
+                <span>{t_content.changePassword}</span>
               </CardTitle>
               <CardDescription>
-                Hesap güvenliğiniz için şifrenizi güncelleyin.
+                {t_content.passwordDesc}
               </CardDescription>
             </CardHeader>
             <CardContent>
               <form onSubmit={handleChangePassword} className="space-y-4">
                 <div className="space-y-2">
-                  <Label htmlFor="currentPassword">Mevcut Şifre</Label>
+                  <Label htmlFor="currentPassword">{t_content.currentPassword}</Label>
                   <Input
                     id="currentPassword"
                     type="password"
                     value={formData.currentPassword}
                     onChange={(e) => handleInputChange('currentPassword', e.target.value)}
-                    placeholder="Mevcut şifrenizi girin"
+                    placeholder={t_content.currentPasswordPlaceholder}
                     required
                   />
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="newPassword">Yeni Şifre</Label>
+                  <Label htmlFor="newPassword">{t_content.newPassword}</Label>
                   <Input
                     id="newPassword"
                     type="password"
                     value={formData.newPassword}
                     onChange={(e) => handleInputChange('newPassword', e.target.value)}
-                    placeholder="Yeni şifrenizi girin"
+                    placeholder={t_content.newPasswordPlaceholder}
                     required
                   />
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="confirmPassword">Yeni Şifre Tekrar</Label>
+                  <Label htmlFor="confirmPassword">{t_content.confirmPassword}</Label>
                   <Input
                     id="confirmPassword"
                     type="password"
                     value={formData.confirmPassword}
                     onChange={(e) => handleInputChange('confirmPassword', e.target.value)}
-                    placeholder="Yeni şifrenizi tekrar girin"
+                    placeholder={t_content.confirmPasswordPlaceholder}
                     required
                   />
                 </div>
@@ -342,7 +425,7 @@ export default function ProfilePage() {
                   className="w-full cursor-pointer"
                 >
                   <Lock className="w-4 h-4 mr-2" />
-                  {isSaving ? 'Değiştiriliyor...' : 'Şifreyi Değiştir'}
+                  {isSaving ? t_content.changing : t_content.changePasswordButton}
                 </Button>
               </form>
             </CardContent>
@@ -354,17 +437,17 @@ export default function ProfilePage() {
           <CardHeader>
             <CardTitle className="flex items-center space-x-2">
               <Mail className="w-5 h-5 text-primary" />
-              <span>Hesap Bilgileri</span>
+              <span>{t_content.accountInfo}</span>
             </CardTitle>
           </CardHeader>
           <CardContent>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
-                <Label className="text-sm font-medium text-gray-500">Kullanıcı ID</Label>
+                <Label className="text-sm font-medium text-gray-500">{t_content.userId}</Label>
                 <p className="text-sm text-gray-900">{user.id}</p>
               </div>
               <div>
-                <Label className="text-sm font-medium text-gray-500">Hesap Türü</Label>
+                <Label className="text-sm font-medium text-gray-500">{t_content.accountType}</Label>
                 <p className="text-sm text-gray-900 capitalize">{user.role}</p>
               </div>
             </div>

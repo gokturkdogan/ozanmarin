@@ -7,11 +7,11 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { useCartStore } from '@/lib/cart'
-import { ArrowLeft, Plus, CreditCard, MapPin, Edit } from 'lucide-react'
+import { ArrowLeft, Plus, CreditCard, MapPin, Edit, Copy, Check } from 'lucide-react'
 import Link from 'next/link'
 import { countries } from '@/lib/countries'
 import { AddressModal } from '@/components/address-modal'
-import { formatTRYPrice } from '@/lib/exchangeRate'
+import { formatTRYPrice, formatPrice } from '@/lib/exchangeRate'
 import { useLanguage } from '@/lib/language'
 
 interface Address {
@@ -42,6 +42,7 @@ export default function CheckoutPage() {
   const [showAddressModal, setShowAddressModal] = useState(false)
   const [editingAddress, setEditingAddress] = useState<Address | null>(null)
   const [paymentMethod, setPaymentMethod] = useState<string>('online') // Default to online payment
+  const [copiedIban, setCopiedIban] = useState<string | null>(null)
   
   // Guest form data
   const [guestForm, setGuestForm] = useState({
@@ -89,6 +90,10 @@ export default function CheckoutPage() {
       accountName: "Hesap Adı:",
       iban: "IBAN:",
       bankNote: "Ödeme yaptıktan sonra dekontu WhatsApp'tan gönderebilirsiniz.",
+      tryAccount: "Türk Lirası Hesabı:",
+      usdAccount: "Dolar Hesabı:",
+      copyButton: "Kopyala",
+      copiedText: "Kopyalandı!",
       orderSummary: "Sipariş Özeti",
       productCount: "Ürün Sayısı:",
       subtotal: "Ara Toplam:",
@@ -107,7 +112,8 @@ export default function CheckoutPage() {
       addressCreateError: "Adres oluşturulurken bir hata oluştu:",
       generalError: "Bir hata oluştu. Lütfen tekrar deneyin.",
       shippingCost: "Kargo Ücreti",
-      shippingCategory: "Kargo"
+      shippingCategory: "Kargo",
+      items: "adet"
     },
     en: {
       emptyCart: "Your Cart is Empty",
@@ -142,6 +148,10 @@ export default function CheckoutPage() {
       accountName: "Account Name:",
       iban: "IBAN:",
       bankNote: "You can send the receipt via WhatsApp after payment.",
+      tryAccount: "Turkish Lira Account:",
+      usdAccount: "US Dollar Account:",
+      copyButton: "Copy",
+      copiedText: "Copied!",
       orderSummary: "Order Summary",
       productCount: "Product Count:",
       subtotal: "Subtotal:",
@@ -160,7 +170,8 @@ export default function CheckoutPage() {
       addressCreateError: "An error occurred while creating address:",
       generalError: "An error occurred. Please try again.",
       shippingCost: "Shipping Cost",
-      shippingCategory: "Shipping"
+      shippingCategory: "Shipping",
+      items: "items"
     }
   }
 
@@ -185,19 +196,37 @@ export default function CheckoutPage() {
     }
   }, [selectedAddressId, guestForm.country, paymentMethod])
 
-  // Calculate shipping cost based on country
+  // Calculate shipping cost based on country and language
   const getShippingCost = () => {
-    if (user) {
-      // Login user - check selected address
-      const selectedAddress = addresses.find(addr => addr.id === selectedAddressId)
-      if (selectedAddress) {
-        return selectedAddress.country === 'Türkiye' ? 200 : 1000
-      }
+    const isTurkey = user 
+      ? addresses.find(addr => addr.id === selectedAddressId)?.country === 'Türkiye'
+      : guestForm.country === 'Türkiye'
+    
+    if (language === 'en') {
+      // English: Show in USD
+      return isTurkey ? 5 : 30
     } else {
-      // Guest user - check form country
-      return guestForm.country === 'Türkiye' ? 200 : 1000
+      // Turkish: Show in TRY
+      return isTurkey ? 200 : 1000
     }
-    return 200 // Default to Turkey shipping
+  }
+
+  // Calculate shipping cost in TRY for payment processing
+  const getShippingCostTRY = () => {
+    const isTurkey = user 
+      ? addresses.find(addr => addr.id === selectedAddressId)?.country === 'Türkiye'
+      : guestForm.country === 'Türkiye'
+    
+    return isTurkey ? 200 : 1000 // Always return TRY values for payment processing
+  }
+
+  // Calculate shipping cost in USD for English orders
+  const getShippingCostUSD = () => {
+    const isTurkey = user 
+      ? addresses.find(addr => addr.id === selectedAddressId)?.country === 'Türkiye'
+      : guestForm.country === 'Türkiye'
+    
+    return isTurkey ? 5 : 30 // Always return USD values for English orders
   }
 
   // Check if user is logged in
@@ -288,6 +317,16 @@ export default function CheckoutPage() {
     setShowAddressModal(true)
   }
 
+  const handleCopyIban = async (iban: string) => {
+    try {
+      await navigator.clipboard.writeText(iban)
+      setCopiedIban(iban)
+      setTimeout(() => setCopiedIban(null), 2000) // Reset after 2 seconds
+    } catch (error) {
+      console.error('Failed to copy IBAN:', error)
+    }
+  }
+
   const handleProceedToPayment = async () => {
     try {
       // Validate required fields
@@ -321,11 +360,12 @@ export default function CheckoutPage() {
         // Create order directly for bank transfer
         const orderData = {
           userId: user ? user.id : null,
-          totalPrice: getTotalPrice() + getShippingCost(),
+          totalPrice: getTotalPrice() + getShippingCostTRY(),
           status: 'received',
           paymentStatus: 'pending',
           paymentMethod: 'bank_transfer',
           shippingAddress: shippingAddress,
+          language: language,
           items: [
             ...items.map(item => ({
               productId: item.id,
@@ -347,7 +387,7 @@ export default function CheckoutPage() {
             {
               productId: 'shipping',
               productName: t_content.shippingCost,
-              productPrice: getShippingCost(),
+              productPrice: getShippingCost(), // Dil bazlı değer
               productImage: null,
               quantity: 1,
               size: null,
@@ -358,7 +398,7 @@ export default function CheckoutPage() {
               categoryName: t_content.shippingCategory,
               brandName: null,
               isShipping: true,
-              shippingCost: getShippingCost()
+              shippingCost: language === 'en' ? getShippingCostUSD() : getShippingCostTRY()
             }
           ]
         }
@@ -395,7 +435,7 @@ export default function CheckoutPage() {
         })
       }
 
-      const totalPrice = getTotalPrice() + getShippingCost()
+      const totalPrice = getTotalPrice() + getShippingCostTRY()
       const basketId = `basket_${Date.now()}`
 
       // Prepare Iyzico request
@@ -462,7 +502,7 @@ export default function CheckoutPage() {
             name: t_content.shippingCategory,
             category1: t_content.shippingCategory,
             itemType: 'PHYSICAL',
-            price: getShippingCost().toFixed(2)
+            price: getShippingCostTRY().toFixed(2)
           }
         ]
       }
@@ -477,6 +517,7 @@ export default function CheckoutPage() {
         paymentStatus: 'pending',
         paymentMethod: 'iyzico',
         shippingAddress: shippingAddress,
+        language: 'tr', // Iyzico için her zaman Türkçe
         items: [
           ...items.map(item => ({
             productId: item.id,
@@ -498,7 +539,7 @@ export default function CheckoutPage() {
           {
             productId: 'shipping',
             productName: t_content.shippingCost,
-            productPrice: getShippingCost(),
+            productPrice: getShippingCost(), // Dil bazlı değer
             productImage: null,
             quantity: 1,
             size: null,
@@ -509,7 +550,7 @@ export default function CheckoutPage() {
             categoryName: t_content.shippingCategory,
             brandName: null,
             isShipping: true,
-            shippingCost: getShippingCost()
+              shippingCost: language === 'en' ? getShippingCostUSD() : getShippingCostTRY()
           }
         ]
       }
@@ -846,11 +887,59 @@ export default function CheckoutPage() {
                 
                 {paymentMethod === 'bank_transfer' && (
                   <div className="mt-4 p-4 bg-blue-50 border border-blue-200 rounded-lg">
-                    <h5 className="font-medium text-blue-900 mb-2">{t_content.bankInfo}</h5>
-                    <div className="text-sm text-blue-800 space-y-1">
-                      <p><strong>{t_content.bank}</strong> Türkiye İş Bankası</p>
-                      <p><strong>{t_content.accountName}</strong> Ozan Marin Denizcilik</p>
-                      <p><strong>{t_content.iban}</strong> TR12 0006 4000 0011 2345 6789 01</p>
+                    <h5 className="font-medium text-blue-900 mb-3">{t_content.bankInfo}</h5>
+                    <div className="text-sm text-blue-800 space-y-3">
+                      <p><strong>{t_content.bank}</strong> Ziraat Bankası</p>
+                      <p><strong>{t_content.accountName}</strong> Abdulkadir Ozan</p>
+                      
+                      <div className="space-y-2">
+                        <div className="p-3 bg-white rounded border">
+                          <div className="flex items-center justify-between mb-1">
+                            <p className="font-medium text-blue-900">{t_content.tryAccount}</p>
+                            <button
+                              onClick={() => handleCopyIban('TR24 0001 0025 7668 8660 7650 05')}
+                              className="flex items-center space-x-1 text-xs text-blue-600 hover:text-blue-800 transition-colors"
+                            >
+                              {copiedIban === 'TR24 0001 0025 7668 8660 7650 05' ? (
+                                <>
+                                  <Check className="w-3 h-3" />
+                                  <span>{t_content.copiedText}</span>
+                                </>
+                              ) : (
+                                <>
+                                  <Copy className="w-3 h-3" />
+                                  <span>{t_content.copyButton}</span>
+                                </>
+                              )}
+                            </button>
+                          </div>
+                          <p className="font-mono text-sm">TR24 0001 0025 7668 8660 7650 05</p>
+                        </div>
+                        
+                        <div className="p-3 bg-white rounded border">
+                          <div className="flex items-center justify-between mb-1">
+                            <p className="font-medium text-blue-900">{t_content.usdAccount}</p>
+                            <button
+                              onClick={() => handleCopyIban('TR94 0001 0025 7668 8660 7650 06')}
+                              className="flex items-center space-x-1 text-xs text-blue-600 hover:text-blue-800 transition-colors"
+                            >
+                              {copiedIban === 'TR94 0001 0025 7668 8660 7650 06' ? (
+                                <>
+                                  <Check className="w-3 h-3" />
+                                  <span>{t_content.copiedText}</span>
+                                </>
+                              ) : (
+                                <>
+                                  <Copy className="w-3 h-3" />
+                                  <span>{t_content.copyButton}</span>
+                                </>
+                              )}
+                            </button>
+                          </div>
+                          <p className="font-mono text-sm">TR94 0001 0025 7668 8660 7650 06</p>
+                        </div>
+                      </div>
+                      
                       <p className="text-xs text-blue-600 mt-2">
                         {t_content.bankNote}
                       </p>
@@ -870,20 +959,20 @@ export default function CheckoutPage() {
               <CardContent className="space-y-4">
                 <div className="flex justify-between text-sm">
                   <span>{t_content.productCount}</span>
-                  <span>{getTotalItems()} {language === 'tr' ? 'adet' : 'items'}</span>
+                  <span>{getTotalItems()} {t_content.items}</span>
                 </div>
                 
                 <div className="flex justify-between text-sm">
                   <span>{t_content.subtotal}</span>
-                  <span>{formatTRYPrice(getTotalPrice())}</span>
+                  <span>{formatPrice(getTotalPrice(), language)}</span>
                 </div>
                 
                 <div className="flex justify-between text-sm">
                   <span>{t_content.shipping}</span>
                   <div className="text-right">
-                    <div>{formatTRYPrice(getShippingCost())}</div>
+                    <div>{formatPrice(getShippingCost(), language)}</div>
                     <div className="text-gray-500 text-xs">
-                      {getShippingCost() === 200 
+                      {(language === 'tr' ? getShippingCost() === 200 : getShippingCost() === 5)
                         ? t_content.shippingNote
                         : t_content.shippingNoteIntl
                       }
@@ -894,7 +983,7 @@ export default function CheckoutPage() {
                 <div className="border-t pt-4">
                   <div className="flex justify-between text-lg font-bold">
                     <span>{t_content.total}</span>
-                    <span>{formatTRYPrice(getTotalPrice() + getShippingCost())}</span>
+                    <span>{formatPrice(getTotalPrice() + getShippingCost(), language)}</span>
                   </div>
                 </div>
 

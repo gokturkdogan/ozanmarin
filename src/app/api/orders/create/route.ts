@@ -12,6 +12,7 @@ export async function POST(request: NextRequest) {
       paymentStatus = 'pending',
       paymentMethod = 'bank_transfer',
       shippingAddress,
+      language = 'tr',
       items
     } = body
 
@@ -43,6 +44,7 @@ export async function POST(request: NextRequest) {
         paymentMethod: paymentMethod,
         iyzicoPaymentId: paymentMethod === 'iyzico' ? body.paymentId : null,
         shippingAddress: shippingAddress,
+        language: language,
         items: {
           create: items.map((item: any) => ({
             productId: item.productId,

@@ -86,6 +86,7 @@ model Order {
   iyzicoPaymentId String?
   iyzicoToken     String?     // Iyzico token for callback lookup
   shippingAddress Json
+  language        String      @default("tr") // Order language: tr, en
   // Kargo bilgileri
   shippingCompany String?     // ups, yurtici
   trackingNumber  String?     // Kargo takip numarası

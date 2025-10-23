@@ -35,6 +35,7 @@ interface Order {
   paymentStatus: string
   paymentMethod?: string
   iyzicoPaymentId?: string
+  language?: string
   shippingAddress: any
   shippingCompany?: string
   trackingNumber?: string
@@ -289,23 +290,16 @@ export default function AdminOrdersPage() {
     }
   }
 
-  const downloadFile = async (url: string, filename: string) => {
-    try {
-      const response = await fetch(url)
-      const blob = await response.blob()
-      const downloadUrl = window.URL.createObjectURL(blob)
-      const link = document.createElement('a')
-      link.href = downloadUrl
-      link.download = filename
-      document.body.appendChild(link)
-      link.click()
-      document.body.removeChild(link)
-      window.URL.revokeObjectURL(downloadUrl)
-    } catch (error) {
-      console.error('Download error:', error)
-      // Fallback: open in new tab
-      window.open(url, '_blank')
+  // OrderItem'ları toplayarak sipariş toplamını hesapla
+  const calculateOrderTotal = (order: Order) => {
+    // Sadece İngilizce siparişlerde OrderItem'ları topla
+    if (!order.items || order.items.length === 0) {
+      return order.totalPrice
     }
+    
+    return order.items.reduce((total, item) => {
+      return total + (item.productPrice || 0)
+    }, 0)
   }
 
   if (isLoading) {
@@ -748,7 +742,12 @@ export default function AdminOrdersPage() {
                             {item.isShipping && <span className="text-xs text-orange-600 ml-2">(Kargo)</span>}
                           </h4>
                           <div className="text-sm text-gray-600 space-y-1 mt-1">
-                            <p>{item.quantity} adet × ₺{(parseFloat(item.productPrice.toString()) || 0).toLocaleString('tr-TR')}</p>
+                            <p>
+                              {item.quantity} adet × {selectedOrder.language === 'en' 
+                                ? `$${(item.productPrice || 0).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
+                                : `₺${(item.productPrice || 0).toLocaleString('tr-TR')}`
+                              }
+                            </p>
                             {item.categoryName && (
                               <p className="text-xs text-gray-500">Kategori: {item.categoryName}</p>
                             )}
@@ -762,7 +761,12 @@ export default function AdminOrdersPage() {
                               <p className="text-xs text-gray-500">Renk: {item.color}</p>
                             )}
                                         {item.hasEmbroidery && (
-                                          <p className="text-xs text-blue-600">✓ Nakışlı (+₺{(parseFloat(item.embroideryPrice?.toString() || '0')).toLocaleString('tr-TR')})</p>
+                                          <p className="text-xs text-blue-600">
+                                            ✓ Nakışlı (+{selectedOrder.language === 'en' 
+                                              ? `$${(item.embroideryPrice || 0).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
+                                              : `₺${(item.embroideryPrice || 0).toLocaleString('tr-TR')}`
+                                            })
+                                          </p>
                                         )}
                                         {item.hasEmbroidery && item.embroideryFile && (
                                           <div className="mt-2">
@@ -781,14 +785,22 @@ export default function AdminOrdersPage() {
                                           </div>
                                         )}
                             {item.isShipping && (
-                              <p className="text-xs text-orange-600">🚚 Kargo Ücreti</p>
+                              <p className="text-xs text-orange-600">
+                                🚚 Kargo Ücreti: {selectedOrder.language === 'en' 
+                                  ? `$${(item.shippingCost || 0).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
+                                  : `₺${(item.shippingCost || 0).toLocaleString('tr-TR')}`
+                                }
+                              </p>
                             )}
                           </div>
                         </div>
                         
                         <div className="text-right">
                           <p className="font-semibold text-gray-900">
-                            ₺{(((parseFloat(item.productPrice.toString()) || 0) + (parseFloat(item.embroideryPrice?.toString() || '0'))) * item.quantity).toLocaleString('tr-TR')}
+                            {selectedOrder.language === 'en' 
+                              ? `$${(item.productPrice || 0).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
+                              : `₺${(item.productPrice || 0).toLocaleString('tr-TR')}`
+                            }
                           </p>
                         </div>
                       </div>

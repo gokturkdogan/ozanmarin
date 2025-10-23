@@ -4,7 +4,9 @@ import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { CheckCircle, Package, Truck, Home, ShoppingCart, ChevronDown, ChevronUp, MapPin, CreditCard, Calendar, User, Phone, Mail } from 'lucide-react'
+import { CheckCircle, Package, Truck, Home, ShoppingCart, ChevronDown, ChevronUp, MapPin, CreditCard, Calendar, User, Phone, Mail, Copy, Check } from 'lucide-react'
+import { useLanguage } from '@/lib/language'
+import { formatPrice } from '@/lib/exchangeRate'
 
 interface OrderItem {
   id: string
@@ -33,6 +35,7 @@ interface Order {
   paymentStatus: string
   paymentMethod?: string
   createdAt: string
+  language?: string
   items: OrderItem[]
   shippingAddress?: any
   shippingCompany?: string
@@ -48,22 +51,118 @@ export default function OrdersPage() {
   const [orders, setOrders] = useState<Order[]>([])
   const [isLoading, setIsLoading] = useState(true)
   const [expandedOrders, setExpandedOrders] = useState<Set<string>>(new Set())
+  const [copiedIban, setCopiedIban] = useState<string | null>(null)
 
-  useEffect(() => {
-    fetchOrders()
-  }, [])
+  const { language, t } = useLanguage()
 
-  const fetchOrders = async () => {
-    try {
-      const response = await fetch('/api/orders')
-      const data = await response.json()
-      setOrders(data.orders || [])
-    } catch (error) {
-      console.error('Error fetching orders:', error)
-    } finally {
-      setIsLoading(false)
+  // Dil bazlı içerik
+  const content = {
+    tr: {
+      loading: "Siparişler yükleniyor...",
+      pageTitle: "Siparişlerim",
+      pageDesc: "Tüm siparişlerinizi buradan takip edebilirsiniz",
+      noOrders: "Henüz siparişiniz yok",
+      noOrdersDesc: "İlk siparişinizi vermek için ürünlerimizi keşfetmeye başlayın.",
+      viewProducts: "Ürünleri İncele",
+      orderNumber: "Sipariş #",
+      received: "Alındı",
+      processing: "Hazırlanıyor",
+      shipped: "Kargoya Verildi",
+      delivered: "Teslim Edildi",
+      cancelled: "İptal Edildi",
+      paymentPending: "Ödeme Bekliyor",
+      paymentPaid: "Ödendi",
+      paymentFailed: "Ödeme Başarısız",
+      paymentRefunded: "İade Edildi",
+      onlinePayment: "Online Ödeme",
+      bankTransfer: "Havale/EFT",
+      orderDetails: "Sipariş Detayları",
+      shippingAddress: "Teslimat Adresi",
+      shippingInfo: "Kargo Bilgileri",
+      shippingCompany: "Kargo Şirketi:",
+      trackingNumber: "Takip Numarası:",
+      trackPackage: "Kargom Nerede? - Yurtiçi Kargo'da Takip Et",
+      orderDate: "Sipariş Tarihi:",
+      total: "Toplam:",
+      payment: "Ödeme:",
+      items: "adet",
+      category: "Kategori:",
+      brand: "Marka:",
+      size: "Boyut:",
+      color: "Renk:",
+      embroidery: "✓ Nakışlı",
+      shippingCost: "🚚 Kargo Ücreti",
+      shipping: "(Kargo)",
+      loadingDetails: "Sipariş detayları yükleniyor...",
+      addressNotFound: "Teslimat adresi bilgisi bulunamadı",
+      paymentPending: "Ödeme Bekliyor",
+      paymentPendingDesc: "Halen ödeme yapmadıysanız, aşağıdaki hesap bilgilerine ödemenizi yapabilirsiniz:",
+      bankTransferInfo: "Banka Havalesi Bilgileri",
+      bank: "Banka:",
+      accountName: "Hesap Adı:",
+      tryAccount: "Türk Lirası Hesabı:",
+      usdAccount: "Dolar Hesabı:",
+      copyButton: "Kopyala",
+      copiedText: "Kopyalandı!",
+      bankNote: "Ödeme yaptıktan sonra dekontu WhatsApp'tan gönderebilirsiniz."
+    },
+    en: {
+      loading: "Loading orders...",
+      pageTitle: "My Orders",
+      pageDesc: "Track all your orders from here",
+      noOrders: "No orders yet",
+      noOrdersDesc: "Start exploring our products to place your first order.",
+      viewProducts: "View Products",
+      orderNumber: "Order #",
+      received: "Received",
+      processing: "Processing",
+      shipped: "Shipped",
+      delivered: "Delivered",
+      cancelled: "Cancelled",
+      paymentPending: "Payment Pending",
+      paymentPaid: "Paid",
+      paymentFailed: "Payment Failed",
+      paymentRefunded: "Refunded",
+      onlinePayment: "Online Payment",
+      bankTransfer: "Bank Transfer",
+      orderDetails: "Order Details",
+      shippingAddress: "Shipping Address",
+      shippingInfo: "Shipping Information",
+      shippingCompany: "Shipping Company:",
+      trackingNumber: "Tracking Number:",
+      trackPackage: "Track Package - Yurtiçi Cargo",
+      orderDate: "Order Date:",
+      total: "Total:",
+      payment: "Payment:",
+      items: "items",
+      category: "Category:",
+      brand: "Brand:",
+      size: "Size:",
+      color: "Color:",
+      embroidery: "✓ Embroidered",
+      shippingCost: "🚚 Shipping Cost",
+      shipping: "(Shipping)",
+      loadingDetails: "Loading order details...",
+      addressNotFound: "Shipping address information not found",
+      paymentPending: "Payment Pending",
+      paymentPendingDesc: "If you haven't made the payment yet, you can make your payment to the following account details:",
+      bankTransferInfo: "Bank Transfer Information",
+      bank: "Bank:",
+      accountName: "Account Name:",
+      tryAccount: "Turkish Lira Account:",
+      usdAccount: "US Dollar Account:",
+      copyButton: "Copy",
+      copiedText: "Copied!",
+      bankNote: "You can send the receipt via WhatsApp after payment."
     }
   }
+
+  const t_content = content[language]
+
+  useEffect(() => {
+    console.log('OrdersPage useEffect triggered')
+    fetchOrders()
+  }, [])
 
   const toggleOrderExpansion = (orderId: string) => {
     const newExpanded = new Set(expandedOrders)
@@ -75,18 +174,36 @@ export default function OrdersPage() {
     setExpandedOrders(newExpanded)
   }
 
+  const fetchOrders = async () => {
+    console.log('fetchOrders function called')
+    try {
+      console.log('Starting fetch to /api/orders')
+      const response = await fetch('/api/orders')
+      console.log('Response status:', response.status)
+      const data = await response.json()
+      console.log('Orders data:', data)
+      setOrders(data.orders || [])
+      console.log('Orders set successfully')
+    } catch (error) {
+      console.error('Error fetching orders:', error)
+    } finally {
+      console.log('Setting isLoading to false')
+      setIsLoading(false)
+    }
+  }
+
   const getStatusText = (status: string) => {
     switch (status) {
       case 'received':
-        return 'Alındı'
+        return t_content.received
       case 'processing':
-        return 'Hazırlanıyor'
+        return t_content.processing
       case 'shipped':
-        return 'Kargoya Verildi'
+        return t_content.shipped
       case 'delivered':
-        return 'Teslim Edildi'
+        return t_content.delivered
       case 'cancelled':
-        return 'İptal Edildi'
+        return t_content.cancelled
       default:
         return status
     }
@@ -95,13 +212,13 @@ export default function OrdersPage() {
   const getPaymentStatusText = (paymentStatus: string) => {
     switch (paymentStatus) {
       case 'pending':
-        return 'Ödeme Bekliyor'
+        return t_content.paymentPending
       case 'paid':
-        return 'Ödendi'
+        return t_content.paymentPaid
       case 'failed':
-        return 'Ödeme Başarısız'
+        return t_content.paymentFailed
       case 'refunded':
-        return 'İade Edildi'
+        return t_content.paymentRefunded
       default:
         return paymentStatus
     }
@@ -139,12 +256,37 @@ export default function OrdersPage() {
     }
   }
 
+  // IBAN kopyalama fonksiyonu
+  const handleCopyIban = async (iban: string) => {
+    try {
+      await navigator.clipboard.writeText(iban)
+      setCopiedIban(iban)
+      setTimeout(() => setCopiedIban(null), 2000) // Reset after 2 seconds
+    } catch (error) {
+      console.error('Failed to copy IBAN:', error)
+    }
+  }
+
+  // OrderItem'ları toplayarak sipariş toplamını hesapla
+  const calculateOrderTotal = (order: Order) => {
+    if (!order.items || order.items.length === 0) {
+      return order.totalPrice // Fallback olarak totalPrice kullan
+    }
+    
+    return order.items.reduce((total, item) => {
+      const itemPrice = parseFloat(item.productPrice) || parseFloat(item.price) || 0
+      const embroideryPrice = parseFloat(item.embroideryPrice) || 0
+      const itemTotal = (itemPrice + embroideryPrice) * item.quantity
+      return total + itemTotal
+    }, 0)
+  }
+
   if (isLoading) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="text-center">
           <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-primary mx-auto"></div>
-          <p className="mt-4 text-gray-600">Siparişler yükleniyor...</p>
+          <p className="mt-4 text-gray-600">{t_content.loading}</p>
         </div>
       </div>
     )
@@ -155,22 +297,22 @@ export default function OrdersPage() {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Header */}
         <div className="mb-8">
-          <h1 className="text-3xl font-bold text-gray-900 mb-2">Siparişlerim</h1>
+          <h1 className="text-3xl font-bold text-gray-900 mb-2">{t_content.pageTitle}</h1>
           <p className="text-lg text-gray-600">
-            Tüm siparişlerinizi buradan takip edebilirsiniz
+            {t_content.pageDesc}
           </p>
         </div>
 
         {orders.length === 0 ? (
           <div className="text-center py-16">
             <ShoppingCart className="w-24 h-24 text-gray-300 mx-auto mb-6" />
-            <h2 className="text-2xl font-bold text-gray-900 mb-4">Henüz siparişiniz yok</h2>
+            <h2 className="text-2xl font-bold text-gray-900 mb-4">{t_content.noOrders}</h2>
             <p className="text-gray-600 mb-8">
-              İlk siparişinizi vermek için ürünlerimizi keşfetmeye başlayın.
+              {t_content.noOrdersDesc}
             </p>
             <Link href="/products">
               <Button size="lg">
-                Ürünleri İncele
+                {t_content.viewProducts}
               </Button>
             </Link>
           </div>
@@ -191,7 +333,7 @@ export default function OrdersPage() {
                           {getStatusIcon(order.status)}
                           <div>
                             <CardTitle className="text-lg">
-                              Sipariş #{order.id.slice(-8)}
+                              {t_content.orderNumber}{order.id.slice(-8)}
                             </CardTitle>
                             <div className="flex items-center space-x-3 mt-2">
                               {/* Sipariş Statüsü Badge */}
@@ -222,7 +364,7 @@ export default function OrdersPage() {
                               {/* Ödeme Yöntemi */}
                               {order.paymentMethod && (
                                 <span className="text-xs text-gray-500 bg-gray-100 px-2 py-1 rounded">
-                                  {order.paymentMethod === 'iyzico' ? 'Online Ödeme' : 'Havale/EFT'}
+                                  {order.paymentMethod === 'iyzico' ? t_content.onlinePayment : t_content.bankTransfer}
                                 </span>
                               )}
                             </div>
@@ -233,10 +375,13 @@ export default function OrdersPage() {
                       <div className="flex items-center space-x-4">
                         <div className="text-right">
                           <p className="text-lg font-bold text-primary">
-                            ₺{order.totalPrice.toLocaleString('tr-TR')}
+                            {order.language === 'en' 
+                              ? `$${calculateOrderTotal(order).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
+                              : `₺${order.totalPrice.toLocaleString('tr-TR')}`
+                            }
                           </p>
                           <p className="text-sm text-gray-500">
-                            {new Date(order.createdAt).toLocaleDateString('tr-TR')}
+                            {new Date(order.createdAt).toLocaleDateString(order.language === 'en' ? 'en-US' : 'tr-TR')}
                           </p>
                         </div>
                         <Button variant="ghost" size="sm">
@@ -288,27 +433,27 @@ export default function OrdersPage() {
                                     <div className="flex-1">
                                       <h4 className="font-medium text-gray-900">
                                         {item.productName || item.name}
-                                        {item.isShipping && <span className="text-xs text-orange-600 ml-2">(Kargo)</span>}
+                                        {item.isShipping && <span className="text-xs text-orange-600 ml-2">{t_content.shipping}</span>}
                                       </h4>
                                       <div className="text-sm text-gray-600 space-y-1 mt-1">
-                                        <p>{item.quantity} adet × ₺{(parseFloat(item.productPrice) || parseFloat(item.price) || 0).toLocaleString('tr-TR')}</p>
+                                        <p>{item.quantity} {t_content.items} × {formatPrice(parseFloat(item.productPrice) || parseFloat(item.price) || 0, order.language || language)}</p>
                                         {item.categoryName && (
-                                          <p className="text-xs text-gray-500">Kategori: {item.categoryName}</p>
+                                          <p className="text-xs text-gray-500">{t_content.category} {item.categoryName}</p>
                                         )}
                                         {item.brandName && (
-                                          <p className="text-xs text-gray-500">Marka: {item.brandName}</p>
+                                          <p className="text-xs text-gray-500">{t_content.brand} {item.brandName}</p>
                                         )}
                                         {item.size && (
-                                          <p className="text-xs text-gray-500">Boyut: {item.size}</p>
+                                          <p className="text-xs text-gray-500">{t_content.size} {item.size}</p>
                                         )}
                                         {item.color && (
-                                          <p className="text-xs text-gray-500">Renk: {item.color}</p>
+                                          <p className="text-xs text-gray-500">{t_content.color} {item.color}</p>
                                         )}
                                         {item.hasEmbroidery && (
-                                          <p className="text-xs text-blue-600">✓ Nakışlı (+₺{(parseFloat(item.embroideryPrice) || 0).toLocaleString('tr-TR')})</p>
+                                          <p className="text-xs text-blue-600">{t_content.embroidery} (+{formatPrice(parseFloat(item.embroideryPrice) || 0, order.language || language)})</p>
                                         )}
                                         {item.isShipping && (
-                                          <p className="text-xs text-orange-600">🚚 Kargo Ücreti</p>
+                                          <p className="text-xs text-orange-600">{t_content.shippingCost}</p>
                                         )}
                                       </div>
                                     </div>
@@ -317,7 +462,7 @@ export default function OrdersPage() {
                                   {/* Price */}
                                   <div className="text-right ml-4">
                                     <p className="font-semibold text-gray-900">
-                                      ₺{(((parseFloat(item.productPrice) || parseFloat(item.price) || 0) + (parseFloat(item.embroideryPrice) || 0)) * item.quantity).toLocaleString('tr-TR')}
+                                      {formatPrice(((parseFloat(item.productPrice) || parseFloat(item.price) || 0) + (parseFloat(item.embroideryPrice) || 0)) * item.quantity, order.language || language)}
                                     </p>
                                   </div>
                                 </div>
@@ -325,7 +470,7 @@ export default function OrdersPage() {
                             ) : (
                               <div className="text-center py-4 text-gray-500">
                                 <Package className="w-8 h-8 mx-auto mb-2 opacity-50" />
-                                <p>Sipariş detayları yükleniyor...</p>
+                                <p>{t_content.loadingDetails}</p>
                               </div>
                             )}
                           </div>
@@ -335,7 +480,7 @@ export default function OrdersPage() {
                         <div>
                           <h3 className="font-semibold text-gray-900 mb-4 flex items-center">
                             <MapPin className="w-5 h-5 mr-2" />
-                            Teslimat Adresi
+                            {t_content.shippingAddress}
                           </h3>
                           {order.shippingAddress ? (
                             <div className="bg-gray-50 rounded-lg p-4 space-y-2">
@@ -369,7 +514,7 @@ export default function OrdersPage() {
                           ) : (
                             <div className="bg-gray-50 rounded-lg p-4 text-center text-gray-500">
                               <MapPin className="w-8 h-8 mx-auto mb-2 opacity-50" />
-                              <p>Teslimat adresi bilgisi bulunamadı</p>
+                              <p>{t_content.addressNotFound}</p>
                             </div>
                           )}
                         </div>
@@ -379,12 +524,12 @@ export default function OrdersPage() {
                           <div className="mt-6">
                             <h3 className="font-semibold text-gray-900 mb-4 flex items-center">
                               <Truck className="w-5 h-5 mr-2" />
-                              Kargo Bilgileri
+                              {t_content.shippingInfo}
                             </h3>
                             <div className="bg-blue-50 rounded-lg p-4 space-y-2">
                               {order.shippingCompany && (
                                 <div className="flex items-center justify-between">
-                                  <span className="text-sm font-medium text-gray-700">Kargo Şirketi:</span>
+                                  <span className="text-sm font-medium text-gray-700">{t_content.shippingCompany}</span>
                                   <span className="text-sm text-gray-900">
                                     {order.shippingCompany === 'ups' ? 'UPS' : 
                                      order.shippingCompany === 'yurtici' ? 'Yurtiçi Kargo' : 
@@ -394,7 +539,7 @@ export default function OrdersPage() {
                               )}
                               {order.trackingNumber && (
                                 <div className="flex items-center justify-between">
-                                  <span className="text-sm font-medium text-gray-700">Takip Numarası:</span>
+                                  <span className="text-sm font-medium text-gray-700">{t_content.trackingNumber}</span>
                                   <span className="text-sm text-gray-900 font-mono">{order.trackingNumber}</span>
                                 </div>
                               )}
@@ -409,7 +554,7 @@ export default function OrdersPage() {
                                     className="inline-flex items-center text-sm text-blue-600 hover:text-blue-800 hover:underline cursor-pointer"
                                   >
                                     <Truck className="w-4 h-4 mr-2" />
-                                    Kargom Nerede? - Yurtiçi Kargo'da Takip Et
+                                    {t_content.trackPackage}
                                   </a>
                                 </div>
                               )}
@@ -423,7 +568,7 @@ export default function OrdersPage() {
                         <div className="flex justify-between items-center">
                           <div className="flex items-center space-x-2 text-sm text-gray-600">
                             <Calendar className="w-4 h-4" />
-                            <span>Sipariş Tarihi: {new Date(order.createdAt).toLocaleDateString('tr-TR', {
+                            <span>{t_content.orderDate} {new Date(order.createdAt).toLocaleDateString(order.language === 'en' ? 'en-US' : 'tr-TR', {
                               year: 'numeric',
                               month: 'long',
                               day: 'numeric',
@@ -433,16 +578,95 @@ export default function OrdersPage() {
                           </div>
                           <div className="text-right">
                             <p className="text-lg font-bold text-gray-900">
-                              Toplam: ₺{order.totalPrice.toLocaleString('tr-TR')}
+                              {t_content.total} {order.language === 'en' 
+                                ? `$${calculateOrderTotal(order).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
+                                : `₺${order.totalPrice.toLocaleString('tr-TR')}`
+                              }
                             </p>
                             {order.paymentMethod && (
                               <p className="text-sm text-gray-500">
-                                Ödeme: {order.paymentMethod === 'iyzico' ? 'Online Ödeme' : 'Havale/EFT'}
+                                {t_content.payment} {order.paymentMethod === 'iyzico' ? t_content.onlinePayment : t_content.bankTransfer}
                               </p>
                             )}
                           </div>
                         </div>
                       </div>
+
+                      {/* Bank Transfer Information for Pending Payments */}
+                      {order.paymentMethod === 'bank_transfer' && order.paymentStatus === 'pending' && (
+                        <div className="mt-6 pt-6 border-t border-gray-200">
+                          <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
+                            <h3 className="font-medium text-yellow-900 mb-2 flex items-center">
+                              <CreditCard className="w-5 h-5 mr-2" />
+                              {t_content.paymentPending}
+                            </h3>
+                            <p className="text-sm text-yellow-800 mb-4">
+                              {t_content.paymentPendingDesc}
+                            </p>
+                            
+                            <div className="bg-white rounded-lg p-4 space-y-3">
+                              <h4 className="font-medium text-gray-900">{t_content.bankTransferInfo}</h4>
+                              
+                              <div className="text-sm text-gray-800 space-y-2">
+                                <p><strong>{t_content.bank}</strong> Ziraat Bankası</p>
+                                <p><strong>{t_content.accountName}</strong> Abdulkadir Ozan</p>
+                                
+                                <div className="space-y-2">
+                                  <div className="p-3 bg-gray-50 rounded border">
+                                    <div className="flex items-center justify-between mb-1">
+                                      <p className="font-medium text-gray-900">{t_content.tryAccount}</p>
+                                      <button
+                                        onClick={() => handleCopyIban('TR24 0001 0025 7668 8660 7650 05')}
+                                        className="flex items-center space-x-1 text-xs text-blue-600 hover:text-blue-800 transition-colors"
+                                      >
+                                        {copiedIban === 'TR24 0001 0025 7668 8660 7650 05' ? (
+                                          <>
+                                            <Check className="w-3 h-3" />
+                                            <span>{t_content.copiedText}</span>
+                                          </>
+                                        ) : (
+                                          <>
+                                            <Copy className="w-3 h-3" />
+                                            <span>{t_content.copyButton}</span>
+                                          </>
+                                        )}
+                                      </button>
+                                    </div>
+                                    <p className="font-mono text-sm">TR24 0001 0025 7668 8660 7650 05</p>
+                                  </div>
+                                  
+                                  <div className="p-3 bg-gray-50 rounded border">
+                                    <div className="flex items-center justify-between mb-1">
+                                      <p className="font-medium text-gray-900">{t_content.usdAccount}</p>
+                                      <button
+                                        onClick={() => handleCopyIban('TR94 0001 0025 7668 8660 7650 06')}
+                                        className="flex items-center space-x-1 text-xs text-blue-600 hover:text-blue-800 transition-colors"
+                                      >
+                                        {copiedIban === 'TR94 0001 0025 7668 8660 7650 06' ? (
+                                          <>
+                                            <Check className="w-3 h-3" />
+                                            <span>{t_content.copiedText}</span>
+                                          </>
+                                        ) : (
+                                          <>
+                                            <Copy className="w-3 h-3" />
+                                            <span>{t_content.copyButton}</span>
+                                          </>
+                                        )}
+                                      </button>
+                                    </div>
+                                    <p className="font-mono text-sm">TR94 0001 0025 7668 8660 7650 06</p>
+                                  </div>
+                                </div>
+                                
+                                <p className="text-xs text-gray-600 mt-2">
+                                  {t_content.bankNote}
+                                </p>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      )}
                     </CardContent>
                   )}
                 </Card>
