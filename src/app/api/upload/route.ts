@@ -41,22 +41,38 @@ export async function POST(request: NextRequest) {
     const result = await new Promise((resolve, reject) => {
       cloudinary.uploader.upload_stream(
         {
-          resource_type: 'auto',
+          resource_type: file.type === 'application/pdf' ? 'raw' : 'auto',
           folder: 'ozan-marin/embroidery',
           public_id: `embroidery_${Date.now()}_${Math.random().toString(36).substring(7)}`,
         },
         (error, result) => {
-          if (error) reject(error)
-          else resolve(result)
+          if (error) {
+            console.error('Cloudinary upload error:', error)
+            reject(error)
+          } else {
+            console.log('Cloudinary upload success:', result)
+            console.log('Secure URL:', result?.secure_url)
+            console.log('Public ID:', result?.public_id)
+            console.log('Resource Type:', result?.resource_type)
+            resolve(result)
+          }
         }
       ).end(buffer)
     })
 
+    // PDF dosyaları için özel URL formatı
+    let fileUrl = (result as any).secure_url
+    if (file.type === 'application/pdf') {
+      // PDF için raw resource type kullanıldığında URL zaten doğru format
+      fileUrl = (result as any).secure_url
+    }
+
     return NextResponse.json({
       success: true,
-      url: (result as any).secure_url,
+      url: fileUrl,
       public_id: (result as any).public_id,
       original_name: file.name,
+      file_type: file.type,
     })
 
   } catch (error) {

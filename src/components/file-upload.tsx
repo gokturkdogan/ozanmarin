@@ -87,9 +87,11 @@ export function FileUpload({
       const result = await response.json()
 
       if (!response.ok) {
+        console.error('Upload API error:', result)
         throw new Error(result.error || 'Upload failed')
       }
 
+      console.log('Upload successful, URL:', result.url)
       setUploadedUrl(result.url)
       onFileSelect(file, result.url)
     } catch (error) {

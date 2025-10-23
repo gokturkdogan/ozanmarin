@@ -11,7 +11,7 @@ import { ArrowLeft, Plus, CreditCard, MapPin, Edit, Copy, Check } from 'lucide-r
 import Link from 'next/link'
 import { countries } from '@/lib/countries'
 import { AddressModal } from '@/components/address-modal'
-import { formatTRYPrice, formatPrice } from '@/lib/exchangeRate'
+import { formatTRYPrice, formatPrice, getUSDExchangeRate } from '@/lib/exchangeRate'
 import { useLanguage } from '@/lib/language'
 
 interface Address {
@@ -43,6 +43,7 @@ export default function CheckoutPage() {
   const [editingAddress, setEditingAddress] = useState<Address | null>(null)
   const [paymentMethod, setPaymentMethod] = useState<string>('online') // Default to online payment
   const [copiedIban, setCopiedIban] = useState<string | null>(null)
+  const [exchangeRate, setExchangeRate] = useState<number>(42.00) // Default fallback rate
   
   // Guest form data
   const [guestForm, setGuestForm] = useState({
@@ -228,6 +229,21 @@ export default function CheckoutPage() {
     
     return isTurkey ? 5 : 30 // Always return USD values for English orders
   }
+
+  // Load exchange rate
+  useEffect(() => {
+    const loadExchangeRate = async () => {
+      try {
+        const rate = await getUSDExchangeRate()
+        setExchangeRate(rate)
+      } catch (error) {
+        console.error('Failed to load exchange rate:', error)
+        // Keep default rate
+      }
+    }
+    
+    loadExchangeRate()
+  }, [])
 
   // Check if user is logged in
   useEffect(() => {
@@ -435,16 +451,19 @@ export default function CheckoutPage() {
         })
       }
 
-      const totalPrice = getTotalPrice() + getShippingCostTRY()
+      // İngilizce dilde USD tutar, Türkçe dilde TRY tutar
+      const totalPrice = language === 'en' 
+        ? getTotalPrice() + getShippingCost() // USD tutar
+        : getTotalPrice() + getShippingCostTRY() // TRY tutar
       const basketId = `basket_${Date.now()}`
 
       // Prepare Iyzico request
       const iyzicoRequest = {
-        locale: 'tr',
+        locale: language === 'en' ? 'en' : 'tr',
         conversationId: basketId,
         price: totalPrice.toFixed(2),
         paidPrice: totalPrice.toFixed(2),
-        currency: 'TRY',
+        currency: language === 'en' ? 'USD' : 'TRY',
         installment: 1,
         paymentChannel: 'WEB',
         paymentGroup: 'PRODUCT',
@@ -481,28 +500,35 @@ export default function CheckoutPage() {
           zipCode: '34000'
         },
         basketItems: [
-          ...items.map((item: any, index: number) => ({
-            id: `item_${index}`,
-            name: cleanText(item.name),
-            category1: 'Denizcilik Tekstili',
-            itemType: 'PHYSICAL',
-            price: ((item.price + (item.embroideryPrice || 0)) * item.quantity).toFixed(2),
-            // Store additional product info for callback
-            productId: item.id,
-            size: item.size,
-            color: item.color,
-            hasEmbroidery: item.hasEmbroidery,
-            embroideryFile: item.embroideryFile,
-            embroideryPrice: item.embroideryPrice,
-            categoryName: item.categoryName,
-            brandName: item.brandName
-          })),
+          ...items.map((item: any, index: number) => {
+            // İngilizce dilde USD tutar, Türkçe dilde TRY tutar
+            const itemPrice = language === 'en' 
+              ? item.price + (item.embroideryPrice || 0) // USD tutar
+              : item.price + (item.embroideryPrice || 0) // TRY tutar
+            
+            return {
+              id: `item_${index}`,
+              name: cleanText(item.name),
+              category1: 'Denizcilik Tekstili',
+              itemType: 'PHYSICAL',
+              price: (itemPrice * item.quantity).toFixed(2),
+              // Store additional product info for callback
+              productId: item.id,
+              size: item.size,
+              color: item.color,
+              hasEmbroidery: item.hasEmbroidery,
+              embroideryFile: item.embroideryFile,
+              embroideryPrice: item.embroideryPrice,
+              categoryName: item.categoryName,
+              brandName: item.brandName
+            }
+          }),
           {
             id: 'shipping',
             name: t_content.shippingCategory,
             category1: t_content.shippingCategory,
             itemType: 'PHYSICAL',
-            price: getShippingCostTRY().toFixed(2)
+            price: (language === 'en' ? getShippingCost() : getShippingCostTRY()).toFixed(2)
           }
         ]
       }
@@ -517,7 +543,7 @@ export default function CheckoutPage() {
         paymentStatus: 'pending',
         paymentMethod: 'iyzico',
         shippingAddress: shippingAddress,
-        language: 'tr', // Iyzico için her zaman Türkçe
+        language: language, // Seçilen dil
         items: [
           ...items.map(item => ({
             productId: item.id,

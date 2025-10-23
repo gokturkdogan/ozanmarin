@@ -455,6 +455,7 @@ export default function ProductPage({ params }: ProductPageProps) {
                     <label className="text-sm font-medium mb-2 block">{t.embroideryDesign}</label>
                     <FileUpload
                       onFileSelect={(file, url) => {
+                        console.log('File selected:', file?.name, 'URL:', url)
                         setEmbroideryFile(file)
                         setEmbroideryUrl(url || '')
                       }}

@@ -11,7 +11,8 @@ interface DashboardStats {
   totalBrands: number
   totalOrders: number
   totalUsers: number
-  totalRevenue: number
+  totalRevenueTRY: number
+  totalRevenueUSD: number
 }
 
 export default function AdminDashboard() {
@@ -21,7 +22,8 @@ export default function AdminDashboard() {
     totalBrands: 0,
     totalOrders: 0,
     totalUsers: 0,
-    totalRevenue: 0
+    totalRevenueTRY: 0,
+    totalRevenueUSD: 0
   })
   const [isLoading, setIsLoading] = useState(true)
 
@@ -47,8 +49,11 @@ export default function AdminDashboard() {
         usersRes.json()
       ])
 
-      const totalRevenue = ordersData.orders?.reduce((sum: number, order: any) => 
-        sum + parseFloat(order.totalPrice), 0) || 0
+      const totalRevenueTRY = ordersData.orders?.reduce((sum: number, order: any) => 
+        sum + (order.language === 'tr' || !order.language ? parseFloat(order.totalPrice) : 0), 0) || 0
+
+      const totalRevenueUSD = ordersData.orders?.reduce((sum: number, order: any) => 
+        sum + (order.language === 'en' ? parseFloat(order.totalPrice) : 0), 0) || 0
 
       setStats({
         totalProducts: productsData.products?.length || 0,
@@ -56,7 +61,8 @@ export default function AdminDashboard() {
         totalBrands: brandsData.brands?.length || 0,
         totalOrders: ordersData.orders?.length || 0,
         totalUsers: usersData.users?.length || 0,
-        totalRevenue
+        totalRevenueTRY,
+        totalRevenueUSD
       })
     } catch (error) {
       console.error('Error fetching dashboard stats:', error)
@@ -97,10 +103,16 @@ export default function AdminDashboard() {
       color: 'text-indigo-600'
     },
     {
-      title: 'Toplam Gelir',
-      value: `₺${stats.totalRevenue.toLocaleString()}`,
+      title: 'TL Gelir',
+      value: `₺${stats.totalRevenueTRY.toLocaleString()}`,
       icon: DollarSign,
       color: 'text-emerald-600'
+    },
+    {
+      title: 'USD Gelir',
+      value: `$${stats.totalRevenueUSD.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`,
+      icon: DollarSign,
+      color: 'text-green-600'
     }
   ]
 
@@ -113,8 +125,8 @@ export default function AdminDashboard() {
         </div>
 
         {isLoading ? (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {[...Array(6)].map((_, i) => (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+            {[...Array(7)].map((_, i) => (
               <Card key={i} className="animate-pulse">
                 <CardHeader className="pb-2">
                   <div className="h-4 bg-gray-200 rounded w-1/2"></div>
@@ -126,7 +138,7 @@ export default function AdminDashboard() {
             ))}
           </div>
         ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
             {statCards.map((stat, index) => {
               const Icon = stat.icon
               return (

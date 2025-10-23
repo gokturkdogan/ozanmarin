@@ -290,18 +290,6 @@ export default function AdminOrdersPage() {
     }
   }
 
-  // OrderItem'ları toplayarak sipariş toplamını hesapla
-  const calculateOrderTotal = (order: Order) => {
-    // Sadece İngilizce siparişlerde OrderItem'ları topla
-    if (!order.items || order.items.length === 0) {
-      return order.totalPrice
-    }
-    
-    return order.items.reduce((total, item) => {
-      return total + (item.productPrice || 0)
-    }, 0)
-  }
-
   if (isLoading) {
     return (
       <div className="container mx-auto px-4 py-8">
@@ -457,7 +445,7 @@ export default function AdminOrdersPage() {
                     
                     <div className="mt-3">
                       <p className="text-lg font-bold text-primary">
-                        ₺{order.totalPrice.toLocaleString('tr-TR')}
+                        {(order.language || 'tr') === 'en' ? '$' : '₺'}{order.totalPrice.toLocaleString((order.language || 'tr') === 'en' ? 'en-US' : 'tr-TR')}
                       </p>
                       <p className="text-sm text-gray-500">
                         {order.items.length} ürün, {order.items.reduce((sum, item) => sum + item.quantity, 0)} adet
@@ -589,7 +577,7 @@ export default function AdminOrdersPage() {
                       <div className="flex justify-between">
                         <span className="text-gray-600">Toplam Tutar:</span>
                         <span className="font-bold text-lg text-primary">
-                          ₺{selectedOrder.totalPrice.toLocaleString('tr-TR')}
+                          {(selectedOrder.language || 'tr') === 'en' ? '$' : '₺'}{selectedOrder.totalPrice.toLocaleString((selectedOrder.language || 'tr') === 'en' ? 'en-US' : 'tr-TR')}
                         </span>
                       </div>
                     </CardContent>
@@ -743,7 +731,7 @@ export default function AdminOrdersPage() {
                           </h4>
                           <div className="text-sm text-gray-600 space-y-1 mt-1">
                             <p>
-                              {item.quantity} adet × {selectedOrder.language === 'en' 
+                              {item.quantity} adet × {((selectedOrder.language || 'tr') === 'en') 
                                 ? `$${(item.productPrice || 0).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
                                 : `₺${(item.productPrice || 0).toLocaleString('tr-TR')}`
                               }
@@ -762,7 +750,7 @@ export default function AdminOrdersPage() {
                             )}
                                         {item.hasEmbroidery && (
                                           <p className="text-xs text-blue-600">
-                                            ✓ Nakışlı (+{selectedOrder.language === 'en' 
+                                            ✓ Nakışlı (+{((selectedOrder.language || 'tr') === 'en') 
                                               ? `$${(item.embroideryPrice || 0).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
                                               : `₺${(item.embroideryPrice || 0).toLocaleString('tr-TR')}`
                                             })
@@ -770,23 +758,22 @@ export default function AdminOrdersPage() {
                                         )}
                                         {item.hasEmbroidery && item.embroideryFile && (
                                           <div className="mt-2">
-                                            <button
-                                              onClick={() => {
-                                                const filename = `nakis-${item.productName}-${item.id}.${item.embroideryFile.split('.').pop()}`
-                                                downloadFile(item.embroideryFile, filename)
-                                              }}
-                                              className="inline-flex items-center text-xs text-blue-600 hover:text-blue-800 hover:underline cursor-pointer bg-transparent border-none p-0"
+                                            <a
+                                              href={item.embroideryFile}
+                                              target="_blank"
+                                              rel="noopener noreferrer"
+                                              className="inline-flex items-center text-xs text-blue-600 hover:text-blue-800 hover:underline cursor-pointer"
                                             >
                                               <svg className="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
                                               </svg>
-                                              Nakış Dosyasını İndir
-                                            </button>
+                                              Nakış Dosyasını Görüntüle
+                                            </a>
                                           </div>
                                         )}
                             {item.isShipping && (
                               <p className="text-xs text-orange-600">
-                                🚚 Kargo Ücreti: {selectedOrder.language === 'en' 
+                                🚚 Kargo Ücreti: {((selectedOrder.language || 'tr') === 'en') 
                                   ? `$${(item.shippingCost || 0).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
                                   : `₺${(item.shippingCost || 0).toLocaleString('tr-TR')}`
                                 }
@@ -797,7 +784,7 @@ export default function AdminOrdersPage() {
                         
                         <div className="text-right">
                           <p className="font-semibold text-gray-900">
-                            {selectedOrder.language === 'en' 
+                            {((selectedOrder.language || 'tr') === 'en') 
                               ? `$${(item.productPrice || 0).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
                               : `₺${(item.productPrice || 0).toLocaleString('tr-TR')}`
                             }
