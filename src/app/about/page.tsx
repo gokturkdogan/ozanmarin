@@ -13,11 +13,12 @@ export default function AboutPage() {
       pageTitle: "Hakkımızda",
       heroTitle: "Ozan Marin",
       heroSubtitle: "Hakkımızda",
-      heroDescription: "Denizcilik tekstili konusunda uzman ekibimizle, yat ve tekne sahiplerine premium kalitede çözümler sunuyoruz.",
-      storyTitle: "Hikayemiz",
-      story1: "Ozan Marin, denizcilik tutkusu olan bir ekibin kurduğu bir markadır. Yıllarca denizde geçirdiğimiz zamanlar boyunca, yat ve tekne sahiplerinin karşılaştığı tekstil ihtiyaçlarını yakından gözlemledik.",
-      story2: "Deniz koşullarının zorluğunu, UV ışınlarının zararlı etkilerini ve tuzlu suyun malzemeler üzerindeki yıpratıcı etkisini biliyoruz. Bu deneyimlerimizden yola çıkarak, sadece denizcilik için tasarlanmış premium kalitede ürünler üretmeye karar verdik.",
-      story3: "Bugün, Türkiye'nin önde gelen denizcilik tekstili markalarından biri olarak, müşterilerimize en kaliteli ve dayanıklı ürünleri sunmaya devam ediyoruz.",
+      heroDescription: "2021 yılında kurulan Ozan Marin, tekneler ve yatlar için yedek parça ve tekstil üretimi konusunda uzmanlaşmış bir firmadır.",
+      storyTitle: "Hakkımızda",
+      story1: "Ozan Marin, 2021 yılında Kadir Ozan tarafından kurulan ve sektördeki deneyimiyle hızla büyüyen bir tekneler ve yatlar için yedek parça ve tekstil üretimi firmasıdır. Misyonumuz, yat sahiplerine kaliteli ve güvenilir ürünler sunmak, aynı zamanda denizcilik sektöründe kaliteyi ve yenilikçi çözümleri en üst düzeye çıkarmaktır.",
+      story2: "Kuruluşumuz, teknelerin bakım ve onarım ihtiyaçlarını en yüksek standartlarda karşılamak için çeşitli yedek parçalar sunmanın yanı sıra, tekne ve yat tekstillerini de kendi bünyemizde üretmektedir. Geniş ürün yelpazemiz, her türlü ihtiyaca cevap verecek şekilde tasarlanmış olup, müşteri memnuniyetini her zaman ön planda tutmaktadır.",
+      story3: "Uluslararası pazarda da aktif olan Ozan Marin, Katar ve Amerika başta olmak üzere birçok ülkeye ihracat yapmaktadır. Her geçen gün genişleyen global müşteri portföyümüzle, dünya çapında kalitemizi kanıtlamış bir markayız.",
+      story4: "Amacımız, deniz tutkusuyla hareket eden her bireye ve kuruma, sektörün en kaliteli yedek parça ve tekstil çözümlerini sunarak, yatlarının uzun ömürlü olmasını sağlamaktır. Müşterilerimize her zaman yenilikçi, sağlam ve estetik ürünler sunmaya devam ediyoruz.",
       valuesTitle: "Değerlerimiz",
       valuesSubtitle: "İşimizi yaparken rehber aldığımız temel değerler",
       qualityTitle: "Kalite",
@@ -41,11 +42,12 @@ export default function AboutPage() {
       pageTitle: "About Us",
       heroTitle: "Ozan Marin",
       heroSubtitle: "About Us",
-      heroDescription: "With our expert team in marine textiles, we provide premium quality solutions for yacht and boat owners.",
-      storyTitle: "Our Story",
-      story1: "Ozan Marin is a brand founded by a team passionate about maritime. Over the years we've spent at sea, we've closely observed the textile needs that yacht and boat owners face.",
-      story2: "We understand the harshness of sea conditions, the harmful effects of UV rays, and the corrosive impact of saltwater on materials. Based on these experiences, we decided to produce premium quality products designed specifically for maritime use.",
-      story3: "Today, as one of Turkey's leading marine textile brands, we continue to offer our customers the highest quality and most durable products.",
+      heroDescription: "Founded in 2021, Ozan Marin is a company specialized in spare parts and textile production for boats and yachts.",
+      storyTitle: "About Us",
+      story1: "Ozan Marin is a spare parts and textile production company for boats and yachts, founded by Kadir Ozan in 2021 and rapidly growing with its industry experience. Our mission is to provide yacht owners with quality and reliable products while maximizing quality and innovative solutions in the maritime industry.",
+      story2: "Our organization not only offers various spare parts to meet the maintenance and repair needs of boats at the highest standards, but also produces boat and yacht textiles in-house. Our wide product range is designed to meet every kind of need, always keeping customer satisfaction in the foreground.",
+      story3: "Ozan Marin, which is also active in the international market, exports to many countries, especially Qatar and America. With our expanding global customer portfolio every day, we are a brand that has proven our quality worldwide.",
+      story4: "Our goal is to provide the highest quality spare parts and textile solutions in the industry to every individual and organization that moves with maritime passion, ensuring the longevity of their yachts. We continue to offer innovative, robust and aesthetic products to our customers at all times.",
       valuesTitle: "Our Values",
       valuesSubtitle: "The fundamental values that guide us in our work",
       qualityTitle: "Quality",
@@ -95,6 +97,7 @@ export default function AboutPage() {
                 <p>{t_content.story1}</p>
                 <p>{t_content.story2}</p>
                 <p>{t_content.story3}</p>
+                <p>{t_content.story4}</p>
               </div>
             </div>
             <div className="aspect-w-16 aspect-h-9">
