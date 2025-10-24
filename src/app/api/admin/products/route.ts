@@ -20,7 +20,8 @@ const productSchema = z.object({
   colors: z.array(z.object({
     tr: z.string().min(1, 'Türkçe renk gerekli'),
     en: z.string().min(1, 'İngilizce renk gerekli')
-  }))
+  })),
+  hasEmbroidery: z.boolean().default(false)
 })
 
 export async function POST(request: NextRequest) {
@@ -97,7 +98,8 @@ export async function POST(request: NextRequest) {
         descriptionEn: validatedData.descriptionEn || null,
         images: validatedData.images,
         sizePrices: validatedData.sizePrices,
-        colors: validatedData.colors
+        colors: validatedData.colors,
+        hasEmbroidery: validatedData.hasEmbroidery
       },
       include: {
         category: {

@@ -21,7 +21,8 @@ const productUpdateSchema = z.object({
   colors: z.array(z.object({
     tr: z.string().min(1, 'Türkçe renk gerekli'),
     en: z.string().min(1, 'İngilizce renk gerekli')
-  }))
+  })),
+  hasEmbroidery: z.boolean().default(false)
 })
 
 export async function GET(
@@ -53,7 +54,18 @@ export async function GET(
 
     const product = await prisma.product.findUnique({
       where: { id },
-      include: {
+      select: {
+        id: true,
+        name: true,
+        nameEn: true,
+        slug: true,
+        slugEn: true,
+        description: true,
+        descriptionEn: true,
+        images: true,
+        sizePrices: true,
+        colors: true,
+        hasEmbroidery: true,
         category: {
           select: {
             id: true,
@@ -183,7 +195,8 @@ export async function PUT(
         descriptionEn: validatedData.descriptionEn || null,
         images: validatedData.images,
         sizePrices: validatedData.sizePrices,
-        colors: validatedData.colors
+        colors: validatedData.colors,
+        hasEmbroidery: validatedData.hasEmbroidery
       },
       include: {
         category: {

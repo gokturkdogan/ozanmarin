@@ -42,7 +42,8 @@ export default function NewProductPage() {
     descriptionEn: '',
     images: [] as string[],
     sizePrices: [] as { size: string; price: number; stock: number }[],
-    colors: [] as { tr: string; en: string }[] // Updated colors interface
+    colors: [] as { tr: string; en: string }[], // Updated colors interface
+    hasEmbroidery: false // Nakış özelliği
   })
   const [uploadingImages, setUploadingImages] = useState(false)
   
@@ -584,6 +585,23 @@ export default function NewProductPage() {
                   ))}
                 </div>
               )}
+            </div>
+
+            {/* Nakış Özelliği */}
+            <div className="space-y-2">
+              <Label>Nakış Özelliği</Label>
+              <div className="flex items-center space-x-2">
+                <input
+                  type="checkbox"
+                  id="hasEmbroidery"
+                  checked={formData.hasEmbroidery}
+                  onChange={(e) => setFormData({ ...formData, hasEmbroidery: e.target.checked })}
+                  className="rounded border-gray-300"
+                />
+                <Label htmlFor="hasEmbroidery" className="text-sm text-gray-600">
+                  Bu ürüne nakış eklenebilir
+                </Label>
+              </div>
             </div>
 
             <div className="flex gap-4 pt-4">

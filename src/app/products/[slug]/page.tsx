@@ -24,6 +24,7 @@ interface Product {
   images: string[]
   sizePrices: { size: string; price: number; stock: number }[]
   colors: { tr: string; en: string }[] // Updated colors interface
+  hasEmbroidery?: boolean // Nakış özelliği
   category: {
     name: string
     nameEn?: string
@@ -463,35 +464,37 @@ export default function ProductPage({ params }: ProductPageProps) {
               )}
 
               {/* Embroidery Option */}
-              <div className="mb-4">
-                <div className="flex items-center space-x-2 mb-3">
-                  <input
-                    type="checkbox"
-                    id="embroidery"
-                    checked={hasEmbroidery}
-                    onChange={(e) => setHasEmbroidery(e.target.checked)}
-                    className="rounded"
-                  />
-                  <label htmlFor="embroidery" className="text-sm font-medium cursor-pointer">
-                    {t.embroidery}
-                  </label>
-                </div>
-                
-                {hasEmbroidery && (
-                  <div className="mt-3">
-                    <label className="text-sm font-medium mb-2 block">{t.embroideryDesign}</label>
-                    <FileUpload
-                      onFileSelect={(file, url) => {
-                        console.log('File selected:', file?.name, 'URL:', url)
-                        setEmbroideryFile(file)
-                        setEmbroideryUrl(url || '')
-                      }}
-                      acceptedTypes={['.jpg', '.jpeg', '.png', '.pdf']}
-                      maxSize={10}
+              {product?.hasEmbroidery && (
+                <div className="mb-4">
+                  <div className="flex items-center space-x-2 mb-3">
+                    <input
+                      type="checkbox"
+                      id="embroidery"
+                      checked={hasEmbroidery}
+                      onChange={(e) => setHasEmbroidery(e.target.checked)}
+                      className="rounded"
                     />
+                    <label htmlFor="embroidery" className="text-sm font-medium cursor-pointer">
+                      {t.embroidery}
+                    </label>
                   </div>
-                )}
-              </div>
+                  
+                  {hasEmbroidery && (
+                    <div className="mt-3">
+                      <label className="text-sm font-medium mb-2 block">{t.embroideryDesign}</label>
+                      <FileUpload
+                        onFileSelect={(file, url) => {
+                          console.log('File selected:', file?.name, 'URL:', url)
+                          setEmbroideryFile(file)
+                          setEmbroideryUrl(url || '')
+                        }}
+                        acceptedTypes={['.jpg', '.jpeg', '.png', '.pdf']}
+                        maxSize={10}
+                      />
+                    </div>
+                  )}
+                </div>
+              )}
               
               <div className="flex items-center space-x-4 mb-4">
                 <label className="text-sm font-medium">{t.quantity}</label>

@@ -44,7 +44,7 @@ export async function POST(request: NextRequest) {
     // Create order
     const order = await prisma.order.create({
       data: {
-        userId: userId,
+        userId: userId || null,
         totalPrice: calculatedTotalPrice,
         status: status,
         paymentStatus: paymentStatus,
