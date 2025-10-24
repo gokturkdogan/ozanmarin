@@ -394,6 +394,7 @@ export default function CheckoutPage() {
               productPrice: item.price, // Sadece ürün fiyatı
               productImage: item.image,
               quantity: item.quantity,
+              stockType: item.stockType || 'piece',
               size: item.size,
               color: item.color,
               hasEmbroidery: item.hasEmbroidery || false,
@@ -411,6 +412,7 @@ export default function CheckoutPage() {
               productPrice: language === 'en' ? getShippingCost() : getShippingCostTRY(), // Dil değerine göre
               productImage: null,
               quantity: 1,
+              stockType: 'piece',
               size: null,
               color: null,
               hasEmbroidery: false,
@@ -519,6 +521,8 @@ export default function CheckoutPage() {
               price: (itemPrice * item.quantity).toFixed(2),
               // Store additional product info for callback
               productId: item.id,
+              quantity: item.quantity,
+              stockType: item.stockType || 'piece',
               size: item.size,
               color: item.color,
               hasEmbroidery: item.hasEmbroidery,
@@ -990,7 +994,7 @@ export default function CheckoutPage() {
               <CardContent className="space-y-4">
                 <div className="flex justify-between text-sm">
                   <span>{t_content.productCount}</span>
-                  <span>{getTotalItems()} {t_content.items}</span>
+                  <span>{items.reduce((sum, item) => sum + (item.stockType === 'meter' ? 1 : item.quantity), 0)} {t_content.units}</span>
                 </div>
                 
                 <div className="flex justify-between text-sm">

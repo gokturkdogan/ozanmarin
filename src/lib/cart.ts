@@ -8,6 +8,7 @@ export interface CartItem {
   price: number
   image: string
   quantity: number
+  stockType?: 'piece' | 'meter'
   size?: string
   color?: string
   hasEmbroidery?: boolean
@@ -44,13 +45,18 @@ export const useCartStore = create<CartStore>()(
           set({
             items: items.map(i =>
               i.cartItemId === cartItemId
-                ? { ...i, quantity: i.quantity + 1 }
+                ? { 
+                    ...i, 
+                    quantity: item.stockType === 'meter' 
+                      ? i.quantity + item.quantity 
+                      : i.quantity + 1 
+                  }
                 : i
             )
           })
         } else {
           set({
-            items: [...items, { ...item, cartItemId, quantity: 1 }]
+            items: [...items, { ...item, cartItemId, quantity: item.quantity || 1 }]
           })
         }
       },
@@ -88,7 +94,9 @@ export const useCartStore = create<CartStore>()(
       },
       
       getTotalItems: () => {
-        return get().items.reduce((total, item) => total + item.quantity, 0)
+        return get().items.reduce((total, item) => {
+          return total + (item.stockType === 'meter' ? 1 : item.quantity)
+        }, 0)
       }
     }),
     {

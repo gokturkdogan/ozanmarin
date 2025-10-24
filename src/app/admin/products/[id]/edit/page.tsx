@@ -76,6 +76,7 @@ export default function EditProductPage({ params }: { params: Promise<{ id: stri
     images: '',
     sizePrices: [] as { size: string; price: number; stock: number }[],
     colors: [] as { tr: string; en: string }[], // Updated colors interface
+    stockType: 'piece' as 'piece' | 'meter', // Stok türü
     hasEmbroidery: false // Nakış özelliği
   })
 
@@ -123,6 +124,7 @@ export default function EditProductPage({ params }: { params: Promise<{ id: stri
           images: product.images.join(', '),
           sizePrices: product.sizePrices || [],
           colors: product.colors || [],
+          stockType: product.stockType || 'piece',
           hasEmbroidery: product.hasEmbroidery || false
         })
         
@@ -667,6 +669,41 @@ export default function EditProductPage({ params }: { params: Promise<{ id: stri
                   ))}
                 </div>
               )}
+            </div>
+
+            {/* Stok Türü */}
+            <div className="space-y-2">
+              <Label>Stok Türü</Label>
+              <div className="flex space-x-4">
+                <div className="flex items-center space-x-2">
+                  <input
+                    type="radio"
+                    id="stockType-piece"
+                    name="stockType"
+                    value="piece"
+                    checked={formData.stockType === 'piece'}
+                    onChange={(e) => setFormData({ ...formData, stockType: e.target.value as 'piece' | 'meter' })}
+                    className="rounded border-gray-300"
+                  />
+                  <Label htmlFor="stockType-piece" className="text-sm">
+                    Adet (Piece)
+                  </Label>
+                </div>
+                <div className="flex items-center space-x-2">
+                  <input
+                    type="radio"
+                    id="stockType-meter"
+                    name="stockType"
+                    value="meter"
+                    checked={formData.stockType === 'meter'}
+                    onChange={(e) => setFormData({ ...formData, stockType: e.target.value as 'piece' | 'meter' })}
+                    className="rounded border-gray-300"
+                  />
+                  <Label htmlFor="stockType-meter" className="text-sm">
+                    Metre (Meter)
+                  </Label>
+                </div>
+              </div>
             </div>
 
             {/* Nakış Özelliği */}

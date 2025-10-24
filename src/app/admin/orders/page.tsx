@@ -17,6 +17,7 @@ interface OrderItem {
   productPrice: number
   productImage?: string
   quantity: number
+  stockType?: 'piece' | 'meter'
   size?: string
   color?: string
   hasEmbroidery?: boolean
@@ -449,7 +450,9 @@ export default function AdminOrdersPage() {
                         {(order.language || 'tr') === 'en' ? '$' : '₺'}{order.totalPrice.toLocaleString((order.language || 'tr') === 'en' ? 'en-US' : 'tr-TR')}
                       </p>
                       <p className="text-sm text-gray-500">
-                        {order.items.length} ürün, {order.items.reduce((sum, item) => sum + item.quantity, 0)} adet
+                        {order.items.length} ürün, {order.items.reduce((sum, item) => {
+                          return sum + (item.stockType === 'meter' ? 1 : item.quantity)
+                        }, 0)} birim
                       </p>
                     </div>
                   </div>
@@ -732,9 +735,15 @@ export default function AdminOrdersPage() {
                           </h4>
                           <div className="text-sm text-gray-600 space-y-1 mt-1">
                             <p>
-                              {item.quantity} adet × {((selectedOrder.language || 'tr') === 'en') 
-                                ? `$${(item.productPrice || 0).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
-                                : `₺${(item.productPrice || 0).toLocaleString('tr-TR')}`
+                              {item.stockType === 'meter' 
+                                ? `${item.quantity} metre × ${((selectedOrder.language || 'tr') === 'en') 
+                                    ? `$${(item.productPrice || 0).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
+                                    : `₺${(item.productPrice || 0).toLocaleString('tr-TR')}`
+                                  }`
+                                : `${item.quantity} adet × ${((selectedOrder.language || 'tr') === 'en') 
+                                    ? `$${(item.productPrice || 0).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
+                                    : `₺${(item.productPrice || 0).toLocaleString('tr-TR')}`
+                                  }`
                               }
                             </p>
                             {item.categoryName && (

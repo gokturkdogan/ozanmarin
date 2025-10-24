@@ -21,6 +21,7 @@ const productSchema = z.object({
     tr: z.string().min(1, 'Türkçe renk gerekli'),
     en: z.string().min(1, 'İngilizce renk gerekli')
   })),
+  stockType: z.enum(['piece', 'meter']).default('piece'),
   hasEmbroidery: z.boolean().default(false)
 })
 
@@ -99,6 +100,7 @@ export async function POST(request: NextRequest) {
         images: validatedData.images,
         sizePrices: validatedData.sizePrices,
         colors: validatedData.colors,
+        stockType: validatedData.stockType,
         hasEmbroidery: validatedData.hasEmbroidery
       },
       include: {

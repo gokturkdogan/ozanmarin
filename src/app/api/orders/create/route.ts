@@ -2,10 +2,57 @@ import { NextRequest, NextResponse } from 'next/server'
 import { verifyToken } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
 import { sendOrderConfirmationEmail } from '@/lib/resend'
+import { z } from 'zod'
+
+const orderSchema = z.object({
+  userId: z.string().nullable().optional(),
+  totalPrice: z.number().positive('Toplam fiyat pozitif olmalı'),
+  status: z.string().default('received'),
+  paymentStatus: z.string().default('pending'),
+  paymentMethod: z.string().default('bank_transfer'),
+  shippingAddress: z.object({
+    firstName: z.string().min(1, 'Ad gerekli').optional(),
+    lastName: z.string().min(1, 'Soyad gerekli').optional(),
+    fullName: z.string().min(1, 'Ad soyad gerekli').optional(),
+    email: z.string().email('Geçerli email gerekli').optional(),
+    phone: z.string().min(1, 'Telefon gerekli'),
+    country: z.string().min(1, 'Ülke gerekli'),
+    city: z.string().min(1, 'Şehir gerekli'),
+    district: z.string().min(1, 'İlçe gerekli'),
+    address: z.string().min(1, 'Adres gerekli')
+  }).refine((data) => {
+    // Either firstName+lastName OR fullName must be provided
+    return (data.firstName && data.lastName) || data.fullName
+  }, {
+    message: 'Ad ve soyad veya tam ad gerekli'
+  }),
+  language: z.string().default('tr'),
+  items: z.array(z.object({
+    productId: z.string().min(1, 'Ürün ID gerekli'),
+    productName: z.string().min(1, 'Ürün adı gerekli'),
+    productPrice: z.number().positive('Ürün fiyatı pozitif olmalı'),
+    productImage: z.string().nullable().optional(),
+    quantity: z.number().positive('Miktar pozitif olmalı'),
+    stockType: z.enum(['piece', 'meter']).default('piece'),
+    size: z.string().nullable().optional(),
+    color: z.string().nullable().optional(),
+    hasEmbroidery: z.boolean().default(false),
+    embroideryFile: z.string().nullable().optional(),
+    embroideryPrice: z.number().default(0),
+    categoryName: z.string().optional(),
+    brandName: z.string().nullable().optional(),
+    isShipping: z.boolean().default(false),
+    shippingCost: z.number().default(0)
+  }))
+})
 
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json()
+    console.log('Order create request body:', JSON.stringify(body, null, 2))
+    
+    const validatedData = orderSchema.parse(body)
+    
     const { 
       userId: requestUserId,
       totalPrice,
@@ -15,14 +62,7 @@ export async function POST(request: NextRequest) {
       shippingAddress,
       language = 'tr',
       items
-    } = body
-
-    // Validate required fields
-    if (!totalPrice || !shippingAddress || !items) {
-      return NextResponse.json({ 
-        error: 'Gerekli bilgiler eksik' 
-      }, { status: 400 })
-    }
+    } = validatedData
 
     let userId = requestUserId
 
@@ -59,6 +99,7 @@ export async function POST(request: NextRequest) {
             productPrice: item.productPrice,
             productImage: item.productImage,
             quantity: item.quantity,
+            stockType: item.stockType || 'piece',
             size: item.size,
             color: item.color,
             hasEmbroidery: item.hasEmbroidery || false,
@@ -127,6 +168,21 @@ export async function POST(request: NextRequest) {
     })
 
   } catch (error) {
+    if (error instanceof z.ZodError) {
+      console.error('Zod validation errors:', error.issues)
+      return NextResponse.json(
+        { 
+          error: 'Geçersiz veri', 
+          details: error.issues.map(issue => ({
+            field: issue.path.join('.'),
+            message: issue.message,
+            code: issue.code
+          }))
+        },
+        { status: 400 }
+      )
+    }
+    
     console.error('Order creation error:', error)
     return NextResponse.json({ 
       error: 'Sipariş oluşturulurken bir hata oluştu' 

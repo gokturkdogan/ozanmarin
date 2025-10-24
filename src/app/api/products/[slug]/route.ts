@@ -21,6 +21,7 @@ export async function GET(
         images: true,
         sizePrices: true,
         colors: true,
+        stockType: true,
         hasEmbroidery: true,
         createdAt: true,
         updatedAt: true,

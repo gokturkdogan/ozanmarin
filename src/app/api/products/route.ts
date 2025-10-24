@@ -34,6 +34,7 @@ export async function GET(request: NextRequest) {
           images: true,
           sizePrices: true,
           colors: true,
+          stockType: true,
           hasEmbroidery: true,
           createdAt: true,
           updatedAt: true,

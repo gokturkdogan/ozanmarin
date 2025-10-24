@@ -66,6 +66,7 @@ model Product {
   description String?
   descriptionEn String? // English description
   images      String[]
+  stockType   String   @default("piece") // "piece" or "meter" - stok türü
   hasEmbroidery Boolean @default(false) // Nakış özelliği var mı?
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
@@ -107,7 +108,8 @@ model OrderItem {
   productName String
   productPrice Decimal @db.Decimal(10, 2)
   productImage String? // Ürün görseli
-  quantity    Int
+  quantity    Decimal  @db.Decimal(10, 2) // Metre için decimal değerler
+  stockType   String   @default("piece") // "piece" or "meter" - stok türü
   size        String?
   color       String?
   hasEmbroidery Boolean @default(false)

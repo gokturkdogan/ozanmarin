@@ -11,6 +11,7 @@ interface OrderItem {
   name: string
   price: number
   quantity: number
+  stockType?: 'piece' | 'meter'
 }
 
 interface Order {
@@ -165,8 +166,14 @@ export default function OrderPage({ params }: OrderPageProps) {
                       <div className="flex-1">
                         <h3 className="font-semibold text-lg">{item.name}</h3>
                         <p className="text-gray-600">
-                          {item.quantity} adet × ₺{item.price.toLocaleString()}
+                          {String(item.stockType).toLowerCase().includes('meter')
+                            ? `${item.quantity} metre × ₺${item.price.toLocaleString()}`
+                            : `${item.quantity} adet × ₺${item.price.toLocaleString()}`
+                          }
                         </p>
+                        <div className="bg-red-100 p-2 rounded text-red-800 text-sm">
+                          DEBUG: stockType = "{item.stockType}" (type: {typeof item.stockType})
+                        </div>
                       </div>
                       <div className="text-right">
                         <p className="font-semibold text-lg">

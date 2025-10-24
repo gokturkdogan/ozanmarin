@@ -24,6 +24,7 @@ interface Product {
   images: string[]
   sizePrices: { size: string; price: number; stock: number }[]
   colors: { tr: string; en: string }[] // Updated colors interface
+  stockType?: 'piece' | 'meter' // Stok türü
   hasEmbroidery?: boolean // Nakış özelliği
   category: {
     name: string
@@ -202,13 +203,17 @@ export default function ProductPage({ params }: ProductPageProps) {
         return
       }
 
-      for (let i = 0; i < quantity; i++) {
+      // StockType'a göre sepete ekleme
+      if (product.stockType === 'meter') {
+        // Metre için tek seferde ekle
         addItem({
-          cartItemId: `${product.id}-${selectedSizePrice.size}-${selectedColor || 'no-color'}-${hasEmbroidery ? 'emb' : 'no-emb'}-${Date.now()}-${i}`,
+          cartItemId: `${product.id}-${selectedSizePrice.size}-${selectedColor || 'no-color'}-${hasEmbroidery ? 'emb' : 'no-emb'}-${quantity}-${Date.now()}`,
           id: product.id,
           name: getTranslatedText(product.name, product.nameEn || null || null, language),
-          price: convertUSDToTRY(selectedSizePrice.price, exchangeRate, language), // Store price in the language it was ordered
+          price: convertUSDToTRY(selectedSizePrice.price, exchangeRate, language),
           image: product.images[0] || '/placeholder.jpg',
+          quantity: quantity,
+          stockType: product.stockType,
           size: selectedSizePrice.size,
           color: selectedColor || '',
           hasEmbroidery: hasEmbroidery,
@@ -217,8 +222,28 @@ export default function ProductPage({ params }: ProductPageProps) {
           categoryName: getTranslatedText(product.category.name, product.category.nameEn || null || null, language),
           brandName: product.brand ? getTranslatedText(product.brand.name, product.brand.nameEn || null || null, language) : undefined
         })
+      } else {
+        // Adet için döngü ile ekle
+        for (let i = 0; i < quantity; i++) {
+          addItem({
+            cartItemId: `${product.id}-${selectedSizePrice.size}-${selectedColor || 'no-color'}-${hasEmbroidery ? 'emb' : 'no-emb'}-${Date.now()}-${i}`,
+            id: product.id,
+            name: getTranslatedText(product.name, product.nameEn || null || null, language),
+            price: convertUSDToTRY(selectedSizePrice.price, exchangeRate, language),
+            image: product.images[0] || '/placeholder.jpg',
+            quantity: 1,
+            stockType: product.stockType || 'piece',
+            size: selectedSizePrice.size,
+            color: selectedColor || '',
+            hasEmbroidery: hasEmbroidery,
+            embroideryFile: embroideryUrl || undefined,
+            embroideryPrice: hasEmbroidery ? (language === 'tr' ? 100 : 5) : 0,
+            categoryName: getTranslatedText(product.category.name, product.category.nameEn || null || null, language),
+            brandName: product.brand ? getTranslatedText(product.brand.name, product.brand.nameEn || null || null, language) : undefined
+          })
+        }
       }
-      setToastMessage(`${quantity} adet ${getTranslatedText(product.name, product.nameEn || null || null, language)} sepete eklendi!`)
+      setToastMessage(`${quantity} ${product.stockType === 'meter' ? 'metre' : 'adet'} ${getTranslatedText(product.name, product.nameEn || null || null, language)} sepete eklendi!`)
       setToastType('success')
       setShowToast(true)
       
@@ -497,24 +522,81 @@ export default function ProductPage({ params }: ProductPageProps) {
               )}
               
               <div className="flex items-center space-x-4 mb-4">
-                <label className="text-sm font-medium">{t.quantity}</label>
-                <div className="flex items-center space-x-2">
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => setQuantity(Math.max(1, quantity - 1))}
-                  >
-                    -
-                  </Button>
-                  <span className="w-12 text-center">{quantity}</span>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => setQuantity(quantity + 1)}
-                  >
-                    +
-                  </Button>
-                </div>
+                <label className="text-sm font-medium">
+                  {t.quantity} {product.stockType === 'meter' ? '(metre)' : '(adet)'}
+                </label>
+                
+                {product.stockType === 'meter' ? (
+                  // Metre için özel input
+                  <div className="flex flex-col items-center space-y-3">
+                    <div className="flex items-center space-x-2">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => setQuantity(Math.max(0.1, Math.round((quantity - 0.1) * 10) / 10))}
+                        className="w-8 h-8"
+                      >
+                        -
+                      </Button>
+                      <div className="flex items-center space-x-1">
+                        <input
+                          type="number"
+                          value={quantity.toFixed(1)}
+                          onChange={(e) => {
+                            const value = parseFloat(e.target.value) || 0.1;
+                            setQuantity(Math.round(value * 10) / 10);
+                          }}
+                          min="0.1"
+                          step="0.1"
+                          className="w-24 px-2 py-1 border border-gray-300 rounded text-center"
+                        />
+                        <span className="text-sm text-gray-500">m</span>
+                      </div>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => setQuantity(Math.round((quantity + 0.1) * 10) / 10)}
+                        className="w-8 h-8"
+                      >
+                        +
+                      </Button>
+                    </div>
+                    
+                    {/* Quick buttons for meter */}
+                    <div className="flex flex-wrap justify-center gap-2">
+                      {[0.5, 1, 2, 5, 10].map((value) => (
+                        <Button
+                          key={value}
+                          variant={quantity === value ? "default" : "outline"}
+                          size="sm"
+                          onClick={() => setQuantity(value)}
+                          className="text-xs px-2 py-1 h-7"
+                        >
+                          {value}m
+                        </Button>
+                      ))}
+                    </div>
+                  </div>
+                ) : (
+                  // Adet için normal input
+                  <div className="flex items-center space-x-2">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => setQuantity(Math.max(1, quantity - 1))}
+                    >
+                      -
+                    </Button>
+                    <span className="w-12 text-center">{quantity}</span>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => setQuantity(quantity + 1)}
+                    >
+                      +
+                    </Button>
+                  </div>
+                )}
               </div>
               
               <div className="flex space-x-4">

@@ -15,6 +15,7 @@ interface OrderItem {
   productPrice: number
   productImage?: string
   quantity: number
+  stockType?: 'piece' | 'meter'
   size?: string
   color?: string
   hasEmbroidery?: boolean
@@ -434,7 +435,9 @@ export default function OrdersPage() {
                                         {item.isShipping && <span className="text-xs text-orange-600 ml-2">{t_content.shipping}</span>}
                                       </h4>
                                       <div className="text-sm text-gray-600 space-y-1 mt-1">
-                                        <p>{item.quantity} {t_content.items} × {formatPrice(Number(item.productPrice) || Number(item.price) || 0, (order.language || language) as 'tr' | 'en')}</p>
+                                        <p>
+                                          {item.quantity} {String(item.stockType).toLowerCase().includes('meter') ? 'metre' : t_content.items} × {formatPrice(Number(item.productPrice) || Number(item.price) || 0, (order.language || language) as 'tr' | 'en')}
+                                        </p>
                                         {item.categoryName && (
                                           <p className="text-xs text-gray-500">{t_content.category} {item.categoryName}</p>
                                         )}
