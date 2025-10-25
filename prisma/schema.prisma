@@ -145,3 +145,17 @@ model Address {
 
   @@map("addresses")
 }
+
+model StoreSettings {
+  id                    String   @id @default(cuid())
+  turkeyShippingUSD     Decimal  @default(0) @db.Decimal(10, 2) // Türkiye dolar kargo ücreti
+  turkeyShippingTRY     Decimal  @default(0) @db.Decimal(10, 2) // Türkiye TL kargo ücreti
+  internationalShippingUSD Decimal @default(0) @db.Decimal(10, 2) // Yurtdışı dolar kargo ücreti
+  internationalShippingTRY Decimal @default(0) @db.Decimal(10, 2) // Yurtdışı TL kargo ücreti
+  embroideryPriceUSD    Decimal  @default(0) @db.Decimal(10, 2) // Dolar nakış ücreti
+  embroideryPriceTRY    Decimal  @default(0) @db.Decimal(10, 2) // TL nakış ücreti
+  createdAt             DateTime @default(now())
+  updatedAt             DateTime @updatedAt
+
+  @@map("store_settings")
+}

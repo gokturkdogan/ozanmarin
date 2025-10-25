@@ -60,7 +60,7 @@ export function AdminLayout({ children }: AdminLayoutProps) {
     { name: 'Markalar', href: '/admin/brands', icon: Tag },
     { name: 'Siparişler', href: '/admin/orders', icon: ShoppingCart },
     { name: 'Kullanıcılar', href: '/admin/users', icon: Users },
-    { name: 'Ayarlar', href: '/admin/settings', icon: Settings },
+    { name: 'Mağaza Ayarları', href: '/admin/store-settings', icon: Settings },
   ]
 
   const handleLogout = async () => {

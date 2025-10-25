@@ -44,6 +44,12 @@ export default function CheckoutPage() {
   const [paymentMethod, setPaymentMethod] = useState<string>('online') // Default to online payment
   const [copiedIban, setCopiedIban] = useState<string | null>(null)
   const [exchangeRate, setExchangeRate] = useState<number>(42.00) // Default fallback rate
+  const [shippingPrices, setShippingPrices] = useState({
+    turkeyTRY: 200,
+    turkeyUSD: 5,
+    internationalTRY: 1000,
+    internationalUSD: 30
+  })
   
   // Guest form data
   const [guestForm, setGuestForm] = useState({
@@ -178,6 +184,38 @@ export default function CheckoutPage() {
 
   const t_content = content[language]
 
+  // Fetch shipping prices from store settings
+  useEffect(() => {
+    const fetchShippingPrices = async () => {
+      try {
+        // Store settings'den tüm değerleri al
+        const response = await fetch('/api/store-settings')
+        if (response.ok) {
+          const data = await response.json()
+          console.log('Store settings data:', data)
+          
+          setShippingPrices({
+            turkeyTRY: data.turkeyShippingTRY || 200,
+            turkeyUSD: data.turkeyShippingUSD || 5,
+            internationalTRY: data.internationalShippingTRY || 1000,
+            internationalUSD: data.internationalShippingUSD || 30
+          })
+        }
+      } catch (error) {
+        console.error('Error fetching shipping prices:', error)
+        // Fallback values
+        setShippingPrices({
+          turkeyTRY: 200,
+          turkeyUSD: 5,
+          internationalTRY: 1000,
+          internationalUSD: 30
+        })
+      }
+    }
+    
+    fetchShippingPrices()
+  }, [])
+
   // Check if selected country is Turkey
   const isTurkeySelected = () => {
     if (user) {
@@ -199,35 +237,34 @@ export default function CheckoutPage() {
 
   // Calculate shipping cost based on country and language
   const getShippingCost = () => {
-    const isTurkey = user 
-      ? addresses.find(addr => addr.id === selectedAddressId)?.country === 'Türkiye'
-      : guestForm.country === 'Türkiye'
+    const isTurkey = isTurkeySelected()
     
-    if (language === 'en') {
-      // English: Show in USD
-      return isTurkey ? 5 : 30
+    console.log('getShippingCost - isTurkey:', isTurkey, 'language:', language)
+    console.log('shippingPrices:', shippingPrices)
+    
+    if (language === 'tr') {
+      // Turkish: Always show in TRY, but different TRY values based on country
+      const result = isTurkey ? shippingPrices.turkeyTRY : shippingPrices.internationalTRY
+      console.log('Turkish - result:', result)
+      return result
     } else {
-      // Turkish: Show in TRY
-      return isTurkey ? 200 : 1000
+      // English: Show in USD
+      const result = isTurkey ? shippingPrices.turkeyUSD : shippingPrices.internationalUSD
+      console.log('English - result:', result)
+      return result
     }
   }
 
   // Calculate shipping cost in TRY for payment processing
   const getShippingCostTRY = () => {
-    const isTurkey = user 
-      ? addresses.find(addr => addr.id === selectedAddressId)?.country === 'Türkiye'
-      : guestForm.country === 'Türkiye'
-    
-    return isTurkey ? 200 : 1000 // Always return TRY values for payment processing
+    const isTurkey = isTurkeySelected()
+    return isTurkey ? shippingPrices.turkeyTRY : shippingPrices.internationalTRY
   }
 
   // Calculate shipping cost in USD for English orders
   const getShippingCostUSD = () => {
-    const isTurkey = user 
-      ? addresses.find(addr => addr.id === selectedAddressId)?.country === 'Türkiye'
-      : guestForm.country === 'Türkiye'
-    
-    return isTurkey ? 5 : 30 // Always return USD values for English orders
+    const isTurkey = isTurkeySelected()
+    return isTurkey ? shippingPrices.turkeyUSD : shippingPrices.internationalUSD
   }
 
   // Load exchange rate
@@ -375,9 +412,9 @@ export default function CheckoutPage() {
       if (paymentMethod === 'bank_transfer') {
         // Create order directly for bank transfer
         // Dil değerine göre fiyat hesapla (ödeme yöntemi farketmez)
-        const totalPrice = language === 'en' 
-          ? getTotalPrice() + getShippingCost() // USD değerler
-          : getTotalPrice() + getShippingCostTRY() // TRY değerler
+        const totalPrice = language === 'tr' 
+          ? getTotalPrice() + getShippingCost() // TRY değerler (ülke bazında)
+          : getTotalPrice() + getShippingCost() // USD değerler (ülke bazında)
         
         const orderData = {
           userId: user ? user.id : null,
@@ -387,43 +424,23 @@ export default function CheckoutPage() {
           paymentMethod: 'bank_transfer',
           shippingAddress: shippingAddress,
           language: language,
-          items: [
-            ...items.map(item => ({
-              productId: item.id,
-              productName: item.name,
-              productPrice: item.price, // Sadece ürün fiyatı
-              productImage: item.image,
-              quantity: item.quantity,
-              stockType: item.stockType || 'piece',
-              size: item.size,
-              color: item.color,
-              hasEmbroidery: item.hasEmbroidery || false,
-              embroideryFile: item.embroideryFile || null,
-              embroideryPrice: item.embroideryPrice || 0, // Nakış fiyatı ayrı
-              categoryName: item.categoryName,
-              brandName: item.brandName,
-              isShipping: false,
-              shippingCost: 0
-            })),
-            // Kargo ücreti
-            {
-              productId: 'shipping',
-              productName: t_content.shippingCost,
-              productPrice: language === 'en' ? getShippingCost() : getShippingCostTRY(), // Dil değerine göre
-              productImage: null,
-              quantity: 1,
-              stockType: 'piece',
-              size: null,
-              color: null,
-              hasEmbroidery: false,
-              embroideryFile: null,
-              embroideryPrice: 0,
-              categoryName: t_content.shippingCategory,
-              brandName: null,
-              isShipping: true,
-              shippingCost: language === 'en' ? getShippingCost() : getShippingCostTRY() // Dil değerine göre
-            }
-          ]
+          items: items.map(item => ({
+            productId: item.id,
+            productName: item.name,
+            productPrice: item.price, // Sadece ürün fiyatı
+            productImage: item.image,
+            quantity: item.quantity,
+            stockType: item.stockType || 'piece',
+            size: item.size,
+            color: item.color,
+            hasEmbroidery: item.hasEmbroidery || false,
+            embroideryFile: item.embroideryFile || null,
+            embroideryPrice: item.embroideryPrice || 0, // Nakış fiyatı ayrı
+            categoryName: item.categoryName,
+            brandName: item.brandName,
+            isShipping: false,
+            shippingCost: 0
+          }))
         }
 
         const response = await fetch('/api/orders/create', {
@@ -459,9 +476,9 @@ export default function CheckoutPage() {
       }
 
       // İngilizce dilde USD tutar, Türkçe dilde TRY tutar
-      const totalPrice = language === 'en' 
-        ? getTotalPrice() + getShippingCost() // USD tutar
-        : getTotalPrice() + getShippingCostTRY() // TRY tutar
+      const totalPrice = language === 'tr' 
+        ? getTotalPrice() + getShippingCost() // TRY tutar (ülke bazında)
+        : getTotalPrice() + getShippingCost() // USD tutar (ülke bazında)
       const basketId = `basket_${Date.now()}`
 
       // Prepare Iyzico request
@@ -553,41 +570,22 @@ export default function CheckoutPage() {
         paymentMethod: 'iyzico',
         shippingAddress: shippingAddress,
         language: language, // Seçilen dil
-        items: [
-          ...items.map(item => ({
-            productId: item.id,
-            productName: item.name,
-            productPrice: item.price, // Sadece ürün fiyatı
-            productImage: item.image,
-            quantity: item.quantity,
-            size: item.size,
-            color: item.color,
-            hasEmbroidery: item.hasEmbroidery || false,
-            embroideryFile: item.embroideryFile || null,
-            embroideryPrice: item.embroideryPrice || 0, // Nakış fiyatı ayrı
-            categoryName: item.categoryName,
-            brandName: item.brandName,
-            isShipping: false,
-            shippingCost: 0
-          })),
-          // Kargo ücreti
-          {
-            productId: 'shipping',
-            productName: t_content.shippingCost,
-            productPrice: getShippingCost(), // Dil bazlı değer
-            productImage: null,
-            quantity: 1,
-            size: null,
-            color: null,
-            hasEmbroidery: false,
-            embroideryFile: null,
-            embroideryPrice: 0,
-            categoryName: t_content.shippingCategory,
-            brandName: null,
-            isShipping: true,
-              shippingCost: language === 'en' ? getShippingCostUSD() : getShippingCostTRY()
-          }
-        ]
+        items: items.map(item => ({
+          productId: item.id,
+          productName: item.name,
+          productPrice: item.price, // Sadece ürün fiyatı
+          productImage: item.image,
+          quantity: item.quantity,
+          size: item.size,
+          color: item.color,
+          hasEmbroidery: item.hasEmbroidery || false,
+          embroideryFile: item.embroideryFile || null,
+          embroideryPrice: item.embroideryPrice || 0, // Nakış fiyatı ayrı
+          categoryName: item.categoryName,
+          brandName: item.brandName,
+          isShipping: false,
+          shippingCost: 0
+        }))
       }
 
       const orderResponse = await fetch('/api/orders/create', {

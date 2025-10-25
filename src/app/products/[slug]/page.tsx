@@ -61,6 +61,10 @@ export default function ProductPage({ params }: ProductPageProps) {
   const [embroideryFile, setEmbroideryFile] = useState<File | null>(null)
   const [embroideryUrl, setEmbroideryUrl] = useState<string>('')
   const [exchangeRate, setExchangeRate] = useState<number>(34.50) // Default fallback rate
+  const [embroideryPrices, setEmbroideryPrices] = useState({
+    TRY: 100,
+    USD: 5
+  })
   const { addItem } = useCartStore()
   const router = useRouter()
   const { language } = useLanguage()
@@ -79,7 +83,7 @@ export default function ProductPage({ params }: ProductPageProps) {
       selectColor: "Renk Seçin:",
       selectColorPlaceholder: "Renk seçin",
       quantity: "Miktar:",
-      embroidery: "Nakış (+₺100)",
+      embroidery: `Nakış (+₺${embroideryPrices.TRY})`,
       embroideryDesign: "Nakış Tasarımı:",
       embroideryRequired: "Nakış seçtiyseniz tasarım dosyasını yüklemelisiniz.",
       addToCart: "Sepete Ekle",
@@ -104,7 +108,7 @@ export default function ProductPage({ params }: ProductPageProps) {
       selectColor: "Select Color:",
       selectColorPlaceholder: "Select color",
       quantity: "Quantity:",
-      embroidery: "Embroidery (+$5)",
+      embroidery: `Embroidery (+$${embroideryPrices.USD})`,
       embroideryDesign: "Embroidery Design:",
       embroideryRequired: "You must upload a design file if you select embroidery.",
       addToCart: "Add to Cart",
@@ -134,8 +138,25 @@ export default function ProductPage({ params }: ProductPageProps) {
     if (slug) {
       fetchProduct()
       loadExchangeRate()
+      loadEmbroideryPrices()
     }
   }, [slug])
+
+  // Store settings'den nakış fiyatlarını yükle
+  const loadEmbroideryPrices = async () => {
+    try {
+      const response = await fetch('/api/store-settings')
+      if (response.ok) {
+        const data = await response.json()
+        setEmbroideryPrices({
+          TRY: data.embroideryPriceTRY || 100,
+          USD: data.embroideryPriceUSD || 5
+        })
+      }
+    } catch (error) {
+      console.error('Error fetching embroidery prices:', error)
+    }
+  }
 
   // Dolar kurunu yükle
   const loadExchangeRate = async () => {
@@ -218,7 +239,7 @@ export default function ProductPage({ params }: ProductPageProps) {
           color: selectedColor || '',
           hasEmbroidery: hasEmbroidery,
           embroideryFile: embroideryUrl || undefined,
-          embroideryPrice: hasEmbroidery ? (language === 'tr' ? 100 : 5) : 0,
+          embroideryPrice: hasEmbroidery ? (language === 'tr' ? embroideryPrices.TRY : embroideryPrices.USD) : 0,
           categoryName: getTranslatedText(product.category.name, product.category.nameEn || null || null, language),
           brandName: product.brand ? getTranslatedText(product.brand.name, product.brand.nameEn || null || null, language) : undefined
         })
@@ -237,7 +258,7 @@ export default function ProductPage({ params }: ProductPageProps) {
             color: selectedColor || '',
             hasEmbroidery: hasEmbroidery,
             embroideryFile: embroideryUrl || undefined,
-            embroideryPrice: hasEmbroidery ? (language === 'tr' ? 100 : 5) : 0,
+            embroideryPrice: hasEmbroidery ? (language === 'tr' ? embroideryPrices.TRY : embroideryPrices.USD) : 0,
             categoryName: getTranslatedText(product.category.name, product.category.nameEn || null || null, language),
             brandName: product.brand ? getTranslatedText(product.brand.name, product.brand.nameEn || null || null, language) : undefined
           })
@@ -395,15 +416,15 @@ export default function ProductPage({ params }: ProductPageProps) {
               <p className="text-xl text-primary font-bold mb-6">
                 {selectedSizePrice ? (
                   <span>
-                    {formatPrice((convertUSDToTRY(selectedSizePrice.price, exchangeRate, language) + (hasEmbroidery ? (language === 'tr' ? 100 : 5) : 0)) * quantity, language)}
+                    {formatPrice((convertUSDToTRY(selectedSizePrice.price, exchangeRate, language) + (hasEmbroidery ? (language === 'tr' ? embroideryPrices.TRY : embroideryPrices.USD) : 0)) * quantity, language)}
                     {quantity > 1 && (
                       <span className="text-sm text-gray-600 ml-2">
-                        ({quantity} × {formatPrice(convertUSDToTRY(selectedSizePrice.price, exchangeRate, language) + (hasEmbroidery ? (language === 'tr' ? 100 : 5) : 0), language)})
+                        ({quantity} × {formatPrice(convertUSDToTRY(selectedSizePrice.price, exchangeRate, language) + (hasEmbroidery ? (language === 'tr' ? embroideryPrices.TRY : embroideryPrices.USD) : 0), language)})
                       </span>
                     )}
                     {hasEmbroidery && (
                       <span className="text-sm text-gray-600 ml-2 block">
-                        {formatPrice(convertUSDToTRY(selectedSizePrice.price, exchangeRate, language), language)} + {language === 'tr' ? '₺100 nakış' : '$5 embroidery'}
+                        {formatPrice(convertUSDToTRY(selectedSizePrice.price, exchangeRate, language), language)} + {language === 'tr' ? `₺${embroideryPrices.TRY} nakış` : `$${embroideryPrices.USD} embroidery`}
                       </span>
                     )}
                   </span>

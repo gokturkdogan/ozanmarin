@@ -202,13 +202,15 @@ export default function CartPage() {
                 
                 <div className="flex justify-between text-sm">
                   <span>{language === 'tr' ? 'Kargo:' : 'Shipping:'}</span>
-                  <span>{language === 'tr' ? '₺200' : '$0'}</span>
+                  <span className="text-gray-500 text-xs">
+                    {language === 'tr' ? 'Adrese göre değişiklik gösterebilir' : 'May vary by address'}
+                  </span>
                 </div>
                 
                 <div className="border-t pt-4">
                   <div className="flex justify-between text-lg font-bold">
                     <span>{t.total}:</span>
-                    <span>{formatPrice(getTotalPrice() + (language === 'tr' ? 200 : 0), language)}</span>
+                    <span>{formatPrice(getTotalPrice(), language)}</span>
                   </div>
                 </div>
 

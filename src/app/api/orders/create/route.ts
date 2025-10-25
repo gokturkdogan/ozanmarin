@@ -4,6 +4,33 @@ import { prisma } from '@/lib/prisma'
 import { sendOrderConfirmationEmail } from '@/lib/resend'
 import { z } from 'zod'
 
+// Helper function to get shipping cost from store settings
+async function getShippingCost(country: string, language: string): Promise<number> {
+  try {
+    const response = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000'}/api/store-settings`)
+    if (response.ok) {
+      const data = await response.json()
+      console.log('Store settings data:', data)
+      
+      // Ülke ve dil bazında kargo ücretini belirle
+      if (country === 'TR' || country === 'Türkiye') {
+        return language === 'tr' ? data.turkeyShippingTRY : data.turkeyShippingUSD
+      } else {
+        return language === 'tr' ? data.internationalShippingTRY : data.internationalShippingUSD
+      }
+    }
+  } catch (error) {
+    console.error('Error fetching shipping cost:', error)
+  }
+  
+  // Fallback values
+  if (country === 'TR' || country === 'Türkiye') {
+    return language === 'en' ? 5 : 200
+  } else {
+    return language === 'en' ? 30 : 1000
+  }
+}
+
 const orderSchema = z.object({
   userId: z.string().nullable().optional(),
   totalPrice: z.number().positive('Toplam fiyat pozitif olmalı'),
@@ -81,11 +108,15 @@ export async function POST(request: NextRequest) {
       return total + (itemPrice * item.quantity)
     }, 0)
 
+    // Get shipping cost from store settings
+    const shippingCost = await getShippingCost(shippingAddress.country, language)
+    console.log('Shipping cost from store settings:', shippingCost)
+
     // Create order
     const order = await prisma.order.create({
       data: {
         userId: userId || null,
-        totalPrice: calculatedTotalPrice,
+        totalPrice: calculatedTotalPrice + shippingCost,
         status: status,
         paymentStatus: paymentStatus,
         paymentMethod: paymentMethod,
@@ -93,23 +124,44 @@ export async function POST(request: NextRequest) {
         shippingAddress: shippingAddress,
         language: language,
         items: {
-          create: items.map((item: any) => ({
-            productId: item.productId,
-            productName: item.productName,
-            productPrice: item.productPrice,
-            productImage: item.productImage,
-            quantity: item.quantity,
-            stockType: item.stockType || 'piece',
-            size: item.size,
-            color: item.color,
-            hasEmbroidery: item.hasEmbroidery || false,
-            embroideryFile: item.embroideryFile || null,
-            embroideryPrice: item.embroideryPrice || 0,
-            categoryName: item.categoryName,
-            brandName: item.brandName,
-            isShipping: item.isShipping || false,
-            shippingCost: item.shippingCost || 0
-          }))
+          create: [
+            // Product items
+            ...items.map((item: any) => ({
+              productId: item.productId,
+              productName: item.productName,
+              productPrice: item.productPrice,
+              productImage: item.productImage,
+              quantity: item.quantity,
+              stockType: item.stockType || 'piece',
+              size: item.size,
+              color: item.color,
+              hasEmbroidery: item.hasEmbroidery || false,
+              embroideryFile: item.embroideryFile || null,
+              embroideryPrice: item.embroideryPrice || 0,
+              categoryName: item.categoryName,
+              brandName: item.brandName,
+              isShipping: false,
+              shippingCost: 0
+            })),
+            // Shipping item
+            {
+              productId: 'shipping',
+              productName: language === 'tr' ? 'Kargo Ücreti' : 'Shipping Cost',
+              productPrice: shippingCost,
+              productImage: null,
+              quantity: 1,
+              stockType: 'piece',
+              size: null,
+              color: null,
+              hasEmbroidery: false,
+              embroideryFile: null,
+              embroideryPrice: 0,
+              categoryName: language === 'tr' ? 'Kargo' : 'Shipping',
+              brandName: null,
+              isShipping: true,
+              shippingCost: shippingCost
+            }
+          ]
         }
       },
       include: {

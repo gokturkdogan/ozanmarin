@@ -12,6 +12,7 @@ import {
   FolderOpen, 
   Tag, 
   ShoppingCart, 
+  Settings,
   LogOut,
   Menu,
   X
@@ -23,6 +24,7 @@ const navigation = [
   { name: 'Kategoriler', href: '/admin/categories', icon: FolderOpen },
   { name: 'Markalar', href: '/admin/brands', icon: Tag },
   { name: 'Siparişler', href: '/admin/orders', icon: ShoppingCart },
+  { name: 'Mağaza Ayarları', href: '/admin/store-settings', icon: Settings },
 ]
 
 export default function AdminLayout({
