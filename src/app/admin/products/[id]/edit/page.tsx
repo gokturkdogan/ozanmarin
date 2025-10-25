@@ -400,7 +400,7 @@ export default function EditProductPage({ params }: { params: Promise<{ id: stri
                     <SelectValue placeholder="Kategori seçin" />
                   </SelectTrigger>
                   <SelectContent>
-                    {categories.map((category) => (
+                    {categories.sort((a, b) => a.name.localeCompare(b.name, 'tr')).map((category) => (
                       <SelectItem key={category.id} value={category.slug}>
                         {category.name}
                       </SelectItem>
@@ -420,7 +420,7 @@ export default function EditProductPage({ params }: { params: Promise<{ id: stri
                     <SelectValue placeholder="Marka seçin (opsiyonel)" />
                   </SelectTrigger>
                   <SelectContent>
-                    {brands.map((brand) => (
+                    {brands.sort((a, b) => a.name.localeCompare(b.name, 'tr')).map((brand) => (
                       <SelectItem key={brand.id} value={brand.id}>
                         {brand.name}
                       </SelectItem>

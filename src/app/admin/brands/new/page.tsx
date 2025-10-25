@@ -177,7 +177,7 @@ export default function NewBrandPage() {
                   <SelectValue placeholder="Kategori seçin" />
                 </SelectTrigger>
                 <SelectContent>
-                  {categories.map((category) => (
+                  {categories.sort((a, b) => a.name.localeCompare(b.name, 'tr')).map((category) => (
                     <SelectItem key={category.id} value={category.id}>
                       {category.name}
                     </SelectItem>

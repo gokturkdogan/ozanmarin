@@ -273,7 +273,7 @@ export default function AdminProductsPage() {
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="all">Tüm Kategoriler</SelectItem>
-                    {categories.map((category) => (
+                    {categories.sort((a, b) => a.name.localeCompare(b.name, 'tr')).map((category) => (
                       <SelectItem key={category.id} value={category.slug}>
                         {category.name}
                       </SelectItem>
@@ -290,7 +290,7 @@ export default function AdminProductsPage() {
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="all">Tüm Markalar</SelectItem>
-                    {getFilteredBrands().map((brand) => (
+                    {getFilteredBrands().sort((a, b) => a.name.localeCompare(b.name, 'tr')).map((brand) => (
                       <SelectItem key={brand.id} value={brand.slug}>
                         {brand.name}
                       </SelectItem>

@@ -240,7 +240,7 @@ export default function AdminBrandsPage() {
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="all">Tüm Kategoriler</SelectItem>
-                    {categories.map((category) => (
+                    {categories.sort((a, b) => a.name.localeCompare(b.name, 'tr')).map((category) => (
                       <SelectItem key={category.id} value={category.slug}>
                         {category.name}
                       </SelectItem>
