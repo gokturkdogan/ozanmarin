@@ -9,7 +9,7 @@ export function Footer() {
   // Dil bazlı içerik
   const content = {
     tr: {
-      companyDescription: "Denizcilik tekstili konusunda uzman ekibimizle, yat ve tekne sahiplerine premium kalitede kumaş kılıfları, minderler ve branda çözümleri sunuyoruz.",
+      companyDescription: "Kuruluşumuz, teknelerin bakım ve onarım ihtiyaçlarını en yüksek standartlarda karşılamak için çeşitli yedek parçalar sunmanın yanı sıra, tekne ve yat tekstillerini de kendi bünyemizde üretmektedir. Geniş ürün yelpazemiz, her türlü ihtiyaca cevap verecek şekilde tasarlanmış olup, müşteri memnuniyetini her zaman ön planda tutmaktadır.",
       quickLinksTitle: "Hızlı Linkler",
       products: "Ürünler",
       about: "Hakkımızda",
@@ -22,7 +22,7 @@ export function Footer() {
       copyright: "© 2024 Ozan Marin. Tüm hakları saklıdır."
     },
     en: {
-      companyDescription: "With our expert team in marine textiles, we provide premium quality fabric covers, cushions and awning solutions for yacht and boat owners.",
+      companyDescription: "Our organization meets the maintenance and repair needs of boats at the highest standards by offering various spare parts, while also producing boat and yacht textiles in-house. Our wide product range is designed to meet all kinds of needs, always keeping customer satisfaction in the foreground.",
       quickLinksTitle: "Quick Links",
       products: "Products",
       about: "About Us",
