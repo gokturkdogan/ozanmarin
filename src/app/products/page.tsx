@@ -275,8 +275,9 @@ export default function ProductsPage() {
         ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
             {filteredProducts.map((product) => (
-              <Card key={product.id} className="group hover:shadow-xl transition-all duration-300 border-0 shadow-md overflow-hidden">
-                <CardContent className="p-0">
+              <Link key={product.id} href={`/products/${product.slug}`} className="block">
+                <Card className="group hover:shadow-xl transition-all duration-300 border-0 shadow-md overflow-hidden cursor-pointer">
+                  <CardContent className="p-0">
                   {/* Product Image */}
                   <div className="relative w-full h-48 bg-gray-100 overflow-hidden">
                     {product.images && product.images.length > 0 ? (
@@ -319,7 +320,7 @@ export default function ProductsPage() {
                     )}
                     
                     {/* Product Name */}
-                    <h3 className="font-semibold text-lg leading-tight line-clamp-2 group-hover:text-primary transition-colors cursor-pointer">
+                    <h3 className="font-semibold text-lg leading-tight line-clamp-2 group-hover:text-primary transition-colors">
                       {getTranslatedText(product.name, product.nameEn || null, language)}
                     </h3>
                     
@@ -364,21 +365,20 @@ export default function ProductsPage() {
                       </div>
                       
                       <div className="flex gap-2">
-                        <Link href={`/products/${product.slug}`} className="flex-1">
-                          <Button 
-                            variant="default" 
-                            size="sm" 
-                            className="w-full cursor-pointer"
-                          >
-                            <ShoppingCart className="w-4 h-4 mr-2" />
-                            {t.addToCart}
-                          </Button>
-                        </Link>
+                        <Button 
+                          variant="default" 
+                          size="sm" 
+                          className="flex-1 cursor-pointer"
+                        >
+                          <ShoppingCart className="w-4 h-4 mr-2" />
+                          {t.addToCart}
+                        </Button>
                       </div>
                     </div>
                   </div>
                 </CardContent>
               </Card>
+              </Link>
             ))}
           </div>
         )}
